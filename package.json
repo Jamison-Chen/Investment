@@ -1,0 +1,25 @@
+{
+    "name": "Investment",
+    "version": "1.0.0",
+    "description": "",
+    "main": "./modules/script.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start:build": "tsc -w",
+        "start": "concurrently npm:start:*"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Jamison-Chen/Investment.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/Jamison-Chen/Investment/issues"
+    },
+    "homepage": "https://github.com/Jamison-Chen/Investment#readme",
+    "dependencies": {
+        "concurrently": "^5.3.0"
+    }
+}
