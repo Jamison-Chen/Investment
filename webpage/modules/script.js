@@ -1,66 +1,67 @@
 "use strict";
 const body = document.getElementById("body");
-const inputDate = document.getElementById("date");
-const inputSid = document.getElementById("sid");
-const inputCompanyName = document.getElementById("companyName");
-const queryBtn = document.getElementById("query-btn");
+// const inputDate = document.getElementById("date");
+// const inputSid = document.getElementById("sid");
+// const inputCompanyName = document.getElementById("companyName");
+// const queryBtn = document.getElementById("query-btn");
 const recordForm = document.getElementById("record-form");
 const allRecordFormInputs = document.getElementsByClassName("record-form-input");
 const submitBtn = document.getElementById("submit-btn");
 const tradeRecordTable = document.getElementById("trade-record-table");
-let url;
-queryBtn === null || queryBtn === void 0 ? void 0 : queryBtn.addEventListener("click", fetchContent);
-recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", recordsCRUD);
-window.addEventListener("keydown", (e) => {
-    if ((e instanceof KeyboardEvent && e.keyCode == 13)) {
-        recordsCRUD();
+let allHoldingSids = [];
+const infoToday = document.getElementById("info-today");
+// localhost api test
+const endPoint = "http://127.0.0.1:5000/";
+// remote api test
+// const endPoint = "https://stock-info-scraper.herokuapp.com/";
+// if (queryBtn != null) {
+//     queryBtn.addEventListener("click", (e) => {
+//         if (inputDate instanceof HTMLInputElement && inputSid instanceof HTMLInputElement && inputCompanyName instanceof HTMLInputElement) {
+//             // fetchSingleStockSingleDay();
+//         }
+//     });
+// }
+// window.addEventListener("keydown", (e) => {
+//     if ((e instanceof KeyboardEvent && e.keyCode == 13)) {
+//         recordsCRUD();
+//     }
+// });
+function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
+    let url = null;
+    if (date != "" && sidList.length != 0) {
+        url = `${endPoint}stockSingleDay?date=${date}&sidList=${sidList.join(",")}`;
     }
-});
-function fetchContent(e) {
-    if (inputDate instanceof HTMLInputElement && inputSid instanceof HTMLInputElement && inputCompanyName instanceof HTMLInputElement) {
-        if (inputDate.value != "" && inputSid.value != "") {
-            // localhost api test
-            url = `http://127.0.0.1:5000/singleStockSingleDay?date=${inputDate.value}&sid=${inputSid.value}`;
-            // remote api test
-            // url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?date=${inputDate.value}&sid=${inputSid.value}`;
-        }
-        else if (inputDate.value != "" && inputCompanyName.value != "") {
-            // localhost api test
-            url = `http://127.0.0.1:5000/singleStockSingleDay?date=${inputDate.value}&name=${inputCompanyName.value}`;
-            // remote api test
-            // url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?date=${inputDate.value}&name=${inputCompanyName.value}`;
-        }
-        else if (inputDate.value == "" && inputSid.value != "") {
-            // localhost api test
-            url = `http://127.0.0.1:5000/singleStockSingleDay?sid=${inputSid.value}`;
-            // remote api test
-            // url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?sid=${inputSid.value}`;
-        }
-        else if (inputDate.value == "" && inputCompanyName.value != "") {
-            // localhost api test
-            url = `http://127.0.0.1:5000/singleStockSingleDay?name=${inputCompanyName.value}`;
-            // remote api test
-            // url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?name=${inputCompanyName.value}`;
-        }
-        else {
-            console.log("Info insufficient.");
-        }
+    else if (date != "" && companyNameList.length != 0) {
+        url = `${endPoint}stockSingleDay?date=${date}&companyNameList=${companyNameList.join(",")}`;
+    }
+    else if (date == "" && sidList.length != 0) {
+        url = `${endPoint}stockSingleDay?sidList=${sidList.join(",")}`;
+    }
+    else if (date == "" && companyNameList.length != 0) {
+        url = `${endPoint}stockSingleDay?companyNameList=${companyNameList.join(",")}`;
+    }
+    else {
+        console.log("Please at least input sidList or company name.");
     }
     if (url != null) {
-        if (body != null) {
-            body.innerHTML = "Waiting...";
+        if (infoToday != null) {
+            infoToday.innerHTML = "Waiting...";
         }
         fetch(url)
             .then(function (response) {
             return response.json();
         })
             .then(function (myJson) {
-            if (body != null) {
-                body.innerHTML = "";
-                for (let each in myJson) {
-                    let d = document.createElement("div");
-                    d.innerHTML = `${each}: ${myJson[each]}`;
-                    body.appendChild(d);
+            if (infoToday != null) {
+                infoToday.innerHTML = "";
+                for (let eachStock in myJson["data"]) {
+                    let d1 = document.createElement("div");
+                    for (let eachField in myJson["data"][eachStock]) {
+                        let d2 = document.createElement("div");
+                        d2.innerHTML = `${eachField}: ${myJson["data"][eachStock][eachField]}`;
+                        d1.appendChild(d2);
+                    }
+                    infoToday.appendChild(d1);
                 }
             }
         });
@@ -79,24 +80,36 @@ function recordsCRUD() {
 function queryTradeHistoryOnLoad() {
     let data = new URLSearchParams();
     data.append("mode", "read");
-    fetch("http://127.0.0.1:5000/records", { method: 'post', body: data })
+    let url = `${endPoint}records`;
+    fetch(url, { method: 'post', body: data })
         .then(function (response) {
         return response.json();
     })
         .then(function (myJson) {
         if (tradeRecordTable != null) {
-            // console.log(myJson["data"]);
+            // create table
             for (let each in myJson["data"]) {
                 let tr = document.createElement("tr");
                 tr.className = "trade-record-table-row";
                 for (let eachField in myJson["data"][each]) {
                     let td = document.createElement("td");
+                    td.className = eachField.split(" ").join("-");
                     td.innerHTML = myJson["data"][each][eachField];
                     tr.appendChild(td);
                 }
                 tradeRecordTable.appendChild(tr);
             }
+            // collect all sid holding
+            let sidDivs = document.getElementsByClassName("Sid");
+            for (let each of sidDivs) {
+                allHoldingSids.push(each.innerHTML);
+            }
+            fetchStockSingleDay("", allHoldingSids);
         }
     });
 }
-queryTradeHistoryOnLoad();
+function main() {
+    recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", recordsCRUD);
+    queryTradeHistoryOnLoad();
+}
+main();

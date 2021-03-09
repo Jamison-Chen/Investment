@@ -46,3 +46,11 @@ form>label {
 #trade-record-table tr:hover {
     background-color: #ddd;
 }
+
+#info-today {
+    display: flex;
+}
+
+#info-today>div {
+    margin: 10px 20px;
+}
