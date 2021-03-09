@@ -1,28 +1,39 @@
-// let date = "20210305";
-// let sid = "2330";
-// const currentURL = window.location.href;
-// const date: string | null = currentURL.split("date=")[1].slice(0, 7);
-// const sid: string | null = currentURL.split("sid=")[1].split("&")[0];
-// const companyName: string | null = currentURL.split("name=")[1];
 const body = document.getElementById("body");
 const inputDate = document.getElementById("date");
 const inputSid = document.getElementById("sid");
 const inputCompanyName = document.getElementById("companyName");
-const submitBtn = document.getElementById("submit");
+const queryBtn = document.getElementById("query-btn");
+const allRecordFormInputs = document.getElementsByClassName("record-form-input")
+const submitBtn = document.getElementById("submit-btn");
 let url: string | null;
-submitBtn?.addEventListener("click", fetchContent);
-window.addEventListener("keydown", fetchContent);
+
+queryBtn?.addEventListener("click", fetchContent);
+submitBtn?.addEventListener("click", recordsCRUD)
+window.addEventListener("keydown", recordsCRUD);
+
 function fetchContent(e: Event): void {
     if ((e instanceof KeyboardEvent && e.keyCode == 13) || e instanceof MouseEvent) {
         if (inputDate instanceof HTMLInputElement && inputSid instanceof HTMLInputElement && inputCompanyName instanceof HTMLInputElement) {
             if (inputDate.value != "" && inputSid.value != "") {
-                url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?date=${inputDate.value}&sid=${inputSid.value}`;
+                // localhost api test
+                url = `http://127.0.0.1:5000/singleStockSingleDay?date=${inputDate.value}&sid=${inputSid.value}`
+                // remote api test
+                // url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?date=${inputDate.value}&sid=${inputSid.value}`;
             } else if (inputDate.value != "" && inputCompanyName.value != "") {
-                url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?date=${inputDate.value}&name=${inputCompanyName.value}`;
+                // localhost api test
+                url = `http://127.0.0.1:5000/singleStockSingleDay?date=${inputDate.value}&name=${inputCompanyName.value}`
+                // remote api test
+                // url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?date=${inputDate.value}&name=${inputCompanyName.value}`;
             } else if (inputDate.value == "" && inputSid.value != "") {
-                url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?sid=${inputSid.value}`;
+                // localhost api test
+                url = `http://127.0.0.1:5000/singleStockSingleDay?sid=${inputSid.value}`
+                // remote api test
+                // url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?sid=${inputSid.value}`;
             } else if (inputDate.value == "" && inputCompanyName.value != "") {
-                url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?name=${inputCompanyName.value}`;
+                // localhost api test
+                url = `http://127.0.0.1:5000/singleStockSingleDay?name=${inputCompanyName.value}`
+                // remote api test
+                // url = `https://stock-info-scraper.herokuapp.com/singleStockSingleDay?name=${inputCompanyName.value}`;
             } else {
                 console.log("Info insufficient.");
             }
@@ -50,6 +61,14 @@ function fetchContent(e: Event): void {
 
 }
 
-
-// TODO
-// 後端可以一天只爬一次，csv存起來，因為fetch頗花時間。
+function recordsCRUD(e: Event): void {
+    if ((e instanceof KeyboardEvent && e.keyCode == 13) || e instanceof MouseEvent) {
+        let data = new URLSearchParams();
+        for (let each of allRecordFormInputs) {
+            if (each instanceof HTMLInputElement) {
+                data.append(each.name, each.value);
+            }
+        }
+        fetch("http://127.0.0.1:5000/records", { method: 'post', body: data });
+    }
+}
