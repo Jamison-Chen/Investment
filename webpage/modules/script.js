@@ -27,44 +27,48 @@ const endPoint = "http://127.0.0.1:5000/";
 //     }
 // });
 function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
-    let url = null;
-    if (date != "" && sidList.length != 0) {
-        url = `${endPoint}stockSingleDay?date=${date}&sidList=${sidList.join(",")}`;
-    }
-    else if (date != "" && companyNameList.length != 0) {
-        url = `${endPoint}stockSingleDay?date=${date}&companyNameList=${companyNameList.join(",")}`;
-    }
-    else if (date == "" && sidList.length != 0) {
-        url = `${endPoint}stockSingleDay?sidList=${sidList.join(",")}`;
-    }
-    else if (date == "" && companyNameList.length != 0) {
-        url = `${endPoint}stockSingleDay?companyNameList=${companyNameList.join(",")}`;
-    }
-    else {
-        console.log("Please at least input sidList or company name.");
-    }
-    if (url != null) {
-        if (infoToday != null) {
-            infoToday.innerHTML = "Waiting...";
-        }
+    const url = decideURL(date, sidList, companyNameList);
+    if (url != null && infoToday != null) {
+        infoToday.innerHTML = "Waiting...";
         fetch(url)
             .then(function (response) {
             return response.json();
         })
             .then(function (myJson) {
-            if (infoToday != null) {
-                infoToday.innerHTML = "";
-                for (let eachStock in myJson["data"]) {
-                    let d1 = document.createElement("div");
-                    for (let eachField in myJson["data"][eachStock]) {
-                        let d2 = document.createElement("div");
-                        d2.innerHTML = `${eachField}: ${myJson["data"][eachStock][eachField]}`;
-                        d1.appendChild(d2);
-                    }
-                    infoToday.appendChild(d1);
-                }
-            }
+            printInfo(myJson);
         });
+    }
+}
+function decideURL(date = "", sidList = [], companyNameList = []) {
+    if (date != "" && sidList.length != 0) {
+        return `${endPoint}stockSingleDay?date=${date}&sidList=${sidList.join(",")}`;
+    }
+    else if (date != "" && companyNameList.length != 0) {
+        return `${endPoint}stockSingleDay?date=${date}&companyNameList=${companyNameList.join(",")}`;
+    }
+    else if (date == "" && sidList.length != 0) {
+        return `${endPoint}stockSingleDay?sidList=${sidList.join(",")}`;
+    }
+    else if (date == "" && companyNameList.length != 0) {
+        return `${endPoint}stockSingleDay?companyNameList=${companyNameList.join(",")}`;
+    }
+    else {
+        console.log("Please at least input sidList or company name.");
+        return null;
+    }
+}
+function printInfo(myJson) {
+    if (infoToday != null) {
+        infoToday.innerHTML = "";
+        for (let eachStock in myJson["data"]) {
+            let d1 = document.createElement("div");
+            for (let eachField in myJson["data"][eachStock]) {
+                let d2 = document.createElement("div");
+                d2.innerHTML = `${eachField}: ${myJson["data"][eachStock][eachField]}`;
+                d1.appendChild(d2);
+            }
+            infoToday.appendChild(d1);
+        }
     }
 }
 function recordsCRUD() {
@@ -86,27 +90,55 @@ function queryTradeHistoryOnLoad() {
         return response.json();
     })
         .then(function (myJson) {
-        if (tradeRecordTable != null) {
-            // create table
-            for (let each in myJson["data"]) {
-                let tr = document.createElement("tr");
-                tr.className = "trade-record-table-row";
-                for (let eachField in myJson["data"][each]) {
-                    let td = document.createElement("td");
-                    td.className = eachField.split(" ").join("-");
-                    td.innerHTML = myJson["data"][each][eachField];
-                    tr.appendChild(td);
-                }
-                tradeRecordTable.appendChild(tr);
-            }
-            // collect all sid holding
-            let sidDivs = document.getElementsByClassName("Sid");
-            for (let each of sidDivs) {
-                allHoldingSids.push(each.innerHTML);
-            }
-            fetchStockSingleDay("", allHoldingSids);
-        }
+        createTradeRecordTable(myJson);
+        collectDailyInfo();
     });
+}
+function createTradeRecordTable(myJson) {
+    if (tradeRecordTable != null) {
+        for (let each in myJson["data"]) {
+            let tr = document.createElement("tr");
+            tr.className = "trade-record-table-row";
+            for (let eachField in myJson["data"][each]) {
+                let td = document.createElement("td");
+                td.className = eachField.split(" ").join("-").toLowerCase();
+                const innerInput = document.createElement("span");
+                innerInput.className = "input not-editing";
+                innerInput.setAttribute("role", "textbox");
+                innerInput.innerHTML = myJson["data"][each][eachField];
+                // innerInput.setAttribute("contenteditable", "true");
+                td.appendChild(innerInput);
+                tr.appendChild(td);
+            }
+            const status = document.createElement("td");
+            status.className = "crud";
+            const innerDiv = document.createElement("div");
+            const updateBtn = document.createElement("div");
+            updateBtn.className = "update-btn";
+            updateBtn.innerHTML = "更改";
+            // updateBtn.addEventListener("click", ...);
+            const divideLine = document.createElement("div");
+            divideLine.className = "divide-line";
+            divideLine.innerHTML = " / ";
+            const deleteBtn = document.createElement("div");
+            deleteBtn.className = "delete-btn";
+            deleteBtn.innerHTML = "刪除";
+            // deleteBtn.addEventListener("click", ...);
+            innerDiv.appendChild(updateBtn);
+            innerDiv.appendChild(divideLine);
+            innerDiv.appendChild(deleteBtn);
+            status.appendChild(innerDiv);
+            tr.appendChild(status);
+            tradeRecordTable.appendChild(tr);
+        }
+    }
+}
+function collectDailyInfo() {
+    let sidDivs = document.querySelectorAll(".sid>.input");
+    for (let each of sidDivs) {
+        allHoldingSids.push(each.innerHTML);
+    }
+    fetchStockSingleDay("", allHoldingSids);
 }
 function main() {
     recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", recordsCRUD);

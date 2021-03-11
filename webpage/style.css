@@ -1,5 +1,6 @@
 html {
     font-family: "微軟正黑體", Arial, Helvetica, sans-serif;
+    font-size: 0.9rem;
     cursor: default;
 }
 
@@ -29,22 +30,52 @@ form>label {
     border-collapse: collapse;
 }
 
-#trade-record-table th,
-#trade-record-table td {
+#trade-record-table th:nth-child(n):not(:nth-last-child(1)),
+#trade-record-table td:nth-child(n):not(:nth-last-child(1)) {
     border: 1px solid #ddd;
     padding: 5px 10px;
 }
 
-#trade-record-table th {
+#trade-record-table th:nth-last-child(1),
+#trade-record-table td:nth-last-child(1) {
+    padding: 5px 10px;
+}
+
+#trade-record-table th:nth-child(n):not(:nth-last-child(1)) {
     background-color: #4CAF50;
 }
 
-#trade-record-table tr:nth-child(even) {
+#trade-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)) {
     background-color: #f2f2f2;
 }
 
-#trade-record-table tr:hover {
+#trade-record-table tr:not(:nth-child(1)):hover>:nth-child(n):not(:nth-last-child(1)) {
     background-color: #ddd;
+}
+
+.trade-record-table-row .id\(timestamp\) {
+    font-size: 0.8rem;
+    color: #888;
+}
+
+.trade-record-table-row span.input.not-editing {
+    /* border: none;
+    background-color: transparent; */
+}
+
+.crud>div {
+    display: flex;
+    font-size: 0.8rem;
+}
+
+.crud>div>.update-btn,
+.crud>div>.delete-btn {
+    color: rgb(0, 149, 255);
+    cursor: pointer;
+}
+
+.divide-line {
+    margin: 0 2px;
 }
 
 #info-today {
