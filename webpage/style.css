@@ -28,6 +28,7 @@ form>label {
 
 #trade-record-table {
     border-collapse: collapse;
+    text-align: center;
 }
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)),
@@ -58,9 +59,20 @@ form>label {
     color: #888;
 }
 
-.trade-record-table-row span.input.not-editing {
-    /* border: none;
-    background-color: transparent; */
+.trade-record-table-row span.input {
+    border: 1px solid transparent;
+    padding: 2px 6px;
+    transition-duration: 300ms;
+}
+
+.trade-record-table-row span.input:not(.not-editing) {
+    border-color: #444;
+    border-radius: 3px;
+    background-color: #fff;
+}
+
+.trade-record-table-row span.input:not(.not-editing):hover {
+    cursor: text;
 }
 
 .crud>div {
@@ -69,9 +81,26 @@ form>label {
 }
 
 .crud>div>.update-btn,
-.crud>div>.delete-btn {
-    color: rgb(0, 149, 255);
+.crud>div>.delete-btn,
+.crud>div>.save-change-btn,
+.crud>div>.forget-change-btn {
     cursor: pointer;
+}
+
+.crud>div>.update-btn {
+    color: rgb(0, 149, 255);
+}
+
+.crud>div>.delete-btn {
+    color: rgb(193, 0, 0);
+}
+
+.crud>div>.save-change-btn {
+    color: #4CAF50;
+}
+
+.crud>div>.forget-change-btn {
+    color: #888;
 }
 
 .divide-line {

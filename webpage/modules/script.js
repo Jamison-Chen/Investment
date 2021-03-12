@@ -41,19 +41,19 @@ function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
 }
 function decideURL(date = "", sidList = [], companyNameList = []) {
     if (date != "" && sidList.length != 0) {
-        return `${endPoint}stockSingleDay?date=${date}&sidList=${sidList.join(",")}`;
+        return `${endPoint}stockSingleDay?date=${date}&sid-list=${sidList.join(",")}`;
     }
     else if (date != "" && companyNameList.length != 0) {
-        return `${endPoint}stockSingleDay?date=${date}&companyNameList=${companyNameList.join(",")}`;
+        return `${endPoint}stockSingleDay?date=${date}&companyName-list=${companyNameList.join(",")}`;
     }
     else if (date == "" && sidList.length != 0) {
-        return `${endPoint}stockSingleDay?sidList=${sidList.join(",")}`;
+        return `${endPoint}stockSingleDay?sid-list=${sidList.join(",")}`;
     }
     else if (date == "" && companyNameList.length != 0) {
-        return `${endPoint}stockSingleDay?companyNameList=${companyNameList.join(",")}`;
+        return `${endPoint}stockSingleDay?companyName-list=${companyNameList.join(",")}`;
     }
     else {
-        console.log("Please at least input sidList or company name.");
+        console.log("Please at least input sid-list or company name.");
         return null;
     }
 }
@@ -71,14 +71,12 @@ function printInfo(myJson) {
         }
     }
 }
-function recordsCRUD() {
-    let data = new URLSearchParams();
-    for (let each of allRecordFormInputs) {
-        if (each instanceof HTMLInputElement) {
-            data.append(each.name, each.value);
-        }
+function recordsCRUD(inData) {
+    let outData = new URLSearchParams();
+    for (let each in inData) {
+        outData.append(each, inData[each]);
     }
-    fetch("http://127.0.0.1:5000/records", { method: 'post', body: data });
+    fetch(`${endPoint}records`, { method: 'post', body: outData });
     return false;
 }
 function queryTradeHistoryOnLoad() {
@@ -106,32 +104,39 @@ function createTradeRecordTable(myJson) {
                 innerInput.className = "input not-editing";
                 innerInput.setAttribute("role", "textbox");
                 innerInput.innerHTML = myJson["data"][each][eachField];
-                // innerInput.setAttribute("contenteditable", "true");
                 td.appendChild(innerInput);
                 tr.appendChild(td);
             }
-            const status = document.createElement("td");
-            status.className = "crud";
-            const innerDiv = document.createElement("div");
-            const updateBtn = document.createElement("div");
-            updateBtn.className = "update-btn";
-            updateBtn.innerHTML = "更改";
-            // updateBtn.addEventListener("click", ...);
-            const divideLine = document.createElement("div");
-            divideLine.className = "divide-line";
-            divideLine.innerHTML = " / ";
-            const deleteBtn = document.createElement("div");
-            deleteBtn.className = "delete-btn";
-            deleteBtn.innerHTML = "刪除";
-            // deleteBtn.addEventListener("click", ...);
-            innerDiv.appendChild(updateBtn);
-            innerDiv.appendChild(divideLine);
-            innerDiv.appendChild(deleteBtn);
-            status.appendChild(innerDiv);
-            tr.appendChild(status);
+            const crud = document.createElement("td");
+            crud.className = "crud";
+            const btnConfigList = [
+                { "btnClassName": "update-btn", "btnDisplayName": "更改", "cllbackFunc": updateTradeRecord },
+                { "btnClassName": "delete-btn", "btnDisplayName": "刪除", "cllbackFunc": deleteTradeRecord }
+            ];
+            let updateDeleteDiv = appendUpdateDeleteDiv(btnConfigList);
+            crud.appendChild(updateDeleteDiv);
+            tr.appendChild(crud);
             tradeRecordTable.appendChild(tr);
         }
     }
+}
+function appendUpdateDeleteDiv(btnConfigList) {
+    const innerDiv = document.createElement("div");
+    const btn1 = document.createElement("div");
+    btn1.className = btnConfigList[0]["btnClassName"];
+    btn1.innerHTML = btnConfigList[0]["btnDisplayName"];
+    btn1.addEventListener("click", (e) => btnConfigList[0]["cllbackFunc"](e));
+    const divideLine = document.createElement("div");
+    divideLine.className = "divide-line";
+    divideLine.innerHTML = " / ";
+    const btn2 = document.createElement("div");
+    btn2.className = btnConfigList[1]["btnClassName"];
+    btn2.innerHTML = btnConfigList[1]["btnDisplayName"];
+    btn2.addEventListener("click", (e) => btnConfigList[1]["cllbackFunc"](e));
+    innerDiv.appendChild(btn1);
+    innerDiv.appendChild(divideLine);
+    innerDiv.appendChild(btn2);
+    return innerDiv;
 }
 function collectDailyInfo() {
     let sidDivs = document.querySelectorAll(".sid>.input");
@@ -140,8 +145,79 @@ function collectDailyInfo() {
     }
     fetchStockSingleDay("", allHoldingSids);
 }
+function updateTradeRecord(e) {
+    let temp = e.target;
+    while (temp instanceof HTMLElement && temp.parentNode != null && temp.className != "trade-record-table-row") {
+        temp = temp.parentNode;
+    }
+    if (temp instanceof HTMLElement) {
+        let allInputSpans = temp.querySelectorAll(".input.not-editing");
+        for (let each of allInputSpans) {
+            if (each.parentNode instanceof HTMLElement && each.parentNode.className != "id") {
+                each.classList.remove("not-editing");
+                each.setAttribute("contenteditable", "true");
+            }
+        }
+        // change the words displayed in the crud div of the target row
+        let crud = temp.querySelector(".crud");
+        const btnConfigList = [
+            { "btnClassName": "save-change-btn", "btnDisplayName": "儲存", "cllbackFunc": saveUpdate },
+            { "btnClassName": "forget-change-btn", "btnDisplayName": "取消", "cllbackFunc": forgetUpdate }
+        ];
+        let saveForgetDiv = appendUpdateDeleteDiv(btnConfigList);
+        if (crud instanceof HTMLElement) {
+            crud.innerHTML = "";
+            crud.appendChild(saveForgetDiv);
+        }
+        // temporarily remove the crud divs of all the other rows
+        let rows = document.getElementsByClassName("trade-record-table-row");
+        for (let each of rows) {
+            if (each != temp) {
+                let crudOfOtherRow = each.querySelector(".crud");
+                if (crudOfOtherRow instanceof HTMLElement) {
+                    crudOfOtherRow.style.display = "none";
+                }
+            }
+        }
+    }
+}
+function deleteTradeRecord(e) {
+    if (window.confirm("確定要刪除此筆交易紀錄嗎？\n刪除後將無法復原！")) {
+        let temp = e.target;
+        while (temp instanceof HTMLElement && temp.parentNode != null && temp.className != "trade-record-table-row") {
+            temp = temp.parentNode;
+        }
+        let data = { "mode": "delete" };
+        if (temp instanceof HTMLElement) {
+            for (let each of temp.childNodes) {
+                if (each instanceof HTMLElement) {
+                    if (each.className == "id") {
+                        data[each.className] = each.innerText;
+                    }
+                }
+            }
+        }
+        recordsCRUD(data);
+        location.reload();
+    }
+}
+// TODO
+function saveUpdate(e) {
+}
+// TODO
+function forgetUpdate(e) {
+}
 function main() {
-    recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", recordsCRUD);
+    recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", doSubmit);
     queryTradeHistoryOnLoad();
+}
+function doSubmit() {
+    let data = {};
+    for (let each of allRecordFormInputs) {
+        if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
+            data[each.name] = each.value;
+        }
+    }
+    recordsCRUD(data);
 }
 main();
