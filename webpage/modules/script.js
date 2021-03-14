@@ -103,15 +103,17 @@ function createTradeRecordTable(myJson) {
                 const innerInput = document.createElement("span");
                 innerInput.className = "input not-editing";
                 innerInput.setAttribute("role", "textbox");
+                innerInput.setAttribute("type", "number");
                 innerInput.innerHTML = myJson["data"][each][eachField];
                 td.appendChild(innerInput);
                 tr.appendChild(td);
             }
+            // show the update/delete btn at the end of each row
             const crud = document.createElement("td");
             crud.className = "crud";
             const btnConfigList = [
-                { "btnClassName": "update-btn", "btnDisplayName": "更改", "cllbackFunc": updateTradeRecord },
-                { "btnClassName": "delete-btn", "btnDisplayName": "刪除", "cllbackFunc": deleteTradeRecord }
+                { "btnClassName": "update-btn", "btnDisplayName": "更改", "cllbackFunc": updateTradeRecord, "args": {} },
+                { "btnClassName": "delete-btn", "btnDisplayName": "刪除", "cllbackFunc": deleteTradeRecord, "args": {} }
             ];
             let updateDeleteDiv = appendUpdateDeleteDiv(btnConfigList);
             crud.appendChild(updateDeleteDiv);
@@ -125,14 +127,14 @@ function appendUpdateDeleteDiv(btnConfigList) {
     const btn1 = document.createElement("div");
     btn1.className = btnConfigList[0]["btnClassName"];
     btn1.innerHTML = btnConfigList[0]["btnDisplayName"];
-    btn1.addEventListener("click", (e) => btnConfigList[0]["cllbackFunc"](e));
+    btn1.addEventListener("click", (e) => btnConfigList[0]["cllbackFunc"](e, btnConfigList[0]["args"]));
     const divideLine = document.createElement("div");
     divideLine.className = "divide-line";
     divideLine.innerHTML = " / ";
     const btn2 = document.createElement("div");
     btn2.className = btnConfigList[1]["btnClassName"];
     btn2.innerHTML = btnConfigList[1]["btnDisplayName"];
-    btn2.addEventListener("click", (e) => btnConfigList[1]["cllbackFunc"](e));
+    btn2.addEventListener("click", (e) => btnConfigList[1]["cllbackFunc"](e, btnConfigList[1]["args"]));
     innerDiv.appendChild(btn1);
     innerDiv.appendChild(divideLine);
     innerDiv.appendChild(btn2);
@@ -146,50 +148,30 @@ function collectDailyInfo() {
     fetchStockSingleDay("", allHoldingSids);
 }
 function updateTradeRecord(e) {
-    let temp = e.target;
-    while (temp instanceof HTMLElement && temp.parentNode != null && temp.className != "trade-record-table-row") {
-        temp = temp.parentNode;
-    }
-    if (temp instanceof HTMLElement) {
-        let allInputSpans = temp.querySelectorAll(".input.not-editing");
+    let targetRowDOM = findEditedRow(e);
+    let copyOriginal = {};
+    if (targetRowDOM instanceof HTMLElement) {
+        let allInputSpans = targetRowDOM.querySelectorAll(".input.not-editing");
         for (let each of allInputSpans) {
-            if (each.parentNode instanceof HTMLElement && each.parentNode.className != "id") {
+            // find each table td of the row being edited
+            if (each.parentNode instanceof HTMLElement && each.parentNode.className != "id" && each.parentNode.className != "company-name") {
                 each.classList.remove("not-editing");
                 each.setAttribute("contenteditable", "true");
+                // copy original data
+                copyOriginal[each.parentNode.className] = each.innerHTML;
             }
         }
         // change the words displayed in the crud div of the target row
-        let crud = temp.querySelector(".crud");
-        const btnConfigList = [
-            { "btnClassName": "save-change-btn", "btnDisplayName": "儲存", "cllbackFunc": saveUpdate },
-            { "btnClassName": "forget-change-btn", "btnDisplayName": "取消", "cllbackFunc": forgetUpdate }
-        ];
-        let saveForgetDiv = appendUpdateDeleteDiv(btnConfigList);
-        if (crud instanceof HTMLElement) {
-            crud.innerHTML = "";
-            crud.appendChild(saveForgetDiv);
-        }
-        // temporarily remove the crud divs of all the other rows
-        let rows = document.getElementsByClassName("trade-record-table-row");
-        for (let each of rows) {
-            if (each != temp) {
-                let crudOfOtherRow = each.querySelector(".crud");
-                if (crudOfOtherRow instanceof HTMLElement) {
-                    crudOfOtherRow.style.display = "none";
-                }
-            }
-        }
+        changeRowEndDiv("clickUpdate", targetRowDOM, { "copy-original": copyOriginal });
     }
+    window.addEventListener("keypress", preventSpaceAndNewLine);
 }
 function deleteTradeRecord(e) {
     if (window.confirm("確定要刪除此筆交易紀錄嗎？\n刪除後將無法復原！")) {
-        let temp = e.target;
-        while (temp instanceof HTMLElement && temp.parentNode != null && temp.className != "trade-record-table-row") {
-            temp = temp.parentNode;
-        }
+        let targetRowDOM = findEditedRow(e);
         let data = { "mode": "delete" };
-        if (temp instanceof HTMLElement) {
-            for (let each of temp.childNodes) {
+        if (targetRowDOM instanceof HTMLElement) {
+            for (let each of targetRowDOM.childNodes) {
                 if (each instanceof HTMLElement) {
                     if (each.className == "id") {
                         data[each.className] = each.innerText;
@@ -201,11 +183,83 @@ function deleteTradeRecord(e) {
         location.reload();
     }
 }
-// TODO
 function saveUpdate(e) {
+    let targetRowDOM = findEditedRow(e);
+    let newData = { "mode": "update" };
+    if (targetRowDOM instanceof HTMLElement) {
+        let allInputSpans = targetRowDOM.querySelectorAll(".input");
+        for (let each of allInputSpans) {
+            // find each table td of the row being edited
+            if (each.parentNode instanceof HTMLElement) {
+                if (each.parentNode.className != "id" && each.parentNode.className != "company-name") {
+                    each.classList.add("not-editing");
+                    each.setAttribute("contenteditable", "false");
+                }
+                newData[each.parentNode.className] = each.innerHTML;
+            }
+        }
+        recordsCRUD(newData);
+        // change the words displayed in the crud div of the target row
+        changeRowEndDiv("clickSave", targetRowDOM, { "copy-original": newData });
+        location.reload();
+    }
+    window.removeEventListener("keypress", preventSpaceAndNewLine);
 }
-// TODO
-function forgetUpdate(e) {
+function forgetUpdate(e, args) {
+    let targetRowDOM = findEditedRow(e);
+    if (targetRowDOM instanceof HTMLElement) {
+        let allInputSpans = targetRowDOM.querySelectorAll(".input");
+        for (let each of allInputSpans) {
+            // find each table td of the row being edited
+            if (each.parentNode instanceof HTMLElement && each.parentNode.className != "id" && each.parentNode.className != "company-name") {
+                each.classList.add("not-editing");
+                each.setAttribute("contenteditable", "false");
+                // set original data back
+                each.innerHTML = args["copy-original"][each.parentNode.className];
+            }
+        }
+        // change the words displayed in the crud div of the target row
+        changeRowEndDiv("clickCancel", targetRowDOM, {});
+    }
+    window.removeEventListener("keypress", preventSpaceAndNewLine);
+}
+function findEditedRow(e) {
+    let temp = e.target;
+    // find the row being edited
+    while (temp instanceof HTMLElement && temp.parentNode != null && temp.className != "trade-record-table-row") {
+        temp = temp.parentNode;
+    }
+    return temp instanceof HTMLElement ? temp : null;
+}
+function changeRowEndDiv(type, targetRowDOM, args) {
+    let crud = targetRowDOM.querySelector(".crud");
+    let btnConfigList = [];
+    if (type == "clickUpdate") {
+        btnConfigList = [
+            { "btnClassName": "save-change-btn", "btnDisplayName": "儲存", "cllbackFunc": saveUpdate, "args": {} },
+            { "btnClassName": "forget-change-btn", "btnDisplayName": "取消", "cllbackFunc": forgetUpdate, "args": { "copy-original": args["copy-original"] } }
+        ];
+    }
+    else {
+        btnConfigList = [
+            { "btnClassName": "update-btn", "btnDisplayName": "更改", "cllbackFunc": updateTradeRecord, "args": {} },
+            { "btnClassName": "delete-btn", "btnDisplayName": "刪除", "cllbackFunc": deleteTradeRecord, "args": {} }
+        ];
+    }
+    let newDiv = appendUpdateDeleteDiv(btnConfigList);
+    if (crud instanceof HTMLElement) {
+        crud.innerHTML = "";
+        crud.appendChild(newDiv);
+    }
+    let rows = document.getElementsByClassName("trade-record-table-row");
+    for (let each of rows) {
+        if (each != targetRowDOM) {
+            let crudOfOtherRow = each.querySelector(".crud");
+            if (crudOfOtherRow instanceof HTMLElement) {
+                crudOfOtherRow.style.display = type == "clickUpdate" ? "none" : "";
+            }
+        }
+    }
 }
 function main() {
     recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", doSubmit);
@@ -219,5 +273,10 @@ function doSubmit() {
         }
     }
     recordsCRUD(data);
+}
+function preventSpaceAndNewLine(e) {
+    if (e instanceof KeyboardEvent && (e.keyCode == 13 || e.keyCode == 32)) {
+        e.preventDefault();
+    }
 }
 main();

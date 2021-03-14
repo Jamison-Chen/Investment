@@ -43,7 +43,8 @@ form>label {
 }
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)) {
-    background-color: #4CAF50;
+    background-color: #000;
+    color: #fff;
 }
 
 #trade-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)) {
@@ -54,7 +55,7 @@ form>label {
     background-color: #ddd;
 }
 
-.trade-record-table-row .id\(timestamp\) {
+.trade-record-table-row .id {
     font-size: 0.8rem;
     color: #888;
 }
