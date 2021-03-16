@@ -12,70 +12,65 @@
 </head>
 
 <body id="body">
-    <div id="comprehensive-assets-chart"></div>
-    <!-- <div id="query-form">
-        <label>
-            <div>Date:</div>
-            <input type="text" name="" id="date" class="form-input">
-        </label>
-        <label>
-            <div>Sid:</div>
-            <input type="text" name="" id="sid" class="form-input">
-        </label>
-        <label>
-            <div>Company Name:</div>
-            <input type="text" name="" id="companyName" class="form-input">
-        </label>
-        <input type="button" value="Query" id="query-btn">
-    </div> -->
-    <form id="record-form">
-        <label>
-            <div>Mode:</div>
-            <input type="text" name="mode" id="mode-record" class="record-form-input form-input">
-        </label>
-        <label>
-            <div>Id:</div>
-            <input type="text" name="id" id="id-record" class="record-form-input form-input">
-        </label>
-        <label>
-            <div>Deal Time:</div>
-            <input type="text" name="deal-time" id="deal-time--record" class="record-form-input form-input">
-        </label>
-        <label>
-            <div>Sid:</div>
-            <input type="text" name="sid" id="sid-record" class="record-form-input form-input">
-        </label>
-        <label>
-            <div>Company Name:</div>
-            <input type="text" name="company-name" id="company-name-record" class="record-form-input form-input">
-        </label>
-        <label>
-            <div>Deal Price:</div>
-            <input type="text" name="deal-price" id="deal-price-record" class="record-form-input form-input">
-        </label>
-        <label>
-            <div>Deal Quantity:</div>
-            <input type="text" name="deal-quantity" id="deal-quantity-record" class="record-form-input form-input">
-        </label>
-        <label>
-            <div>Handling Fee:</div>
-            <input type="text" name="handling-fee" id="handling-fee-record" class="record-form-input form-input">
-        </label>
-        <input type="submit" id="submit-btn" value="Submit">
-    </form>
-    <table id="trade-record-table">
-        <tr id="trade-record-table-head">
-            <th>ID</th>
-            <th>成交日期</th>
-            <th>證券代號</th>
-            <th>公司名稱</th>
-            <th>每股價格</th>
-            <th>成交數量(股)</th>
-            <th>手續費用</th>
-            <th></th>
-        </tr>
-    </table>
-    <div id="info-today"></div>
+    <div id="main">
+        <div class="chart-container">
+            <div id="fund-invested-chart"></div>
+            <div id="cumulative-assets-chart"></div>
+        </div>
+
+        <div id="create-trade-record-btn-container">
+            <div id="create-trade-record-btn">+ New Trade</div>
+        </div>
+        <div id="create-trade-record-form-container">
+            <form id="create-record-form">
+                <label>
+                    <div>Deal Time:</div>
+                    <input type="text" name="deal-time" id="deal-time--record" class="record-form-input form-input">
+                </label>
+                <label>
+                    <div>Sid:</div>
+                    <input type="text" name="sid" id="sid-record" class="record-form-input form-input">
+                </label>
+                <label>
+                    <div>Company Name:</div>
+                    <input type="text" name="company-name" id="company-name-record" class="record-form-input form-input">
+                </label>
+                <label>
+                    <div>Deal Price:</div>
+                    <input type="text" name="deal-price" id="deal-price-record" class="record-form-input form-input">
+                </label>
+                <label>
+                    <div>Deal Quantity:</div>
+                    <input type="text" name="deal-quantity" id="deal-quantity-record" class="record-form-input form-input">
+                </label>
+                <label>
+                    <div>Handling Fee:</div>
+                    <input type="text" name="handling-fee" id="handling-fee-record" class="record-form-input form-input">
+                </label>
+                <div id="submit-btn">Create</div>
+            </form>
+        </div>
+        <div id="table-and-stock-info-container">
+            <div class="table-container">
+                <div id="trade-record-table-title" class="table-title">交易紀錄</div>
+                <table id="trade-record-table">
+                    <tr id="trade-record-table-head">
+                        <th>ID</th>
+                        <th>成交日期</th>
+                        <th>證券代號</th>
+                        <th>公司名稱</th>
+                        <th>每股價格</th>
+                        <th>成交數量(股)</th>
+                        <th>手續費用</th>
+                        <th></th>
+                    </tr>
+                </table>
+            </div>
+            <div id="info-today"></div>
+        </div>
+        <div id="create-error">Info Not Sufficient!</div>
+    </div>
+
 </body>
 
 </html>

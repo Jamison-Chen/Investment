@@ -1,34 +1,168 @@
+:root {
+    --lightGray: #bbb;
+}
+
+::selection {
+    color: #fff;
+    background: var(--lightGray);
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    margin: 5px 0;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--lightGray);
+}
+
 html {
     font-family: "微軟正黑體", Arial, Helvetica, sans-serif;
     font-size: 0.9rem;
     cursor: default;
+    height: 100vh;
 }
 
-form {
+body {
+    margin: 0;
+    padding: 0;
+    height: inherit;
+}
+
+#main {
+    display: flex;
+    flex-direction: column;
+    height: inherit;
+}
+
+.chart-container {
+    width: inherit;
+    margin: 10px;
+    display: flex;
+    justify-content: space-around;
+}
+
+#fund-invested-chart {
+    width: max-content;
+}
+
+#create-trade-record-btn-container {
+    width: 25%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 9vh;
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+    margin: 0 auto 1vh auto;
+}
+
+#create-trade-record-btn {
+    font-size: 1.6rem;
+    font-weight: 100;
+    color: #444;
+}
+
+#create-trade-record-btn:hover {
+    color: #888;
+}
+
+#create-trade-record-form-container {
+    position: fixed;
+    top: 0%;
+    left: 0%;
+    width: 100vw;
+    height: 100vh;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+#create-record-form {
     display: flex;
     flex-direction: column;
     width: 23%;
     min-width: 270px;
     justify-content: center;
+    padding: 20px 20px 10px 20px;
+    border-radius: 5px;
+    background-color: #fff;
 }
 
-form>label {
+#create-record-form>label {
     display: flex;
     justify-content: space-between;
+    margin: 5px 0;
 }
 
 .form-input {
     width: 50%;
 }
 
-#submit-btn,
-#query-btn {
-    margin: 0 auto;
+#submit-btn {
+    font-size: 1.2rem;
+    margin: 10px auto 0 auto;
+    transition-duration: 100ms;
+}
+
+#submit-btn:hover {
+    color: #888;
+}
+
+#create-error {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    display: none;
+    text-align: center;
+    opacity: 0%;
+    background-color: rgb(191, 0, 0);
+    color: #FFF;
+    font-size: 1.2rem;
+    font-weight: bold;
+    padding: 15px 10px;
+    border-radius: 10px;
+    transition-duration: 300ms;
+}
+
+#table-and-stock-info-container {
+    display: flex;
+    overflow: hidden;
+}
+
+.table-container {
+    min-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    padding: 0 0 0 10px;
+}
+
+.table-title {
+    font-size: 1.4rem;
+    font-weight: 100;
+    margin: 20px 0;
+}
+
+#trade-record-table th {
+    position: sticky;
+    top: 0;
 }
 
 #trade-record-table {
     border-collapse: collapse;
     text-align: center;
+    width: 100%;
 }
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)),
@@ -110,6 +244,8 @@ form>label {
 
 #info-today {
     display: flex;
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 #info-today>div {

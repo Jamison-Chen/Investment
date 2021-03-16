@@ -8,18 +8,21 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-const body = document.getElementById("body");
+// const body = document.getElementById("body");
 // const inputDate = document.getElementById("date");
 // const inputSid = document.getElementById("sid");
 // const inputCompanyName = document.getElementById("companyName");
-// const queryBtn = document.getElementById("query-btn");
-const recordForm = document.getElementById("record-form");
+const createRecordBtn = document.getElementById("create-trade-record-btn");
+const createRecordContainer = document.getElementById("create-trade-record-form-container");
+const createRecordForm = document.getElementById("create-record-form");
 const allRecordFormInputs = document.getElementsByClassName("record-form-input");
 const submitBtn = document.getElementById("submit-btn");
+const createErrorDiv = document.getElementById("create-error");
 const tradeRecordTable = document.getElementById("trade-record-table");
 let allHoldingSids = new Set();
 const infoToday = document.getElementById("info-today");
-const comprehensiveAssetsChart = document.getElementById('comprehensive-assets-chart');
+const fundInvestedChart = document.getElementById('fund-invested-chart');
+const todayStr = new Date().toISOString().slice(0, 10);
 // localhost api test
 const endPoint = "http://127.0.0.1:5000/";
 // remote api test
@@ -33,7 +36,7 @@ const endPoint = "http://127.0.0.1:5000/";
 // }
 // window.addEventListener("keydown", (e) => {
 //     if ((e instanceof KeyboardEvent && e.keyCode == 13)) {
-//         recordsCRUD();
+//         tradeRecordCRUD();
 //     }
 // });
 function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
@@ -81,7 +84,7 @@ function printInfo(myJson) {
         }
     }
 }
-function recordsCRUD(inData) {
+function tradeRecordCRUD(inData) {
     let outData = new URLSearchParams();
     for (let each in inData) {
         outData.append(each, inData[each]);
@@ -89,7 +92,7 @@ function recordsCRUD(inData) {
     fetch(`${endPoint}records`, { method: 'post', body: outData });
     return false;
 }
-function queryTradeHistoryOnLoad() {
+function queryTradeRecordOnLoad() {
     let data = new URLSearchParams();
     data.append("mode", "read");
     let url = `${endPoint}records`;
@@ -98,7 +101,7 @@ function queryTradeHistoryOnLoad() {
         return response.json();
     });
 }
-function createTradeRecordTable(myJson) {
+function constructTradeRecordTable(myJson) {
     if (tradeRecordTable != null) {
         for (let each in myJson["data"]) {
             let tr = document.createElement("tr");
@@ -153,6 +156,28 @@ function collectDailyInfo() {
     }
     fetchStockSingleDay("", [...allHoldingSids]);
 }
+function createTradeRecord(e) {
+    let data = { "mode": "create" };
+    let hasEmpty = false;
+    for (let each of allRecordFormInputs) {
+        if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
+            if (each.value != "") {
+                data[each.name] = each.value;
+                console.log(each.value.length);
+            }
+            else {
+                hasEmpty = true;
+            }
+        }
+    }
+    if (!hasEmpty) {
+        tradeRecordCRUD(data);
+        location.reload();
+    }
+    else {
+        infoNotSufficientError();
+    }
+}
 function updateTradeRecord(e) {
     let targetRowDOM = findEditedRow(e);
     let copyOriginal = {};
@@ -185,7 +210,7 @@ function deleteTradeRecord(e) {
                 }
             }
         }
-        recordsCRUD(data);
+        tradeRecordCRUD(data);
         location.reload();
     }
 }
@@ -204,7 +229,7 @@ function saveUpdate(e) {
                 newData[each.parentNode.className] = each.innerHTML;
             }
         }
-        recordsCRUD(newData);
+        tradeRecordCRUD(newData);
         // change the words displayed in the crud div of the target row
         changeRowEndDiv("clickSave", targetRowDOM, { "copy-original": newData });
         location.reload();
@@ -267,31 +292,11 @@ function changeRowEndDiv(type, targetRowDOM, args) {
         }
     }
 }
-function main() {
-    return __awaiter(this, void 0, void 0, function* () {
-        recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", doSubmit);
-        const jsonResponsed = yield queryTradeHistoryOnLoad();
-        createTradeRecordTable(jsonResponsed);
-        collectDailyInfo();
-        let assetsData = arrangeAssetsData("2021-03-01", "2021-03-16");
-        applyGoogleChart(assetsData);
-    });
-}
-function doSubmit() {
-    let data = {};
-    for (let each of allRecordFormInputs) {
-        if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
-            data[each.name] = each.value;
-        }
-    }
-    recordsCRUD(data);
-}
 function preventSpaceAndNewLine(e) {
     if (e instanceof KeyboardEvent && (e.keyCode == 13 || e.keyCode == 32)) {
         e.preventDefault();
     }
 }
-main();
 function arrangeAssetsData(startDateStr, endDateStr) {
     let result = [];
     if (tradeRecordTable != null) {
@@ -301,7 +306,7 @@ function arrangeAssetsData(startDateStr, endDateStr) {
             const eachDateStr = eachDate.split("-").join("");
             let dataRow;
             if (result[result.length - 1] != undefined) {
-                dataRow = [eachDateStr, ...result[result.length - 1].slice(1)];
+                dataRow = [eachDateStr, ...result[result.length - 1].slice(1, -1)];
             }
             else {
                 dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
@@ -321,9 +326,15 @@ function arrangeAssetsData(startDateStr, endDateStr) {
                     }
                 }
             }
+            const reducer = (previousValue, currentValue) => previousValue + currentValue;
+            // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
+            // [...dataRow].slice(1).reduce(reducer);
+            // if in JavaScript.
+            const total = [...dataRow].slice(1).reduce((i, j) => reducer(parseInt(`${i}`), parseInt(`${j}`)));
+            dataRow.push(total);
             result.push(dataRow);
         }
-        result = [["Date", ...allHoldingSids], ...result];
+        result = [["Date", ...allHoldingSids, "Total"], ...result];
     }
     return result;
 }
@@ -343,12 +354,55 @@ function drawChart(dataIn) {
     let data = new google.visualization.arrayToDataTable(dataIn);
     let options = {
         chart: {
-            title: 'Box Office Earnings in First Two Weeks of Opening',
-            subtitle: 'in millions of dollars (USD)'
+            title: "累計投入資金",
+            subtitle: '近一個月'
         },
         width: 500,
-        height: 300
+        height: 350
     };
-    let chart = new google.charts.Line(comprehensiveAssetsChart);
+    let chart = new google.charts.Line(fundInvestedChart);
     chart.draw(data, google.charts.Line.convertOptions(options));
 }
+function expandTradeRecordForm(e) {
+    if (submitBtn != null && createRecordContainer != null) {
+        submitBtn.addEventListener("click", createTradeRecord);
+        createRecordContainer.removeEventListener("click", expandTradeRecordForm);
+        createRecordContainer.addEventListener("click", foldTradeRecordForm);
+        createRecordContainer.style.display = "flex";
+    }
+}
+function foldTradeRecordForm(e) {
+    if (submitBtn != null && createRecordContainer != null && e.target instanceof HTMLElement && e.target.id == createRecordContainer.id) {
+        submitBtn.removeEventListener("click", createTradeRecord);
+        createRecordContainer.removeEventListener("click", foldTradeRecordForm);
+        createRecordContainer.addEventListener("click", expandTradeRecordForm);
+        createRecordContainer.style.display = "none";
+    }
+}
+function infoNotSufficientError() {
+    if (createErrorDiv != null) {
+        createErrorDiv.style.display = "unset";
+        setTimeout(() => {
+            createErrorDiv.style.opacity = "100%";
+            setTimeout(() => {
+                createErrorDiv.style.opacity = "0%";
+                setTimeout(() => {
+                    createErrorDiv.style.display = "none";
+                }, 300);
+            }, 1000);
+        });
+    }
+}
+function main() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (createRecordBtn != null) {
+            createRecordBtn.addEventListener("click", expandTradeRecordForm);
+        }
+        const jsonResponsed = yield queryTradeRecordOnLoad();
+        constructTradeRecordTable(jsonResponsed);
+        collectDailyInfo();
+        let assetsData = arrangeAssetsData("2021-02-18", todayStr);
+        applyGoogleChart(assetsData);
+    });
+}
+main();
