@@ -1,4 +1,13 @@
 "use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 const body = document.getElementById("body");
 // const inputDate = document.getElementById("date");
 // const inputSid = document.getElementById("sid");
@@ -8,8 +17,9 @@ const recordForm = document.getElementById("record-form");
 const allRecordFormInputs = document.getElementsByClassName("record-form-input");
 const submitBtn = document.getElementById("submit-btn");
 const tradeRecordTable = document.getElementById("trade-record-table");
-let allHoldingSids = [];
+let allHoldingSids = new Set();
 const infoToday = document.getElementById("info-today");
+const comprehensiveAssetsChart = document.getElementById('comprehensive-assets-chart');
 // localhost api test
 const endPoint = "http://127.0.0.1:5000/";
 // remote api test
@@ -83,13 +93,9 @@ function queryTradeHistoryOnLoad() {
     let data = new URLSearchParams();
     data.append("mode", "read");
     let url = `${endPoint}records`;
-    fetch(url, { method: 'post', body: data })
+    return fetch(url, { method: 'post', body: data })
         .then(function (response) {
         return response.json();
-    })
-        .then(function (myJson) {
-        createTradeRecordTable(myJson);
-        collectDailyInfo();
     });
 }
 function createTradeRecordTable(myJson) {
@@ -143,9 +149,9 @@ function appendUpdateDeleteDiv(btnConfigList) {
 function collectDailyInfo() {
     let sidDivs = document.querySelectorAll(".sid>.input");
     for (let each of sidDivs) {
-        allHoldingSids.push(each.innerHTML);
+        allHoldingSids.add(each.innerHTML);
     }
-    fetchStockSingleDay("", allHoldingSids);
+    fetchStockSingleDay("", [...allHoldingSids]);
 }
 function updateTradeRecord(e) {
     let targetRowDOM = findEditedRow(e);
@@ -262,8 +268,14 @@ function changeRowEndDiv(type, targetRowDOM, args) {
     }
 }
 function main() {
-    recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", doSubmit);
-    queryTradeHistoryOnLoad();
+    return __awaiter(this, void 0, void 0, function* () {
+        recordForm === null || recordForm === void 0 ? void 0 : recordForm.addEventListener("submit", doSubmit);
+        const jsonResponsed = yield queryTradeHistoryOnLoad();
+        createTradeRecordTable(jsonResponsed);
+        collectDailyInfo();
+        let assetsData = arrangeAssetsData("2021-03-01", "2021-03-16");
+        applyGoogleChart(assetsData);
+    });
 }
 function doSubmit() {
     let data = {};
@@ -280,32 +292,55 @@ function preventSpaceAndNewLine(e) {
     }
 }
 main();
-function arrangeAssetsInfo() {
+function arrangeAssetsData(startDateStr, endDateStr) {
+    let result = [];
+    if (tradeRecordTable != null) {
+        let dates = getDatesArray(new Date(startDateStr), new Date(endDateStr));
+        const allTradeHistoryRows = tradeRecordTable.getElementsByClassName("trade-record-table-row");
+        for (let eachDate of dates) {
+            const eachDateStr = eachDate.split("-").join("");
+            let dataRow;
+            if (result[result.length - 1] != undefined) {
+                dataRow = [eachDateStr, ...result[result.length - 1].slice(1)];
+            }
+            else {
+                dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
+            }
+            for (let eachRow of allTradeHistoryRows) {
+                const eachDealTime = eachRow.querySelector(".deal-time");
+                const eachSid = eachRow.querySelector(".sid");
+                const eachDealPrice = eachRow.querySelector(".deal-price");
+                const eachDealQuantity = eachRow.querySelector(".deal-quantity");
+                if (eachRow instanceof HTMLElement && eachDealTime instanceof HTMLElement && eachSid instanceof HTMLElement && eachDealPrice instanceof HTMLElement && eachDealQuantity instanceof HTMLElement) {
+                    if (parseInt(eachDealTime.innerText) == parseInt(eachDateStr)) {
+                        let idx = [...allHoldingSids].indexOf(eachSid.innerText) + 1;
+                        // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
+                        // dataRow[idx] += (parseFloat(eachDealPrice.innerText) * parseFloat(eachDealQuantity.innerText))
+                        // if in JavaScript.
+                        dataRow[idx] = parseInt(`${dataRow[idx]}`) + (parseFloat(eachDealPrice.innerText) * parseFloat(eachDealQuantity.innerText));
+                    }
+                }
+            }
+            result.push(dataRow);
+        }
+        result = [["Date", ...allHoldingSids], ...result];
+    }
+    return result;
 }
-google.charts.load('current', { 'packages': ['line'] });
-google.charts.setOnLoadCallback(drawChart);
-function drawChart() {
-    let data = new google.visualization.DataTable();
-    data.addColumn('number', 'Day');
-    data.addColumn('number', 'Guardians of the Galaxy');
-    data.addColumn('number', 'The Avengers');
-    data.addColumn('number', 'Transformers: Age of Extinction');
-    data.addRows([
-        [1, 37.8, 80.8, 41.8],
-        [2, 30.9, 69.5, 32.4],
-        [3, 25.4, 57, 25.7],
-        [4, 11.7, 18.8, 10.5],
-        [5, 11.9, 17.6, 10.4],
-        [6, 8.8, 13.6, 7.7],
-        [7, 7.6, 12.3, 9.6],
-        [8, 12.3, 29.2, 10.6],
-        [9, 16.9, 42.9, 14.8],
-        [10, 12.8, 30.9, 11.6],
-        [11, 5.3, 7.9, 4.7],
-        [12, 6.6, 8.4, 5.2],
-        [13, 4.8, 6.3, 3.6],
-        [14, 4.2, 6.2, 3.4]
-    ]);
+function getDatesArray(startDate, endDate) {
+    let result = [];
+    for (let date = new Date(startDate); date <= endDate; date.setDate(date.getDate() + 1)) {
+        result.push(new Date(date).toISOString().slice(0, 10));
+    }
+    return result;
+}
+;
+function applyGoogleChart(dataIn) {
+    google.charts.load('current', { 'packages': ['line'] });
+    google.charts.setOnLoadCallback(() => drawChart(dataIn));
+}
+function drawChart(dataIn) {
+    let data = new google.visualization.arrayToDataTable(dataIn);
     let options = {
         chart: {
             title: 'Box Office Earnings in First Two Weeks of Opening',
@@ -314,6 +349,6 @@ function drawChart() {
         width: 500,
         height: 300
     };
-    let chart = new google.charts.Line(document.getElementById('comprehensive-assets-chart'));
+    let chart = new google.charts.Line(comprehensiveAssetsChart);
     chart.draw(data, google.charts.Line.convertOptions(options));
 }
