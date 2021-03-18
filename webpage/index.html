@@ -24,27 +24,27 @@
         <div id="create-trade-record-form-container">
             <form id="create-record-form">
                 <label>
-                    <div>Deal Time:</div>
+                    <div>交易日期</div>
                     <input type="text" name="deal-time" id="deal-time--record" class="record-form-input form-input">
                 </label>
                 <label>
-                    <div>Sid:</div>
+                    <div>證券代號</div>
                     <input type="text" name="sid" id="sid-record" class="record-form-input form-input">
                 </label>
                 <label>
-                    <div>Company Name:</div>
+                    <div>公司名稱</div>
                     <input type="text" name="company-name" id="company-name-record" class="record-form-input form-input">
                 </label>
                 <label>
-                    <div>Deal Price:</div>
+                    <div>每股成交價格</div>
                     <input type="text" name="deal-price" id="deal-price-record" class="record-form-input form-input">
                 </label>
                 <label>
-                    <div>Deal Quantity:</div>
+                    <div>買(+)/賣(-)股數</div>
                     <input type="text" name="deal-quantity" id="deal-quantity-record" class="record-form-input form-input">
                 </label>
                 <label>
-                    <div>Handling Fee:</div>
+                    <div>手續費用</div>
                     <input type="text" name="handling-fee" id="handling-fee-record" class="record-form-input form-input">
                 </label>
                 <div id="submit-btn">Create</div>
@@ -58,20 +58,36 @@
         </div>
         <div id="table-and-stock-info-container">
             <div class="table-container" id="trade-record-table-container">
-                <table id="trade-record-table">
+                <table id="trade-record-table" class="table">
                     <tr id="trade-record-table-head">
                         <th>ID</th>
                         <th>成交日期</th>
                         <th>證券代號</th>
                         <th>公司名稱</th>
                         <th>每股價格</th>
-                        <th>成交數量(股)</th>
+                        <th>成交股數</th>
                         <th>手續費用</th>
                         <th></th>
                     </tr>
                 </table>
             </div>
-            <div id="stock-info-today"></div>
+            <div class="table-container" id="stock-info-table-container">
+                <table id="stock-info-table" class="table">
+                    <tr id="stock-info-table-head">
+                        <th>證券代號</th>
+                        <th>公司名稱</th>
+                        <th>成交股數</th>
+                        <th>成交筆數</th>
+                        <th>成交金額</th>
+                        <th>開盤價</th>
+                        <th>最高價</th>
+                        <th>最低價</th>
+                        <th>收盤價</th>
+                        <th>漲跌</th>
+                        <th>本益比</th>
+                    </tr>
+                </table>
+            </div>
         </div>
         <div id="create-error">Info Not Sufficient!</div>
     </div>

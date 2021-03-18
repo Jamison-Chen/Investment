@@ -1,7 +1,3 @@
-// const body = document.getElementById("body");
-// const inputDate = document.getElementById("date");
-// const inputSid = document.getElementById("sid");
-// const inputCompanyName = document.getElementById("companyName");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
 const createRecordContainer = document.getElementById("create-trade-record-form-container");
 const createRecordForm = document.getElementById("create-record-form");
@@ -12,9 +8,10 @@ const allTabs = document.getElementsByClassName("tab");
 const tradeRecordTab = document.getElementById("trade-record-tab");
 const stockInfoTab = document.getElementById("stock-info-tab");
 const tradeRecordTableContainer = document.getElementById("trade-record-table-container");
-const tradeRecordTable = document.getElementById("trade-record-table");
+const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 let allHoldingSids: Set<string> = new Set();
-const stockInfoToday = document.getElementById("stock-info-today");
+const stockInfoTableContainer = document.getElementById("stock-info-table-container");
+const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
 const fundInvestedChart = document.getElementById('fund-invested-chart');
 const todayStr = new Date().toISOString().slice(0, 10);
 
@@ -58,7 +55,7 @@ function queryTradeRecordOnLoad(): Promise<void> {
 }
 
 function constructTradeRecordTable(myJson: any): void {
-    if (tradeRecordTable != null) {
+    if (tradeRecordTableBody != null) {
         for (let each in myJson["data"]) {
             let tr = document.createElement("tr");
             tr.className = "trade-record-table-row";
@@ -83,7 +80,7 @@ function constructTradeRecordTable(myJson: any): void {
             let updateDeleteDiv = appendUpdateDeleteDiv(btnConfigList);
             crud.appendChild(updateDeleteDiv);
             tr.appendChild(crud);
-            tradeRecordTable.appendChild(tr);
+            tradeRecordTableBody.appendChild(tr);
         }
     }
 }
@@ -259,9 +256,9 @@ function preventSpaceAndNewLine(e: Event): void {
 
 function arrangeAssetsData(startDateStr: string, endDateStr: string): (string | number)[][] {
     let result: (string | number)[][] = [];
-    if (tradeRecordTable != null) {
+    if (tradeRecordTableBody != null) {
         let dates = getDatesArray(new Date(startDateStr), new Date(endDateStr));
-        const allTradeHistoryRows = tradeRecordTable.getElementsByClassName("trade-record-table-row");
+        const allTradeHistoryRows = tradeRecordTableBody.getElementsByClassName("trade-record-table-row");
         for (let eachDate of dates) {
             const eachDateStr = eachDate.split("-").join("");
             let dataRow: (string | number)[];
@@ -371,9 +368,9 @@ function collectDailyInfo(): void {
 
 function fetchStockSingleDay(date: string = "", sidList: string[] = [], companyNameList: string[] = []): void {
     const url: string | null = decideURL(date, sidList, companyNameList);
-    if (url != null && stockInfoToday != null) {
-        stockInfoToday.className = "waiting-data";
-        stockInfoToday.innerHTML = "Waiting...";
+    if (url != null && stockInfoTableContainer != null) {
+        stockInfoTableContainer.classList.add("waiting-data");
+        stockInfoTableContainer.classList.remove("data-arrived");
         fetch(url)
             .then(function (response) {
                 return response.json();
@@ -400,17 +397,31 @@ function decideURL(date: string = "", sidList: string[] = [], companyNameList: s
 }
 
 function constructStockInfoTable(myJson: any): void {
-    if (stockInfoToday != null) {
-        stockInfoToday.className = "data-arrived";
-        stockInfoToday.innerHTML = "";
+    if (stockInfoTableContainer != null && stockInfoTableBody != null) {
+        stockInfoTableContainer.classList.remove("waiting-data");
+        stockInfoTableContainer.classList.add("data-arrived");
         for (let eachStock in myJson["data"]) {
-            let d1 = document.createElement("div");
+            let tr = document.createElement("tr");
+            tr.className = "stock-info-table-row";
+            let temp: HTMLElement | undefined;
             for (let eachField in myJson["data"][eachStock]) {
-                let d2 = document.createElement("div");
-                d2.innerHTML = `${eachField}: ${myJson["data"][eachStock][eachField]}`;
-                d1.appendChild(d2);
+                if (eachField) {
+                    if (eachField.indexOf("最後") == -1) {
+                        if (eachField.indexOf("價差") == -1) {
+                            let td = document.createElement("td");
+                            td.className = eachField;
+                            td.innerHTML = myJson["data"][eachStock][eachField];
+                            tr.appendChild(td);
+                            if (eachField.indexOf("(+/-)") != -1) {
+                                temp = td;
+                            }
+                        } else if (temp instanceof HTMLElement) {
+                            temp.innerHTML += myJson["data"][eachStock][eachField];
+                        }
+                    }
+                }
             }
-            stockInfoToday.appendChild(d1);
+            stockInfoTableBody.appendChild(tr);
         }
     }
 }
@@ -424,17 +435,17 @@ function controlLowerPageTabs(): void {
 }
 
 function highlightTab(e: Event): void {
-    if (e.target instanceof HTMLElement && tradeRecordTableContainer instanceof HTMLElement && stockInfoToday instanceof HTMLElement) {
+    if (e.target instanceof HTMLElement && tradeRecordTableContainer instanceof HTMLElement && stockInfoTableContainer instanceof HTMLElement) {
         if (e.target.innerText == "交易紀錄") {
             tradeRecordTab?.classList.add("active");
             stockInfoTab?.classList.remove("active");
             tradeRecordTableContainer.classList.remove("close");
-            stockInfoToday.classList.remove("active");
+            stockInfoTableContainer.classList.remove("active");
         } else {
             stockInfoTab?.classList.add("active");
             tradeRecordTab?.classList.remove("active");
             tradeRecordTableContainer.classList.add("close");
-            stockInfoToday.classList.add("active");
+            stockInfoTableContainer.classList.add("active");
         }
     }
     // for (let each of allTabs) {
