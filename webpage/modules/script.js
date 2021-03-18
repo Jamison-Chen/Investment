@@ -18,9 +18,13 @@ const createRecordForm = document.getElementById("create-record-form");
 const allRecordFormInputs = document.getElementsByClassName("record-form-input");
 const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
+const allTabs = document.getElementsByClassName("tab");
+const tradeRecordTab = document.getElementById("trade-record-tab");
+const stockInfoTab = document.getElementById("stock-info-tab");
+const tradeRecordTableContainer = document.getElementById("trade-record-table-container");
 const tradeRecordTable = document.getElementById("trade-record-table");
 let allHoldingSids = new Set();
-const infoToday = document.getElementById("info-today");
+const stockInfoToday = document.getElementById("stock-info-today");
 const fundInvestedChart = document.getElementById('fund-invested-chart');
 const todayStr = new Date().toISOString().slice(0, 10);
 // localhost api test
@@ -39,51 +43,6 @@ const endPoint = "http://127.0.0.1:5000/";
 //         tradeRecordCRUD();
 //     }
 // });
-function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
-    const url = decideURL(date, sidList, companyNameList);
-    if (url != null && infoToday != null) {
-        infoToday.innerHTML = "Waiting...";
-        fetch(url)
-            .then(function (response) {
-            return response.json();
-        })
-            .then(function (myJson) {
-            printInfo(myJson);
-        });
-    }
-}
-function decideURL(date = "", sidList = [], companyNameList = []) {
-    if (date != "" && sidList.length != 0) {
-        return `${endPoint}stockSingleDay?date=${date}&sid-list=${sidList.join(",")}`;
-    }
-    else if (date != "" && companyNameList.length != 0) {
-        return `${endPoint}stockSingleDay?date=${date}&companyName-list=${companyNameList.join(",")}`;
-    }
-    else if (date == "" && sidList.length != 0) {
-        return `${endPoint}stockSingleDay?sid-list=${sidList.join(",")}`;
-    }
-    else if (date == "" && companyNameList.length != 0) {
-        return `${endPoint}stockSingleDay?companyName-list=${companyNameList.join(",")}`;
-    }
-    else {
-        console.log("Please at least input sid-list or company name.");
-        return null;
-    }
-}
-function printInfo(myJson) {
-    if (infoToday != null) {
-        infoToday.innerHTML = "";
-        for (let eachStock in myJson["data"]) {
-            let d1 = document.createElement("div");
-            for (let eachField in myJson["data"][eachStock]) {
-                let d2 = document.createElement("div");
-                d2.innerHTML = `${eachField}: ${myJson["data"][eachStock][eachField]}`;
-                d1.appendChild(d2);
-            }
-            infoToday.appendChild(d1);
-        }
-    }
-}
 function tradeRecordCRUD(inData) {
     let outData = new URLSearchParams();
     for (let each in inData) {
@@ -131,31 +90,6 @@ function constructTradeRecordTable(myJson) {
         }
     }
 }
-function appendUpdateDeleteDiv(btnConfigList) {
-    const innerDiv = document.createElement("div");
-    const btn1 = document.createElement("div");
-    btn1.className = btnConfigList[0]["btnClassName"];
-    btn1.innerHTML = btnConfigList[0]["btnDisplayName"];
-    btn1.addEventListener("click", (e) => btnConfigList[0]["cllbackFunc"](e, btnConfigList[0]["args"]));
-    const divideLine = document.createElement("div");
-    divideLine.className = "divide-line";
-    divideLine.innerHTML = " / ";
-    const btn2 = document.createElement("div");
-    btn2.className = btnConfigList[1]["btnClassName"];
-    btn2.innerHTML = btnConfigList[1]["btnDisplayName"];
-    btn2.addEventListener("click", (e) => btnConfigList[1]["cllbackFunc"](e, btnConfigList[1]["args"]));
-    innerDiv.appendChild(btn1);
-    innerDiv.appendChild(divideLine);
-    innerDiv.appendChild(btn2);
-    return innerDiv;
-}
-function collectDailyInfo() {
-    let sidDivs = document.querySelectorAll(".sid>.input");
-    for (let each of sidDivs) {
-        allHoldingSids.add(each.innerHTML);
-    }
-    fetchStockSingleDay("", [...allHoldingSids]);
-}
 function createTradeRecord(e) {
     let data = { "mode": "create" };
     let hasEmpty = false;
@@ -177,6 +111,24 @@ function createTradeRecord(e) {
     else {
         infoNotSufficientError();
     }
+}
+function appendUpdateDeleteDiv(btnConfigList) {
+    const innerDiv = document.createElement("div");
+    const btn1 = document.createElement("div");
+    btn1.className = btnConfigList[0]["btnClassName"];
+    btn1.innerHTML = btnConfigList[0]["btnDisplayName"];
+    btn1.addEventListener("click", (e) => btnConfigList[0]["cllbackFunc"](e, btnConfigList[0]["args"]));
+    const divideLine = document.createElement("div");
+    divideLine.className = "divide-line";
+    divideLine.innerHTML = " / ";
+    const btn2 = document.createElement("div");
+    btn2.className = btnConfigList[1]["btnClassName"];
+    btn2.innerHTML = btnConfigList[1]["btnDisplayName"];
+    btn2.addEventListener("click", (e) => btnConfigList[1]["cllbackFunc"](e, btnConfigList[1]["args"]));
+    innerDiv.appendChild(btn1);
+    innerDiv.appendChild(divideLine);
+    innerDiv.appendChild(btn2);
+    return innerDiv;
 }
 function updateTradeRecord(e) {
     let targetRowDOM = findEditedRow(e);
@@ -357,8 +309,8 @@ function drawChart(dataIn) {
             title: "累計投入資金",
             subtitle: '近一個月'
         },
-        width: 500,
-        height: 350
+        width: window.innerWidth / 2.7,
+        height: window.innerHeight / 2
     };
     let chart = new google.charts.Line(fundInvestedChart);
     chart.draw(data, google.charts.Line.convertOptions(options));
@@ -393,6 +345,92 @@ function infoNotSufficientError() {
         });
     }
 }
+function collectDailyInfo() {
+    let sidDivs = document.querySelectorAll(".sid>.input");
+    for (let each of sidDivs) {
+        allHoldingSids.add(each.innerHTML);
+    }
+    fetchStockSingleDay("", [...allHoldingSids]);
+}
+function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
+    const url = decideURL(date, sidList, companyNameList);
+    if (url != null && stockInfoToday != null) {
+        stockInfoToday.className = "waiting-data";
+        stockInfoToday.innerHTML = "Waiting...";
+        fetch(url)
+            .then(function (response) {
+            return response.json();
+        })
+            .then(function (myJson) {
+            constructStockInfoTable(myJson);
+        });
+    }
+}
+function decideURL(date = "", sidList = [], companyNameList = []) {
+    if (date != "" && sidList.length != 0) {
+        return `${endPoint}stockSingleDay?date=${date}&sid-list=${sidList.join(",")}`;
+    }
+    else if (date != "" && companyNameList.length != 0) {
+        return `${endPoint}stockSingleDay?date=${date}&companyName-list=${companyNameList.join(",")}`;
+    }
+    else if (date == "" && sidList.length != 0) {
+        return `${endPoint}stockSingleDay?sid-list=${sidList.join(",")}`;
+    }
+    else if (date == "" && companyNameList.length != 0) {
+        return `${endPoint}stockSingleDay?companyName-list=${companyNameList.join(",")}`;
+    }
+    else {
+        console.log("Please at least input sid-list or company name.");
+        return null;
+    }
+}
+function constructStockInfoTable(myJson) {
+    if (stockInfoToday != null) {
+        stockInfoToday.className = "data-arrived";
+        stockInfoToday.innerHTML = "";
+        for (let eachStock in myJson["data"]) {
+            let d1 = document.createElement("div");
+            for (let eachField in myJson["data"][eachStock]) {
+                let d2 = document.createElement("div");
+                d2.innerHTML = `${eachField}: ${myJson["data"][eachStock][eachField]}`;
+                d1.appendChild(d2);
+            }
+            stockInfoToday.appendChild(d1);
+        }
+    }
+}
+function controlLowerPageTabs() {
+    for (let each of allTabs) {
+        if (each instanceof HTMLElement) {
+            each.addEventListener("click", highlightTab);
+        }
+    }
+}
+function highlightTab(e) {
+    if (e.target instanceof HTMLElement && tradeRecordTableContainer instanceof HTMLElement && stockInfoToday instanceof HTMLElement) {
+        if (e.target.innerText == "交易紀錄") {
+            tradeRecordTab === null || tradeRecordTab === void 0 ? void 0 : tradeRecordTab.classList.add("active");
+            stockInfoTab === null || stockInfoTab === void 0 ? void 0 : stockInfoTab.classList.remove("active");
+            tradeRecordTableContainer.classList.remove("close");
+            stockInfoToday.classList.remove("active");
+        }
+        else {
+            stockInfoTab === null || stockInfoTab === void 0 ? void 0 : stockInfoTab.classList.add("active");
+            tradeRecordTab === null || tradeRecordTab === void 0 ? void 0 : tradeRecordTab.classList.remove("active");
+            tradeRecordTableContainer.classList.add("close");
+            stockInfoToday.classList.add("active");
+        }
+    }
+    // for (let each of allTabs) {
+    //     if (each instanceof HTMLElement && e.target instanceof HTMLElement) {
+    //         if (each.innerText != e.target.innerText) {
+    //             each.classList.remove("active");
+    //         } else {
+    //             each.classList.add("active");
+    //         }
+    //     }
+    // }
+}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         if (createRecordBtn != null) {
@@ -403,6 +441,7 @@ function main() {
         collectDailyInfo();
         let assetsData = arrangeAssetsData("2021-02-18", todayStr);
         applyGoogleChart(assetsData);
+        controlLowerPageTabs();
     });
 }
 main();

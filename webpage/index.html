@@ -50,9 +50,14 @@
                 <div id="submit-btn">Create</div>
             </form>
         </div>
+        <div class=tab-container>
+            <div class="tabs clearfix">
+                <div id="trade-record-tab" class="tab active">交易紀錄</div>
+                <div id="stock-info-tab" class="tab">證券資訊</div>
+            </div>
+        </div>
         <div id="table-and-stock-info-container">
-            <div class="table-container">
-                <div id="trade-record-table-title" class="table-title">交易紀錄</div>
+            <div class="table-container" id="trade-record-table-container">
                 <table id="trade-record-table">
                     <tr id="trade-record-table-head">
                         <th>ID</th>
@@ -66,7 +71,7 @@
                     </tr>
                 </table>
             </div>
-            <div id="info-today"></div>
+            <div id="stock-info-today"></div>
         </div>
         <div id="create-error">Info Not Sufficient!</div>
     </div>

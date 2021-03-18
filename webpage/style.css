@@ -1,4 +1,5 @@
 :root {
+    --bgc: #fff;
     --lightGray: #bbb;
 }
 
@@ -56,7 +57,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 9vh;
+    min-height: 8vh;
     border-top: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
     margin: 0 auto 1vh auto;
@@ -93,7 +94,7 @@ body {
     justify-content: center;
     padding: 20px 20px 10px 20px;
     border-radius: 5px;
-    background-color: #fff;
+    background-color: var(--bgc);
 }
 
 #create-record-form>label {
@@ -125,7 +126,7 @@ body {
     text-align: center;
     opacity: 0%;
     background-color: rgb(191, 0, 0);
-    color: #FFF;
+    color: #efefef;
     font-size: 1.2rem;
     font-weight: bold;
     padding: 15px 10px;
@@ -133,13 +134,100 @@ body {
     transition-duration: 300ms;
 }
 
+.tab-container {
+    margin: 0;
+    padding: 0;
+    max-height: 25px;
+}
+
+.tabs {
+    margin: 0;
+    line-height: 25px;
+    max-height: 25px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+}
+
+.clearfix:before,
+.clearfix:after {
+    content: "";
+    display: table;
+}
+
+.clearfix:after {
+    clear: both;
+}
+
+.clearfix {
+    zoom: 1;
+}
+
+.tab.active {
+    z-index: 2;
+    background: #fefefe;
+}
+
+.tab.active:before {
+    border-color: transparent #fefefe transparent transparent;
+}
+
+.tab.active:after {
+    border-color: transparent transparent transparent #fefefe;
+}
+
+.tab {
+    float: right;
+    border-top-right-radius: 10px;
+    border-top-left-radius: 10px;
+    padding: 0 30px 0 25px;
+    height: 170px;
+    background: #efefef;
+    position: relative;
+    box-shadow: 0 20px 20px rgba(0, 0, 0, 0.6);
+    max-width: 200px;
+}
+
+.tab:before,
+.tab:after {
+    content: '';
+    background: transparent;
+    height: 20px;
+    width: 20px;
+    border-radius: 100%;
+    border-width: 10px;
+    top: 0px;
+    border-style: solid;
+    position: absolute;
+}
+
+.tab:before {
+    border-color: transparent #efefef transparent transparent;
+    transform: rotate(48deg);
+    left: -30px;
+}
+
+.tab:after {
+    border-color: transparent transparent transparent #efefef;
+    transform: rotate(-48deg);
+    right: -30px;
+}
+
+.tab>span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-decoration: none;
+    color: #222;
+}
+
 #table-and-stock-info-container {
     display: flex;
     overflow: hidden;
 }
 
-.table-container {
-    min-width: 800px;
+#trade-record-table-container {
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -148,21 +236,19 @@ body {
     padding: 0 0 0 10px;
 }
 
-.table-title {
-    font-size: 1.4rem;
-    font-weight: 100;
-    margin: 20px 0;
-}
-
-#trade-record-table th {
-    position: sticky;
-    top: 0;
+#trade-record-table-container.close {
+    display: none;
 }
 
 #trade-record-table {
     border-collapse: collapse;
     text-align: center;
     width: 100%;
+}
+
+#trade-record-table th {
+    position: sticky;
+    top: 0;
 }
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)),
@@ -178,7 +264,7 @@ body {
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)) {
     background-color: #000;
-    color: #fff;
+    color: var(--bgc);
 }
 
 #trade-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)) {
@@ -203,7 +289,7 @@ body {
 .trade-record-table-row span.input:not(.not-editing) {
     border-color: #444;
     border-radius: 3px;
-    background-color: #fff;
+    background-color: var(--bgc);
 }
 
 .trade-record-table-row span.input:not(.not-editing):hover {
@@ -242,12 +328,27 @@ body {
     margin: 0 2px;
 }
 
-#info-today {
-    display: flex;
+#stock-info-today {
+    display: none;
+    width: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
 }
 
-#info-today>div {
+#stock-info-today.active {
+    display: flex;
+}
+
+#stock-info-today.waiting-data {
+    justify-content: center;
+    align-items: center;
+}
+
+#stock-info-today.data-arrived {
+    justify-content: center;
+    align-items: flex-start;
+}
+
+#stock-info-today>div {
     margin: 10px 20px;
 }
