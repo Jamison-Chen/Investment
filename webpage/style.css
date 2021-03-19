@@ -6,12 +6,14 @@
 @media screen and (min-width:1024px) {
      :root {
         --tradeRecordTableWidth: 80%;
+        --stockInfoTableWidth: 70%;
     }
 }
 
 @media screen and (max-width:1024px) {
      :root {
         --tradeRecordTableWidth: 100%;
+        --stockInfoTableWidth: 100%;
     }
 }
 
@@ -262,12 +264,19 @@ body {
 .table {
     border-collapse: collapse;
     text-align: center;
-    width: var(--tradeRecordTableWidth);
 }
 
 .table th {
     position: sticky;
     top: 0;
+}
+
+#trade-record-table {
+    width: var(--tradeRecordTableWidth);
+}
+
+#stock-info-table {
+    width: var(--stockInfoTableWidth);
 }
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)),
@@ -358,13 +367,4 @@ body {
 
 #stock-info-table-container.active {
     display: flex;
-    /* justify-content: center; */
-}
-
-#stock-info-table-container.waiting-data {
-    /* align-items: center; */
-}
-
-#stock-info-table-container.data-arrived {
-    /* align-items: flex-start; */
 }

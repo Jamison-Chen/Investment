@@ -63,15 +63,17 @@ function constructTradeRecordTable(myJson) {
             let tr = document.createElement("tr");
             tr.className = "trade-record-table-row";
             for (let eachField in myJson["data"][each]) {
-                let td = document.createElement("td");
-                td.className = eachField.split(" ").join("-").toLowerCase();
-                const innerInput = document.createElement("span");
-                innerInput.className = "input not-editing";
-                innerInput.setAttribute("role", "textbox");
-                innerInput.setAttribute("type", "number");
-                innerInput.innerHTML = myJson["data"][each][eachField];
-                td.appendChild(innerInput);
-                tr.appendChild(td);
+                if (eachField.toLowerCase() != "id") {
+                    let td = document.createElement("td");
+                    td.className = eachField.split(" ").join("-").toLowerCase();
+                    const innerInput = document.createElement("span");
+                    innerInput.className = "input not-editing";
+                    innerInput.setAttribute("role", "textbox");
+                    innerInput.setAttribute("type", "number");
+                    innerInput.innerHTML = myJson["data"][each][eachField];
+                    td.appendChild(innerInput);
+                    tr.appendChild(td);
+                }
             }
             // show the update/delete btn at the end of each row
             const crud = document.createElement("td");
