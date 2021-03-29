@@ -63,17 +63,18 @@ function constructTradeRecordTable(myJson) {
             let tr = document.createElement("tr");
             tr.className = "trade-record-table-row";
             for (let eachField in myJson["data"][each]) {
-                if (eachField.toLowerCase() != "id") {
-                    let td = document.createElement("td");
-                    td.className = eachField.split(" ").join("-").toLowerCase();
-                    const innerInput = document.createElement("span");
-                    innerInput.className = "input not-editing";
-                    innerInput.setAttribute("role", "textbox");
-                    innerInput.setAttribute("type", "number");
-                    innerInput.innerHTML = myJson["data"][each][eachField];
-                    td.appendChild(innerInput);
-                    tr.appendChild(td);
+                let td = document.createElement("td");
+                td.className = eachField.split(" ").join("-").toLowerCase();
+                const innerInput = document.createElement("span");
+                innerInput.className = "input not-editing";
+                innerInput.setAttribute("role", "textbox");
+                innerInput.setAttribute("type", "number");
+                innerInput.innerHTML = myJson["data"][each][eachField];
+                td.appendChild(innerInput);
+                if (eachField.toLowerCase() == "id") {
+                    td.style.display = "none";
                 }
+                tr.appendChild(td);
             }
             // show the update/delete btn at the end of each row
             const crud = document.createElement("td");
@@ -248,7 +249,7 @@ function preventSpaceAndNewLine(e) {
         e.preventDefault();
     }
 }
-function arrangeAssetsData(startDateStr, endDateStr) {
+function arrangeAssetsDataForChart(startDateStr, endDateStr) {
     let result = [];
     if (tradeRecordTableBody != null) {
         let dates = getDatesArray(new Date(startDateStr), new Date(endDateStr));
@@ -453,7 +454,7 @@ function main() {
         const jsonResponsed = yield queryTradeRecordOnLoad();
         constructTradeRecordTable(jsonResponsed);
         collectDailyInfo();
-        let assetsData = arrangeAssetsData("2021-02-18", todayStr);
+        let assetsData = arrangeAssetsDataForChart("2021-02-18", todayStr);
         applyGoogleChart(assetsData);
         controlLowerPageTabs();
     });
