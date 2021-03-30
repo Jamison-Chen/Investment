@@ -11,13 +11,17 @@ const tradeRecordTableContainer = document.getElementById("trade-record-table-co
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 const stockInfoTableContainer = document.getElementById("stock-info-table-container");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
-const fundInvestedChart = document.getElementById('fund-invested-chart');
+const cashInvestedChart = document.getElementById('cash-invested-chart');
+const componentChart = document.getElementById('component-chart');
+const compareChart = document.getElementById('compare-chart');
 
-const todayStr = new Date().toISOString().slice(0, 10);
 let tradeRecordJson: any = {};
+let stockInfoJson: any = {};
 let allHoldingSids: Set<string> = new Set();
 let stockWarehouse: any = {};  // structure: {aSid:{aPrice:curQ, ...}, ...}
 let handlingFee = 0;
+let cashInvested = 0;
+let securityMktVal = 0;
 
 const endPoint = "http://127.0.0.1:5000/";  // localhost api test
 
@@ -50,17 +54,17 @@ function fetchTradeRecord(): Promise<void> {
 
 function buildTradeRecordTb(myData: any[]): void {
     if (tradeRecordTableBody != null) {
-        for (let each in myData) {
+        for (let eachRecord of myData) {
             let tr = document.createElement("tr");
             tr.className = "trade-record-table-row";
-            for (let eachField in myData[each]) {
+            for (let eachField in eachRecord) {
                 let td = document.createElement("td");
                 td.className = eachField;
                 const innerInput = document.createElement("span");
                 innerInput.className = "input not-editing";
                 innerInput.setAttribute("role", "textbox");
                 innerInput.setAttribute("type", "number");
-                innerInput.innerHTML = myData[each][eachField];
+                innerInput.innerHTML = eachRecord[eachField];
                 td.appendChild(innerInput);
                 // Do not show the id in the table.
                 if (eachField.toLowerCase() == "id") {
@@ -274,7 +278,8 @@ function noSpaceAndNewLine(e: Event): void {
     }
 }
 
-function cashInvChartData(startDateStr: string, endDateStr: string, tradeRecordData: any[]): (string | number)[][] {
+function cashInvChartData(endDateStr: string, tradeRecordData: any[]): (string | number)[][] {
+    let startDateStr = tradeRecordData[tradeRecordData.length - 1]["deal-time"].slice(0, 4) + "-" + tradeRecordData[tradeRecordData.length - 1]["deal-time"].slice(4, 6) + "-" + tradeRecordData[tradeRecordData.length - 1]["deal-time"].slice(6);
     let result: (string | number)[][] = [];
     let dates = getDatesArray(new Date(startDateStr), new Date(endDateStr));
     for (let eachDate of dates) {
@@ -322,6 +327,7 @@ function cashInvChartData(startDateStr: string, endDateStr: string, tradeRecordD
                             }
                         }
                     }
+                    stockWarehouse[s][t][p] = 0;
                 }
             }
         }
@@ -335,6 +341,54 @@ function cashInvChartData(startDateStr: string, endDateStr: string, tradeRecordD
     }
     // result = [["Date", ...allHoldingSids, "Total"], ...result];
     result = [["Date", "Cash Invested"], ...result.map(i => [i[0], i[i.length - 1]])];  // only use the "total" field
+    let latestCashInv = result[result.length - 1][1];
+    if (typeof latestCashInv == "number") {
+        cashInvested = latestCashInv;
+    }
+    return result;
+}
+
+function componentChartData(): (string | number)[][] {
+    let result: (string | number)[][] = [["Sid", "Market Value"]];
+    // Count Q for each Sid
+    for (let eachStock in stockWarehouse) {
+        let eachRow = [eachStock, 0];
+        for (let eachDay in stockWarehouse[eachStock]) {
+            for (let eachP in stockWarehouse[eachStock][eachDay]) {
+                eachRow[1] += stockWarehouse[eachStock][eachDay][eachP]
+            }
+        }
+        if (eachRow[1] != 0) {
+            result.push(eachRow);
+        } else {
+            // update allHoldingSids
+            allHoldingSids.delete(eachStock);
+        }
+    }
+
+    // Q * market value
+    for (let eachStock of stockInfoJson["data"]) {
+        for (let eachResult of result) {
+            if (eachStock["證券代號"] == eachResult[0]) {
+                if (typeof eachResult[1] == "number") {
+                    eachResult[1] *= parseFloat(eachStock["收盤價"]);
+                    securityMktVal += eachResult[1];
+                }
+            }
+        }
+    }
+
+    // merge small numbers into "others"
+    let smallNum = result.filter(i => typeof i[1] == "number" && i[1] / securityMktVal < 0.05);
+    result = result.filter(i => i[1] == "Market Value" || (typeof i[1] == "number" && i[1] / securityMktVal >= 0.05));
+    let numForOthers = 0;
+    for (let each of smallNum) {
+        if (typeof each[1] == "number") {
+            numForOthers += each[1];
+        }
+    }
+    result.push(["Others", numForOthers]);
+
     return result;
 }
 
@@ -346,26 +400,78 @@ function getDatesArray(startDate: Date, endDate: Date) {
     return result;
 };
 
-function applyGoogleChart(dataIn: (string | number)[][]): void {
-    google.charts.load('current', { 'packages': ['line'] });
-    google.charts.setOnLoadCallback(() => drawChart(dataIn));
+function applyCashInvestedChart(startDate: string, dataIn: (string | number)[][]): void {
+    google.charts.load('current', { 'packages': ["line"] });
+    startDate = startDate.split("-").join("");
+    dataIn = dataIn.filter(i => i[0] == "Date" || (typeof i[0] == "string" && parseInt(i[0]) >= parseInt(startDate)));
+    google.charts.setOnLoadCallback(() => drawCashInvestedChart(dataIn));
 }
 
-function drawChart(dataIn: (string | number)[][]): void {
+function drawCashInvestedChart(dataIn: (string | number)[][]): void {
     let data = new google.visualization.arrayToDataTable(dataIn);
 
     let options = {
         chart: {
             title: "累計投入資金",
-            subtitle: '近一個月'
+            // subtitle: '近一個月'
         },
-        width: window.innerWidth / 3.5,
-        height: window.innerHeight / 2.3
+        width: window.innerWidth / 4,
+        height: window.innerHeight / 2.3,
+        legend: { position: "none" }
     };
 
-    let chart = new google.charts.Line(fundInvestedChart);
+    let chart = new google.charts.Line(cashInvestedChart);
 
     chart.draw(data, google.charts.Line.convertOptions(options));
+}
+
+function applyComponentChart(dataIn: (string | number)[][]): void {
+    google.charts.load('current', { 'packages': ["corechart"] });
+    google.charts.setOnLoadCallback(() => drawComponentChart(dataIn));
+}
+
+function drawComponentChart(dataIn: (string | number)[][]): void {
+    let data = new google.visualization.arrayToDataTable(dataIn);
+    let options = {
+        title: "證券市值佔比",
+        width: window.innerWidth / 3.5,
+        height: window.innerHeight / 2.3,
+        chartArea: { left: '10%', top: '10%', width: '80%', height: '80%' },
+        fontSize: 14
+    };
+
+    let chart = new google.visualization.PieChart(componentChart);
+
+    chart.draw(data, options);
+}
+
+function applyCompareChart(cashInvested: number, securityMktVal: number): void {
+    google.charts.load('current', { 'packages': ['corechart', 'bar'] });
+    google.charts.setOnLoadCallback(() => drawComareChart(cashInvested, securityMktVal));
+}
+
+function drawComareChart(cashInvested: number, securityMktVal: number): void {
+    let data = google.visualization.arrayToDataTable([
+        ["Assets", "Value", { role: "style" }],
+        ["Cash Invested", cashInvested, "#0a5"],
+        ["Security Mkt Val", securityMktVal, "#b00"]
+    ]);
+
+    let options = {
+        title: '投入現金與現值比較',
+        vAxis: {
+            minValue: 0
+        },
+        bar: { groupWidth: "30%" },
+        width: window.innerWidth / 3.5,
+        height: window.innerHeight / 2.3,
+        fontSize: 14,
+        legend: { position: "none" }
+    };
+
+    let chart = new google.visualization.ColumnChart(compareChart);
+
+    chart.draw(data, options);
 }
 
 function expandTradeRecordForm(e: Event): void {
@@ -401,11 +507,12 @@ function infoNotSufficientErr(): void {
     }
 }
 
-function collectAllHoldingSid(): void {
+function initAllHoldingSid(): void {
     for (let each of tradeRecordJson["data"]) {
         allHoldingSids.add(each["sid"]);
     }
 }
+
 
 function fetchStockSingleDay(date: string = "", sidList: string[] = [], companyNameList: string[] = []): Promise<void> {
     const url: string | null = decideURL(date, sidList, companyNameList);
@@ -434,32 +541,34 @@ function decideURL(date: string = "", sidList: string[] = [], companyNameList: s
     }
 }
 
-function buildStockInfoTb(myJson: any): void {
+function buildStockInfoTb(myData: any[]): void {
     if (stockInfoTableContainer != null && stockInfoTableBody != null) {
         stockInfoTableContainer.classList.remove("waiting-data");
         stockInfoTableContainer.classList.add("data-arrived");
-        for (let eachStock in myJson["data"]) {
-            let tr = document.createElement("tr");
-            tr.className = "stock-info-table-row";
-            let temp: HTMLElement | undefined;
-            for (let eachField in myJson["data"][eachStock]) {
-                if (eachField) {
-                    if (eachField.indexOf("最後") == -1) {
-                        if (eachField.indexOf("價差") == -1) {
-                            let td = document.createElement("td");
-                            td.className = eachField;
-                            td.innerHTML = myJson["data"][eachStock][eachField];
-                            tr.appendChild(td);
-                            if (eachField.indexOf("(+/-)") != -1) {
-                                temp = td;
+        for (let eachStock of myData) {
+            if (allHoldingSids.has(eachStock["證券代號"])) {
+                let tr = document.createElement("tr");
+                tr.className = "stock-info-table-row";
+                let temp: HTMLElement | undefined;
+                for (let eachField in eachStock) {
+                    if (eachField) {
+                        if (eachField.indexOf("最後") == -1) {
+                            if (eachField.indexOf("價差") == -1) {
+                                let td = document.createElement("td");
+                                td.className = eachField;
+                                td.innerHTML = eachStock[eachField];
+                                tr.appendChild(td);
+                                if (eachField.indexOf("(+/-)") != -1) {
+                                    temp = td;
+                                }
+                            } else if (temp instanceof HTMLElement) {
+                                temp.innerHTML += eachStock[eachField];
                             }
-                        } else if (temp instanceof HTMLElement) {
-                            temp.innerHTML += myJson["data"][eachStock][eachField];
                         }
                     }
                 }
+                stockInfoTableBody.appendChild(tr);
             }
-            stockInfoTableBody.appendChild(tr);
         }
     }
 }
@@ -497,27 +606,42 @@ function highlightTab(e: Event): void {
     // }
 }
 
+function getDateStr(endDate: Date, interval: string): string {
+    if (interval == "aMonth") {
+        let m = endDate.getMonth();
+        endDate.setMonth(endDate.getMonth() - 1);
+        // If still in same month, set date to last day of previous month.
+        if (endDate.getMonth() == m) endDate.setDate(0);
+        endDate.setHours(0, 0, 0, 0);
+    }
+    let result = endDate.toISOString().slice(0, 10);
+    return result;
+}
+
 async function main(): Promise<void> {
     if (createRecordBtn != null) {
         createRecordBtn.addEventListener("click", expandTradeRecordForm);
     }
-    // The chart below need info in this table, so this need to be await
+    controlTab();
+    // The cash-invested chart need info in trade-record table, so this need to be await
     tradeRecordJson = await fetchTradeRecord();
-    buildTradeRecordTb(tradeRecordJson["data"]);
-    collectAllHoldingSid();
+    initAllHoldingSid();
     buildStockWarehouse(tradeRecordJson["data"]);
 
-    fetchStockSingleDay("", [...allHoldingSids]).then(
-        function (myJson) {
-            buildStockInfoTb(myJson);
-        }
-    )
-    // const dailyInfoJson = await fetchStockSingleDay("", [...allHoldingSids]);
-    // buildStockInfoTb(dailyInfoJson);
+    let todayStr = getDateStr(new Date(), "noInterval");
+    let cashInvestedData = cashInvChartData(todayStr, tradeRecordJson["data"]);
+    let startDateStr = getDateStr(new Date(), "aMonth");
+    applyCashInvestedChart(startDateStr, cashInvestedData);
 
-    let assetsData = cashInvChartData("2021-02-18", todayStr, tradeRecordJson["data"]);
-    applyGoogleChart(assetsData);
-    controlTab();
+    // The component chart need info in stock-info table, so this need to be await
+    stockInfoJson = await fetchStockSingleDay("", [...allHoldingSids]);
+    let componentData = componentChartData();
+    applyComponentChart(componentData);
+
+    applyCompareChart(cashInvested, securityMktVal);
+
+    buildTradeRecordTb(tradeRecordJson["data"]);
+    buildStockInfoTb(stockInfoJson["data"]);
 }
 
 main();

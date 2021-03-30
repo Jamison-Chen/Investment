@@ -5,8 +5,8 @@
 
 @media screen and (min-width:1024px) {
      :root {
-        --tradeRecordTableWidth: 45%;
-        --stockInfoTableWidth: 70%;
+        --tradeRecordTableWidth: 700px;
+        --stockInfoTableWidth: 860px;
     }
 }
 
@@ -62,7 +62,9 @@ body {
     justify-content: space-around;
 }
 
-#fund-invested-chart {
+#cash-invested-chart,
+#component-chart,
+#compare-chart {
     width: max-content;
 }
 
