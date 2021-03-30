@@ -5,7 +5,7 @@
 
 @media screen and (min-width:1024px) {
      :root {
-        --tradeRecordTableWidth: 80%;
+        --tradeRecordTableWidth: 45%;
         --stockInfoTableWidth: 70%;
     }
 }
@@ -74,7 +74,7 @@ body {
     min-height: 8vh;
     border-top: 1px solid #ccc;
     border-bottom: 1px solid #ccc;
-    margin: 0 auto 1vh auto;
+    margin: 0 auto 25px auto;
 }
 
 #create-trade-record-btn {

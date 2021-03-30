@@ -19,22 +19,16 @@ const tradeRecordTab = document.getElementById("trade-record-tab");
 const stockInfoTab = document.getElementById("stock-info-tab");
 const tradeRecordTableContainer = document.getElementById("trade-record-table-container");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
-let allHoldingSids = new Set();
 const stockInfoTableContainer = document.getElementById("stock-info-table-container");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
 const fundInvestedChart = document.getElementById('fund-invested-chart');
 const todayStr = new Date().toISOString().slice(0, 10);
-// localhost api test
-const endPoint = "http://127.0.0.1:5000/";
-// remote api test
-// const endPoint = "https://stock-info-scraper.herokuapp.com/";
-// if (queryBtn != null) {
-//     queryBtn.addEventListener("click", (e) => {
-//         if (inputDate instanceof HTMLInputElement && inputSid instanceof HTMLInputElement && inputCompanyName instanceof HTMLInputElement) {
-//             // fetchSingleStockSingleDay();
-//         }
-//     });
-// }
+let tradeRecordJson = {};
+let allHoldingSids = new Set();
+let stockWarehouse = {}; // structure: {aSid:{aPrice:curQ, ...}, ...}
+let handlingFee = 0;
+const endPoint = "http://127.0.0.1:5000/"; // localhost api test
+// const endPoint = "https://stock-info-scraper.herokuapp.com/";    // remote api test
 // window.addEventListener("keydown", (e) => {
 //     if ((e instanceof KeyboardEvent && e.keyCode == 13)) {
 //         tradeRecordCRUD();
@@ -48,7 +42,7 @@ function tradeRecordCRUD(inData) {
     fetch(`${endPoint}records`, { method: 'post', body: outData });
     return false;
 }
-function queryTradeRecordOnLoad() {
+function fetchTradeRecord() {
     let data = new URLSearchParams();
     data.append("mode", "read");
     let url = `${endPoint}records`;
@@ -57,20 +51,21 @@ function queryTradeRecordOnLoad() {
         return response.json();
     });
 }
-function constructTradeRecordTable(myJson) {
+function buildTradeRecordTb(myData) {
     if (tradeRecordTableBody != null) {
-        for (let each in myJson["data"]) {
+        for (let each in myData) {
             let tr = document.createElement("tr");
             tr.className = "trade-record-table-row";
-            for (let eachField in myJson["data"][each]) {
+            for (let eachField in myData[each]) {
                 let td = document.createElement("td");
-                td.className = eachField.split(" ").join("-").toLowerCase();
+                td.className = eachField;
                 const innerInput = document.createElement("span");
                 innerInput.className = "input not-editing";
                 innerInput.setAttribute("role", "textbox");
                 innerInput.setAttribute("type", "number");
-                innerInput.innerHTML = myJson["data"][each][eachField];
+                innerInput.innerHTML = myData[each][eachField];
                 td.appendChild(innerInput);
+                // Do not show the id in the table.
                 if (eachField.toLowerCase() == "id") {
                     td.style.display = "none";
                 }
@@ -87,6 +82,28 @@ function constructTradeRecordTable(myJson) {
             crud.appendChild(updateDeleteDiv);
             tr.appendChild(crud);
             tradeRecordTableBody.appendChild(tr);
+        }
+    }
+}
+function buildStockWarehouse(myData) {
+    for (let each of allHoldingSids) {
+        stockWarehouse[each] = {};
+    }
+    for (let each in myData) {
+        let s = myData[each]["sid"];
+        let t = myData[each]["deal-time"];
+        stockWarehouse[s][t] = {};
+    }
+    for (let each in myData) {
+        let s = myData[each]["sid"];
+        let t = myData[each]["deal-time"];
+        let p = myData[each]["deal-price"];
+        let q = parseFloat(myData[each]["deal-quantity"]);
+        if (stockWarehouse[s][t][p]) {
+            stockWarehouse[s][t][p] += q;
+        }
+        else {
+            stockWarehouse[s][t][p] = q;
         }
     }
 }
@@ -109,7 +126,7 @@ function createTradeRecord(e) {
         location.reload();
     }
     else {
-        infoNotSufficientError();
+        infoNotSufficientErr();
     }
 }
 function appendUpdateDeleteDiv(btnConfigList) {
@@ -147,7 +164,7 @@ function updateTradeRecord(e) {
         // change the words displayed in the crud div of the target row
         changeRowEndDiv("clickUpdate", targetRowDOM, { "copy-original": copyOriginal });
     }
-    window.addEventListener("keypress", preventSpaceAndNewLine);
+    window.addEventListener("keypress", noSpaceAndNewLine);
 }
 function deleteTradeRecord(e) {
     if (window.confirm("確定要刪除此筆交易紀錄嗎？\n刪除後將無法復原！")) {
@@ -186,7 +203,7 @@ function saveUpdate(e) {
         changeRowEndDiv("clickSave", targetRowDOM, { "copy-original": newData });
         location.reload();
     }
-    window.removeEventListener("keypress", preventSpaceAndNewLine);
+    window.removeEventListener("keypress", noSpaceAndNewLine);
 }
 function forgetUpdate(e, args) {
     let targetRowDOM = findEditedRow(e);
@@ -204,7 +221,7 @@ function forgetUpdate(e, args) {
         // change the words displayed in the crud div of the target row
         changeRowEndDiv("clickCancel", targetRowDOM, {});
     }
-    window.removeEventListener("keypress", preventSpaceAndNewLine);
+    window.removeEventListener("keypress", noSpaceAndNewLine);
 }
 function findEditedRow(e) {
     let temp = e.target;
@@ -244,50 +261,73 @@ function changeRowEndDiv(type, targetRowDOM, args) {
         }
     }
 }
-function preventSpaceAndNewLine(e) {
+function noSpaceAndNewLine(e) {
     if (e instanceof KeyboardEvent && (e.keyCode == 13 || e.keyCode == 32)) {
         e.preventDefault();
     }
 }
-function arrangeAssetsDataForChart(startDateStr, endDateStr) {
+function cashInvChartData(startDateStr, endDateStr, tradeRecordData) {
     let result = [];
-    if (tradeRecordTableBody != null) {
-        let dates = getDatesArray(new Date(startDateStr), new Date(endDateStr));
-        const allTradeHistoryRows = tradeRecordTableBody.getElementsByClassName("trade-record-table-row");
-        for (let eachDate of dates) {
-            const eachDateStr = eachDate.split("-").join("");
-            let dataRow;
-            if (result[result.length - 1] != undefined) {
-                dataRow = [eachDateStr, ...result[result.length - 1].slice(1, -1)];
-            }
-            else {
-                dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
-            }
-            for (let eachRow of allTradeHistoryRows) {
-                const eachDealTime = eachRow.querySelector(".deal-time");
-                const eachSid = eachRow.querySelector(".sid");
-                const eachDealPrice = eachRow.querySelector(".deal-price");
-                const eachDealQuantity = eachRow.querySelector(".deal-quantity");
-                if (eachRow instanceof HTMLElement && eachDealTime instanceof HTMLElement && eachSid instanceof HTMLElement && eachDealPrice instanceof HTMLElement && eachDealQuantity instanceof HTMLElement) {
-                    if (parseInt(eachDealTime.innerText) == parseInt(eachDateStr)) {
-                        let idx = [...allHoldingSids].indexOf(eachSid.innerText) + 1;
-                        // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
-                        // dataRow[idx] += (parseFloat(eachDealPrice.innerText) * parseFloat(eachDealQuantity.innerText))
-                        // if in JavaScript.
-                        dataRow[idx] = parseInt(`${dataRow[idx]}`) + (parseFloat(eachDealPrice.innerText) * parseFloat(eachDealQuantity.innerText));
+    let dates = getDatesArray(new Date(startDateStr), new Date(endDateStr));
+    for (let eachDate of dates) {
+        const eachDateStr = eachDate.split("-").join("");
+        let dataRow;
+        // Create a new row whose values is the copy of the values of the previous(last) row.
+        if (result[result.length - 1] != undefined) {
+            dataRow = [eachDateStr, ...result[result.length - 1].slice(1, -1)];
+        }
+        else {
+            dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
+        }
+        for (let eachRecord of tradeRecordData) {
+            let t = parseInt(eachRecord["deal-time"]);
+            if (t == parseInt(eachDateStr)) {
+                let s = eachRecord["sid"];
+                let p = parseFloat(eachRecord["deal-price"]);
+                let q = parseFloat(eachRecord["deal-quantity"]);
+                let f = parseFloat(eachRecord["handling-fee"]);
+                handlingFee += f; // currently not used
+                let idx = [...allHoldingSids].indexOf(s) + 1;
+                if (q >= 0) {
+                    // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
+                    // dataRow[idx] += p*q;
+                    // if in JavaScript.
+                    dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (p * q);
+                }
+                else {
+                    while (q < 0) {
+                        for (let eachT in stockWarehouse[s]) {
+                            if (parseInt(eachT) < t) {
+                                for (let eachP in stockWarehouse[s][eachT]) {
+                                    let eachQ = stockWarehouse[s][eachT][eachP];
+                                    let diff = q + eachQ;
+                                    if (diff >= 0) {
+                                        stockWarehouse[s][eachT][eachP] = eachQ + q;
+                                        dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (parseFloat(eachP) * q);
+                                        q = 0;
+                                    }
+                                    else {
+                                        stockWarehouse[s][eachT][eachP] = 0;
+                                        dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (parseFloat(eachP) * eachQ);
+                                        q = diff;
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-            const reducer = (previousValue, currentValue) => previousValue + currentValue;
-            // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
-            // [...dataRow].slice(1).reduce(reducer);
-            // if in JavaScript.
-            const total = [...dataRow].slice(1).reduce((i, j) => reducer(parseInt(`${i}`), parseInt(`${j}`)));
-            dataRow.push(total);
-            result.push(dataRow);
         }
-        result = [["Date", ...allHoldingSids, "Total"], ...result];
+        const reducer = (previousValue, currentValue) => previousValue + currentValue;
+        // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
+        // [...dataRow].slice(1).reduce(reducer);
+        // if in JavaScript.
+        const total = [...dataRow].slice(1).reduce((i, j) => reducer(parseInt(`${i}`), parseInt(`${j}`)));
+        dataRow.push(total);
+        result.push(dataRow);
     }
+    // result = [["Date", ...allHoldingSids, "Total"], ...result];
+    result = [["Date", "Cash Invested"], ...result.map(i => [i[0], i[i.length - 1]])]; // only use the "total" field
     return result;
 }
 function getDatesArray(startDate, endDate) {
@@ -309,8 +349,8 @@ function drawChart(dataIn) {
             title: "累計投入資金",
             subtitle: '近一個月'
         },
-        width: window.innerWidth / 2.7,
-        height: window.innerHeight / 2
+        width: window.innerWidth / 3.5,
+        height: window.innerHeight / 2.3
     };
     let chart = new google.charts.Line(fundInvestedChart);
     chart.draw(data, google.charts.Line.convertOptions(options));
@@ -331,7 +371,7 @@ function foldTradeRecordForm(e) {
         createRecordContainer.style.display = "none";
     }
 }
-function infoNotSufficientError() {
+function infoNotSufficientErr() {
     if (createErrorDiv != null) {
         createErrorDiv.style.display = "unset";
         setTimeout(() => {
@@ -345,26 +385,21 @@ function infoNotSufficientError() {
         });
     }
 }
-function collectDailyInfo() {
-    let sidDivs = document.querySelectorAll(".sid>.input");
-    for (let each of sidDivs) {
-        allHoldingSids.add(each.innerHTML);
+function collectAllHoldingSid() {
+    for (let each of tradeRecordJson["data"]) {
+        allHoldingSids.add(each["sid"]);
     }
-    fetchStockSingleDay("", [...allHoldingSids]);
 }
 function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
     const url = decideURL(date, sidList, companyNameList);
-    if (url != null && stockInfoTableContainer != null) {
+    if (stockInfoTableContainer != null) {
         stockInfoTableContainer.classList.add("waiting-data");
         stockInfoTableContainer.classList.remove("data-arrived");
-        fetch(url)
-            .then(function (response) {
-            return response.json();
-        })
-            .then(function (myJson) {
-            constructStockInfoTable(myJson);
-        });
     }
+    return fetch(url)
+        .then(function (response) {
+        return response.json();
+    });
 }
 function decideURL(date = "", sidList = [], companyNameList = []) {
     if (date != "" && sidList.length != 0) {
@@ -381,10 +416,10 @@ function decideURL(date = "", sidList = [], companyNameList = []) {
     }
     else {
         console.log("Please at least input sid-list or company name.");
-        return null;
+        return "";
     }
 }
-function constructStockInfoTable(myJson) {
+function buildStockInfoTb(myJson) {
     if (stockInfoTableContainer != null && stockInfoTableBody != null) {
         stockInfoTableContainer.classList.remove("waiting-data");
         stockInfoTableContainer.classList.add("data-arrived");
@@ -414,7 +449,7 @@ function constructStockInfoTable(myJson) {
         }
     }
 }
-function controlLowerPageTabs() {
+function controlTab() {
     for (let each of allTabs) {
         if (each instanceof HTMLElement) {
             each.addEventListener("click", highlightTab);
@@ -451,12 +486,19 @@ function main() {
         if (createRecordBtn != null) {
             createRecordBtn.addEventListener("click", expandTradeRecordForm);
         }
-        const jsonResponsed = yield queryTradeRecordOnLoad();
-        constructTradeRecordTable(jsonResponsed);
-        collectDailyInfo();
-        let assetsData = arrangeAssetsDataForChart("2021-02-18", todayStr);
+        // The chart below need info in this table, so this need to be await
+        tradeRecordJson = yield fetchTradeRecord();
+        buildTradeRecordTb(tradeRecordJson["data"]);
+        collectAllHoldingSid();
+        buildStockWarehouse(tradeRecordJson["data"]);
+        fetchStockSingleDay("", [...allHoldingSids]).then(function (myJson) {
+            buildStockInfoTb(myJson);
+        });
+        // const dailyInfoJson = await fetchStockSingleDay("", [...allHoldingSids]);
+        // buildStockInfoTb(dailyInfoJson);
+        let assetsData = cashInvChartData("2021-02-18", todayStr, tradeRecordJson["data"]);
         applyGoogleChart(assetsData);
-        controlLowerPageTabs();
+        controlTab();
     });
 }
 main();
