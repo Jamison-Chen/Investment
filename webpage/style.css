@@ -57,7 +57,7 @@ body {
 
 .chart-container {
     width: inherit;
-    margin: 10px;
+    margin: 20px 0;
     display: flex;
     justify-content: space-around;
 }

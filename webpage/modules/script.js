@@ -30,6 +30,7 @@ let allHoldingSids = new Set();
 let stockWarehouse = {}; // structure: {aSid:{aPrice:curQ, ...}, ...}
 let handlingFee = 0;
 let cashInvested = 0;
+let cashExtracted = 0;
 let securityMktVal = 0;
 const endPoint = "http://127.0.0.1:5000/"; // localhost api test
 // const endPoint = "https://stock-info-scraper.herokuapp.com/";    // remote api test
@@ -293,13 +294,13 @@ function cashInvChartData(endDateStr, tradeRecordData) {
                 let f = parseFloat(eachRecord["handling-fee"]);
                 handlingFee += f; // currently not used
                 let idx = [...allHoldingSids].indexOf(s) + 1;
-                if (q >= 0) {
+                if (q >= 0) { // When buying
                     // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
                     // dataRow[idx] += p*q;
                     // if in JavaScript.
                     dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (p * q);
                 }
-                else {
+                else { // When selling
                     while (q < 0) {
                         for (let eachT in stockWarehouse[s]) {
                             if (parseInt(eachT) < t) {
@@ -309,11 +310,13 @@ function cashInvChartData(endDateStr, tradeRecordData) {
                                     if (diff >= 0) {
                                         stockWarehouse[s][eachT][eachP] = eachQ + q;
                                         dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (parseFloat(eachP) * q);
+                                        cashExtracted += (p - parseFloat(eachP)) * (-1 * q);
                                         q = 0;
                                     }
                                     else {
                                         stockWarehouse[s][eachT][eachP] = 0;
                                         dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (parseFloat(eachP) * eachQ);
+                                        cashExtracted += (p - parseFloat(eachP)) * eachQ;
                                         q = diff;
                                     }
                                 }
@@ -390,62 +393,74 @@ function getDatesArray(startDate, endDate) {
 }
 ;
 function applyCashInvestedChart(startDate, dataIn) {
-    google.charts.load('current', { 'packages': ["line"] });
+    google.charts.load('current', { 'packages': ["corechart"] });
     startDate = startDate.split("-").join("");
     dataIn = dataIn.filter(i => i[0] == "Date" || (typeof i[0] == "string" && parseInt(i[0]) >= parseInt(startDate)));
-    google.charts.setOnLoadCallback(() => drawCashInvestedChart(dataIn));
-}
-function drawCashInvestedChart(dataIn) {
-    let data = new google.visualization.arrayToDataTable(dataIn);
     let options = {
-        chart: {
-            title: "累計投入資金",
+        title: '累計投入現金',
+        titleTextStyle: {
+            fontSize: 14,
+            bold: true,
+            color: "#000"
         },
-        width: window.innerWidth / 4,
-        height: window.innerHeight / 2.3,
-        legend: { position: "none" }
+        curveType: 'none',
+        width: window.innerWidth / 3.5,
+        height: window.innerHeight / 2.4,
+        legend: { position: 'none' },
+        hAxis: {
+            title: ""
+        }
     };
-    let chart = new google.charts.Line(cashInvestedChart);
-    chart.draw(data, google.charts.Line.convertOptions(options));
+    google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "LineChart", cashInvestedChart));
 }
 function applyComponentChart(dataIn) {
     google.charts.load('current', { 'packages': ["corechart"] });
-    google.charts.setOnLoadCallback(() => drawComponentChart(dataIn));
-}
-function drawComponentChart(dataIn) {
-    let data = new google.visualization.arrayToDataTable(dataIn);
     let options = {
-        title: "證券市值佔比",
+        title: "各證券市值佔比",
+        titleTextStyle: {
+            fontSize: 14,
+            bold: true,
+            color: "#000"
+        },
         width: window.innerWidth / 3.5,
-        height: window.innerHeight / 2.3,
-        chartArea: { left: '10%', top: '10%', width: '80%', height: '80%' },
-        fontSize: 14
+        height: window.innerHeight / 2.4,
+        chartArea: {
+            left: '10%',
+            top: '20%',
+            width: '80%',
+            height: '80%'
+        }
     };
-    let chart = new google.visualization.PieChart(componentChart);
-    chart.draw(data, options);
+    google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "PieChart", componentChart));
 }
-function applyCompareChart(cashInvested, securityMktVal) {
+function applyCompareChart(cashInvested, securityMktVal, cashExtracted) {
     google.charts.load('current', { 'packages': ['corechart', 'bar'] });
-    google.charts.setOnLoadCallback(() => drawComareChart(cashInvested, securityMktVal));
-}
-function drawComareChart(cashInvested, securityMktVal) {
-    let data = google.visualization.arrayToDataTable([
+    let dataIn = [
         ["Assets", "Value", { role: "style" }],
         ["Cash Invested", cashInvested, "#0a5"],
-        ["Security Mkt Val", securityMktVal, "#b00"]
-    ]);
+        ["Security Mkt Val", securityMktVal, "#b00"],
+        ["Cash Extracted", cashExtracted, "#00b"]
+    ];
     let options = {
-        title: '投入現金與現值比較',
+        title: '現金與市值',
+        titleTextStyle: {
+            fontSize: 14,
+            bold: true,
+            color: "#000"
+        },
         vAxis: {
             minValue: 0
         },
-        bar: { groupWidth: "30%" },
+        bar: { groupWidth: "40%" },
         width: window.innerWidth / 3.5,
-        height: window.innerHeight / 2.3,
-        fontSize: 14,
+        height: window.innerHeight / 2.4,
         legend: { position: "none" }
     };
-    let chart = new google.visualization.ColumnChart(compareChart);
+    google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "ColumnChart", compareChart));
+}
+function configAndDrawChart(dataIn, options, chartType, targetDiv) {
+    let data = google.visualization.arrayToDataTable(dataIn);
+    let chart = new google.visualization[chartType](targetDiv);
     chart.draw(data, options);
 }
 function expandTradeRecordForm(e) {
@@ -606,7 +621,7 @@ function main() {
         stockInfoJson = yield fetchStockSingleDay("", [...allHoldingSids]);
         let componentData = componentChartData();
         applyComponentChart(componentData);
-        applyCompareChart(cashInvested, securityMktVal);
+        applyCompareChart(cashInvested, securityMktVal, cashExtracted);
         buildTradeRecordTb(tradeRecordJson["data"]);
         buildStockInfoTb(stockInfoJson["data"]);
     });

@@ -1,6 +1,6 @@
 # Investment Recorder & Simulator
 
-## Main Functions
+>## Main Functions
 
 1. This app helps you to record your investment history, to do some statistics, and visualize it for you.
 
@@ -8,7 +8,7 @@
 
 ---
 
-## Investment Rcorder
+>## Investment Rcorder
 
 ### TODOS
 
@@ -22,6 +22,8 @@
 
 2. Add search bar in the lower section of the page. When user types in any thing, try to search and filter any content that has the words entered.
 
+3. Improve the appearance of the trade record table.
+
 ### Things that has problem to realize
 
 1. Draw a graph that describe the fluctuation of the holding-securities' market value.
@@ -31,6 +33,6 @@
 
 ---
 
-## Investment Simulator
+>## Investment Simulator
 
 TBD
