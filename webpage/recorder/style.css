@@ -55,9 +55,32 @@ body {
     height: inherit;
 }
 
+#header {
+    min-height: 40px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 20px;
+}
+
+#mode {
+    border-radius: 50%;
+    height: fit-content;
+    width: fit-content;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#mode:hover {
+    background-color: #f5f5f5;
+}
+
 .chart-container {
     width: inherit;
-    margin: 20px 0;
+    margin: 0 0 20px 0;
     display: flex;
     justify-content: space-around;
 }
@@ -69,7 +92,7 @@ body {
 }
 
 #create-trade-record-btn-container {
-    width: 25%;
+    width: 250px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -83,6 +106,7 @@ body {
     font-size: 1.6rem;
     font-weight: 100;
     color: #444;
+    transition-duration: 300ms;
 }
 
 #create-trade-record-btn:hover {

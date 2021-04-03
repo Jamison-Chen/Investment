@@ -34,26 +34,18 @@ const endPoint = "http://127.0.0.1:5000/";  // localhost api test
 //     }
 // });
 
-function tradeRecordCRUD(inData: any): boolean {
+function tradeRecordCRUD(inData: any): Promise<void> {
     let outData = new URLSearchParams();
     for (let each in inData) {
         outData.append(each, inData[each]);
     }
-    fetch(`${endPoint}records`, { method: 'post', body: outData });
-    return false;
-}
-
-function fetchTradeRecord(): Promise<void> {
-    let data = new URLSearchParams();
-    data.append("mode", "read");
-    let url = `${endPoint}records`;
-    return fetch(url, { method: 'post', body: data })
+    return fetch(`${endPoint}records`, { method: 'post', body: outData })
         .then(function (response) {
             return response.json();
-        });
+        });;
 }
 
-function buildTradeRecordTb(myData: any[]): void {
+function buildRecordTable(myData: any[]): void {
     if (tradeRecordTableBody != null) {
         for (let eachRecord of myData) {
             let tr = document.createElement("tr");
@@ -110,21 +102,20 @@ function buildStockWarehouse(myData: any[]): void {
     }
 }
 
-function createTradeRecord(e: Event): void {
+async function createTradeRecord(e: Event): Promise<void> {
     let data: any = { "mode": "create" };
     let hasEmpty = false;
     for (let each of allRecordFormInputs) {
         if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
             if (each.value != "") {
                 data[each.name] = each.value;
-                console.log(each.value.length);
             } else {
                 hasEmpty = true;
             }
         }
     }
     if (!hasEmpty) {
-        tradeRecordCRUD(data);
+        await tradeRecordCRUD(data);
         location.reload();
     } else {
         infoNotSufficientErr();
@@ -192,7 +183,7 @@ function deleteTradeRecord(e: Event): void {
     }
 }
 
-function saveUpdate(e: Event): void {
+async function saveUpdate(e: Event): Promise<void> {
     let targetRowDOM = findEditedRow(e);
     let newData: any = { "mode": "update" };
     if (targetRowDOM instanceof HTMLElement) {
@@ -207,12 +198,12 @@ function saveUpdate(e: Event): void {
                 newData[each.parentNode.className] = each.innerHTML;
             }
         }
-        tradeRecordCRUD(newData);
+        await tradeRecordCRUD(newData);
         // change the words displayed in the crud div of the target row
         changeRowEndDiv("clickSave", targetRowDOM, { "copy-original": newData });
-        location.reload();
     }
     window.removeEventListener("keypress", noSpaceAndNewLine);
+    location.reload();
 }
 
 function forgetUpdate(e: Event, args: any): void {
@@ -628,7 +619,7 @@ async function main(): Promise<void> {
     }
     controlTab();
     // The cash-invested chart need info in trade-record table, so this need to be await
-    tradeRecordJson = await fetchTradeRecord();
+    tradeRecordJson = await tradeRecordCRUD({ "mode": "read" });
     initAllHoldingSid();
     buildStockWarehouse(tradeRecordJson["data"]);
 
@@ -644,7 +635,7 @@ async function main(): Promise<void> {
 
     applyCompareChart(cashInvested, securityMktVal, cashExtracted);
 
-    buildTradeRecordTb(tradeRecordJson["data"]);
+    buildRecordTable(tradeRecordJson["data"]);
     buildStockInfoTb(stockInfoJson["data"]);
 }
 
