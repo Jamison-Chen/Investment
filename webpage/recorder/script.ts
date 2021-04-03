@@ -407,7 +407,7 @@ function applyCashInvestedChart(startDate: string, dataIn: (string | number)[][]
         },
         curveType: 'none',
         width: window.innerWidth / 3.5,
-        height: window.innerHeight / 2.4,
+        height: window.innerHeight / 2.5,
         legend: { position: 'none' },
         hAxis: {
             title: ""
@@ -426,7 +426,7 @@ function applyComponentChart(dataIn: (string | number)[][]): void {
             color: "#000"
         },
         width: window.innerWidth / 3.5,
-        height: window.innerHeight / 2.4,
+        height: window.innerHeight / 2.5,
         chartArea: {
             left: '10%',
             top: '20%',
@@ -457,7 +457,7 @@ function applyCompareChart(cashInvested: number, securityMktVal: number, cashExt
         },
         bar: { groupWidth: "40%" },
         width: window.innerWidth / 3.5,
-        height: window.innerHeight / 2.4,
+        height: window.innerHeight / 2.5,
         legend: { position: "none" }
     };
     google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "ColumnChart", compareChart));

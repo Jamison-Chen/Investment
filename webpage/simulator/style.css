@@ -1,0 +1,117 @@
+:root {
+    --bgc: #fff;
+    --lightGray: #bbb;
+}
+
+@media screen and (min-width:1024px) {
+     :root {
+        /* --tradeRecordTableWidth: 700px;
+        --stockInfoTableWidth: 860px; */
+    }
+}
+
+@media screen and (max-width:1024px) {
+     :root {
+        /* --tradeRecordTableWidth: 100%;
+        --stockInfoTableWidth: 100%; */
+    }
+}
+
+
+/* ::selection {
+    color: #fff;
+    background: var(--lightGray);
+} */
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    margin: 5px 0;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: var(--lightGray);
+}
+
+html {
+    font-family: "微軟正黑體", Arial, Helvetica, sans-serif;
+    font-size: 0.9rem;
+    cursor: default;
+    height: 100vh;
+    user-select: none;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    height: inherit;
+}
+
+#main {
+    display: flex;
+    flex-direction: column;
+    height: inherit;
+}
+
+#header {
+    position: relative;
+    min-height: 40px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 0 20px;
+}
+
+#mode-btn {
+    border-radius: 50%;
+    height: fit-content;
+    width: fit-content;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#mode-btn:hover {
+    background-color: #f5f5f5;
+}
+
+#mode-list {
+    height: fit-content;
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #fff;
+    top: 100%;
+    right: 0%;
+    margin-right: 30px;
+    border-radius: 5px;
+    box-shadow: 0 0 5px #888;
+    z-index: 100;
+}
+
+.mode-option {
+    text-align: center;
+    padding: 10px 20px;
+    text-decoration: none;
+}
+
+#simulator-option {
+    color: #888;
+    background-color: #f5f5f5;
+}
+
+#recorder-option {
+    color: #444;
+}
+
+.mode-option:hover {
+    background-color: #f5f5f5;
+}
