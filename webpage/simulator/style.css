@@ -4,17 +4,17 @@
 }
 
 @media screen and (min-width:1024px) {
-     :root {
-        /* --tradeRecordTableWidth: 700px;
-        --stockInfoTableWidth: 860px; */
-    }
+    /* :root {
+        --tradeRecordTableWidth: 700px;
+        --stockInfoTableWidth: 860px;
+    } */
 }
 
 @media screen and (max-width:1024px) {
-     :root {
-        /* --tradeRecordTableWidth: 100%;
-        --stockInfoTableWidth: 100%; */
-    }
+    /* :root {
+        --tradeRecordTableWidth: 100%;
+        --stockInfoTableWidth: 100%;
+    } */
 }
 
 
@@ -108,10 +108,54 @@ body {
     background-color: #f5f5f5;
 }
 
+#simulator-option:hover {
+    cursor: default;
+}
+
 #recorder-option {
     color: #444;
 }
 
 .mode-option:hover {
     background-color: #f5f5f5;
+}
+
+#graph-container {
+    min-height: 70vh;
+    display: flex;
+    justify-content: center;
+}
+
+#lower-part {
+    height: 35vh;
+    width: 100%;
+    background-color: #000;
+    opacity: 70%;
+}
+
+#chart-list {
+    height: 35%;
+    width: 96%;
+    padding: 10px 2%;
+    display: flex;
+    justify-content: center;
+}
+
+#start-btn {
+    width: 100px;
+    padding: 10px;
+    color: #fff;
+    border-radius: 5px;
+    background-color: #082;
+    text-align: center;
+    font-weight: 900;
+    margin: 30px auto 0 auto;
+}
+
+#start-btn:hover {
+    background-color: #071;
+}
+
+#start-btn:active {
+    background-color: #060;
 }

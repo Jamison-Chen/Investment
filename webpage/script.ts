@@ -1,21 +1,26 @@
 const modeBtn = document.getElementById("mode-btn");
 const modeList = document.getElementById("mode-list");
-function expandModeList(e: Event): void {
-    if (modeBtn != null && modeList != null) {
-        modeBtn.removeEventListener("click", expandModeList);
-        modeBtn.addEventListener("click", foldModeList);
-        modeList.style.display = "flex";
+const header = document.getElementById("header");
+const body = document.getElementById("body");
+function controlModeList(e: Event): void {
+    if (modeBtn != null && modeList != null && body != null) {
+        if (modeList.style.display == "flex") {
+            modeList.style.display = "none";
+        } else {
+            modeList.style.display = "flex";
+        }
     }
 }
 
 function foldModeList(e: Event): void {
-    if (modeBtn != null && modeList != null) {
-        modeBtn.removeEventListener("click", foldModeList);
-        modeBtn.addEventListener("click", expandModeList);
-        modeList.style.display = "none";
+    if (!e.path.includes(modeBtn)) {
+        if (modeList != null) {
+            modeList.style.display = "none";
+        }
     }
 }
 
-if (modeBtn != null) {
-    modeBtn.addEventListener("click", expandModeList);
+if (modeBtn != null && body != null) {
+    modeBtn.addEventListener("click", controlModeList);
+    body.addEventListener("click", foldModeList);
 }
