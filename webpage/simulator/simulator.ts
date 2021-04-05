@@ -19,7 +19,7 @@ class Strategy {
     }
     public recordQuantity(qToday: number, i: number): void {
         this.dailyQList.push(qToday);
-        this.cumulQList.push(this.dailyQList[i - 1] + qToday);
+        this.cumulQList.push(this.cumulQList[i - 1] + qToday);
     }
     public recordCashFlow(qToday: number, i: number): void {
         let cashDeltaToday = qToday * this.pList[i];

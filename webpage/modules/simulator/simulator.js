@@ -11,7 +11,7 @@ class Strategy {
     }
     recordQuantity(qToday, i) {
         this.dailyQList.push(qToday);
-        this.cumulQList.push(this.dailyQList[i - 1] + qToday);
+        this.cumulQList.push(this.cumulQList[i - 1] + qToday);
     }
     recordCashFlow(qToday, i) {
         let cashDeltaToday = qToday * this.pList[i];

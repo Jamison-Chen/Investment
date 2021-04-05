@@ -1,15 +1,8 @@
 import { BHmixGrid } from './simulator.js';
 const graphContainer = document.getElementById("graph-container");
 
-function applyCharts(): void {
+function applyCharts(dataIn: (string | number)[][]): void {
     google.charts.load('current', { 'packages': ["corechart"] });
-    let dataIn = [
-        ['Year', 'Sales', 'Expenses'],
-        ['2004', 1000, 400],
-        ['2005', 1170, 460],
-        ['2006', 660, 1120],
-        ['2007', 1030, 540]
-    ];
     let options = {
         title: '累計投入現金',
         titleTextStyle: {
@@ -34,8 +27,38 @@ function drawSimulatedChart(dataIn: any[][], options: any, chartType: string, ta
     chart.draw(data, options);
 }
 
+function simulatePriceFluct(initP: number, nDays: number): number[] {
+    // let deltaPList = [1];
+    let pList = [initP];
+    for (let i = 0; i < nDays - 1; i++) {
+        pList.push(pList[pList.length - 1] * normal(1, 0.04));
+    }
+    return pList;
+}
+
+function normal(mu: number, std: number): number {
+    let u = 0, v = 0;
+    while (u === 0) u = Math.random(); //Converting [0,1) to (0,1)
+    while (v === 0) v = Math.random();
+    return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
+}
+
 function simulatorMain(): void {
-    applyCharts();
+
+    let initP = 100;
+    let initTotalAssets = 10000;
+    let nDays = 360;
+    let pList = simulatePriceFluct(initP, nDays);
+
+    let r = 0.05;
+    let b = new BHmixGrid(initTotalAssets, nDays, pList, r);
+    b.followStrategy();
+    let data: (string | number)[][] = [["day", "price", "TA"]];
+    for (let i = 0; i < b.nDays; i++) {
+        let eachDay = [i + 1, b.cashList[i], b.totalAssetsList[i]]
+        data.push(eachDay);
+    }
+    applyCharts(data);
 }
 
 simulatorMain();
