@@ -1,4 +1,3 @@
-"use strict";
 const graphContainer = document.getElementById("graph-container");
 function applyCharts() {
     google.charts.load('current', { 'packages': ["corechart"] });
@@ -35,3 +34,4 @@ function simulatorMain() {
     applyCharts();
 }
 simulatorMain();
+export {};

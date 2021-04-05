@@ -1,3 +1,4 @@
+import { BHmixGrid } from './simulator.js';
 const graphContainer = document.getElementById("graph-container");
 
 function applyCharts(): void {
