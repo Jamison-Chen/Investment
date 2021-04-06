@@ -1,5 +1,6 @@
 class Strategy {
     constructor() {
+        this.nDays = 0;
         this.dailyQList = [];
         this.cumulQList = [];
         this.pList = [];
@@ -86,5 +87,63 @@ export class BHmixGrid extends Strategy {
         // let multiplier = 1;
         // let multiplier = pToday/latestMaxP;
         return Math.floor(baseQ * multiplier);
+    }
+}
+export class GridConstQ extends Strategy {
+    constructor(initTotalAsset, baseQ, nDays, pList, maxPrice, minPrice, nTable) {
+        super();
+        this.baseQ = baseQ;
+        this.nDays = nDays;
+        this.totalAssetsList = [initTotalAsset];
+        this.cumulInvestCashList = [baseQ * pList[0]];
+        this.cashList = [initTotalAsset - baseQ * pList[0]];
+        this.securMktValList = [baseQ * pList[0]];
+        this.rateOfReturnList = [0];
+        this.pList = pList;
+        this.cumulQList = [baseQ];
+        this.dailyQList = [baseQ];
+        this.maxPrice = maxPrice;
+        this.minPrice = minPrice;
+        this.nTable = nTable;
+    }
+    followStrategy() {
+        // numbers in divideLines are in descending order
+        let divideLines = [];
+        for (let i = 0; i < this.nTable + 1; i++) {
+            divideLines.push(this.minPrice * i / this.nTable + this.maxPrice * (this.nTable - i) / this.nTable);
+        }
+        let standAt = this.calcStandAt(this.pList[0], divideLines);
+        for (let i = 1; i < this.nDays; i++) {
+            let newStandAt = this.calcStandAt(this.pList[i], divideLines);
+            // If price rises, sell.
+            let qToday = 0;
+            if (newStandAt < standAt) {
+                // If price isn't too high
+                if (newStandAt > 0) {
+                    if (this.cumulQList[i - 1] > 0) {
+                        qToday = Math.max(-1 * this.cumulQList[i - 1], -1 * this.baseQ);
+                    }
+                }
+                // If price falls, buy.
+            }
+            else if (newStandAt > standAt) {
+                // If price isn't too low
+                if (newStandAt < this.nTable) {
+                    qToday = this.baseQ;
+                }
+            }
+            this.recordAllInfo(qToday, i);
+            standAt = newStandAt;
+        }
+    }
+    calcStandAt(price, aList) {
+        let result = 0;
+        for (let each of aList) {
+            if (price >= each) {
+                return result;
+            }
+            result++;
+        }
+        return result;
     }
 }

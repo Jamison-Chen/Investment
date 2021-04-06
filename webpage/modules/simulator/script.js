@@ -1,23 +1,43 @@
-import { BHmixGrid } from './simulator.js';
-const graphContainer = document.getElementById("graph-container");
-function applyCharts(dataIn) {
-    google.charts.load('current', { 'packages': ["corechart"] });
-    let options = {
-        title: '累計投入現金',
-        titleTextStyle: {
-            fontSize: 14,
-            bold: true,
-            color: "#000"
-        },
-        curveType: 'none',
-        width: window.innerWidth * 0.7,
-        height: window.innerHeight * 0.7,
-        legend: { position: 'none' },
-        hAxis: {
-            title: ""
-        }
-    };
-    google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", graphContainer));
+import { BHmixGrid, GridConstQ } from './simulator.js';
+const priceGraph = document.getElementById("price-graph");
+const assetsFraph = document.getElementById("assets-graph");
+const allOptions = document.getElementsByClassName("strategy-option");
+const bhmixgridOption = document.getElementById("bh-mix-grid");
+const gridconstqOption = document.getElementById("grid-constant-q");
+function applyPriceChart(dataIn) {
+    if (priceGraph != null) {
+        google.charts.load('current', { 'packages': ["corechart"] });
+        let options = {
+            title: '價格走勢',
+            titleTextStyle: {
+                fontSize: 16,
+                bold: false,
+                color: "#777"
+            },
+            curveType: 'none',
+            width: priceGraph.offsetWidth,
+            height: priceGraph.offsetHeight,
+            legend: { position: 'none' },
+        };
+        google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", priceGraph));
+    }
+}
+function applyAssetsCharts(dataIn) {
+    if (assetsFraph != null) {
+        google.charts.load('current', { 'packages': ["corechart"] });
+        let options = {
+            title: '各項資產',
+            titleTextStyle: {
+                fontSize: 16,
+                bold: false,
+                color: "#777"
+            },
+            curveType: 'none',
+            width: assetsFraph.offsetWidth,
+            height: assetsFraph.offsetHeight,
+        };
+        google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", assetsFraph));
+    }
 }
 function drawSimulatedChart(dataIn, options, chartType, targetDiv) {
     let data = google.visualization.arrayToDataTable(dataIn);
@@ -40,19 +60,47 @@ function normal(mu, std) {
         v = Math.random();
     return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
 }
+function selectStrategy(e, s) {
+    for (let each of allOptions) {
+        each.classList.remove("active");
+    }
+    if (e.currentTarget instanceof HTMLElement) {
+        e.currentTarget.classList.add("active");
+    }
+    execStrategy(s);
+}
+function execStrategy(s) {
+    s.followStrategy();
+    let comprehensiveData = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
+    let priceData = [["Day", "Price"]];
+    for (let i = 0; i < s.nDays; i++) {
+        let eachComprehensive = [i + 1, s.totalAssetsList[i], s.securMktValList[i], s.cumulInvestCashList[i], s.cashList[i]];
+        let eachPrice = [i + 1, s.pList[i]];
+        comprehensiveData.push(eachComprehensive);
+        priceData.push(eachPrice);
+    }
+    applyPriceChart(priceData);
+    applyAssetsCharts(comprehensiveData);
+}
 function simulatorMain() {
     let initP = 100;
     let initTotalAssets = 10000;
     let nDays = 360;
     let pList = simulatePriceFluct(initP, nDays);
+    // BHmixGrid Strategy
     let r = 0.05;
     let b = new BHmixGrid(initTotalAssets, nDays, pList, r);
-    b.followStrategy();
-    let data = [["day", "price", "TA"]];
-    for (let i = 0; i < b.nDays; i++) {
-        let eachDay = [i + 1, b.cashList[i], b.totalAssetsList[i]];
-        data.push(eachDay);
+    // Grid Strategy (const q)
+    let maxPrice = 300;
+    let minPrice = 0;
+    let nTable = 50;
+    let baseQ = 5;
+    let gq = new GridConstQ(initTotalAssets, baseQ, nDays, pList, maxPrice, minPrice, nTable);
+    // Grid Strategy (const ratio)
+    // Chicken Strategy
+    if (bhmixgridOption != null && gridconstqOption != null) {
+        bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b); });
+        gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq); });
     }
-    applyCharts(data);
 }
 simulatorMain();
