@@ -172,8 +172,8 @@ body {
 #create-record-form {
     display: flex;
     flex-direction: column;
-    width: 23%;
-    min-width: 270px;
+    width: 210px;
+    font-size: 1.1rem;
     justify-content: center;
     padding: 20px 20px 10px 20px;
     border-radius: 5px;
@@ -187,11 +187,19 @@ body {
 }
 
 .form-input {
-    width: 50%;
+    width: 35%;
+    border-radius: 50px;
+    border: 1px solid #888;
+    padding: 0 10px;
+}
+
+.form-input:focus {
+    outline: none;
 }
 
 #submit-btn {
     font-size: 1.2rem;
+    font-weight: 900;
     margin: 10px auto 0 auto;
     transition-duration: 100ms;
 }
@@ -316,6 +324,14 @@ body {
     border-top: 3px solid var(--bgc);
 }
 
+.table-container.active {
+    display: flex !important;
+}
+
+.table-container.close {
+    display: none !important;
+}
+
 #table-and-stock-info-container {
     display: flex;
     overflow: hidden;
@@ -323,10 +339,6 @@ body {
 
 #trade-record-table-container {
     display: flex;
-}
-
-#trade-record-table-container.close {
-    display: none;
 }
 
 .table {
@@ -351,7 +363,9 @@ body {
 #trade-record-table td:nth-child(n):not(:nth-last-child(1)),
 #stock-info-table th:nth-child(n),
 #stock-info-table td:nth-child(n) {
-    border: 1px solid #ddd;
+    border-left: 0;
+    border-right: 0;
+    border-top: 1px solid #ddd;
     padding: 5px 10px;
 }
 

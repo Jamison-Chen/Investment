@@ -46,16 +46,16 @@
                     <div>證券代號</div>
                     <input type="text" name="sid" id="sid-record" class="record-form-input form-input">
                 </label>
-                <label>
+                <!-- <label>
                     <div>公司名稱</div>
                     <input type="text" name="company-name" id="company-name-record" class="record-form-input form-input">
-                </label>
+                </label> -->
                 <label>
                     <div>每股成交價格</div>
                     <input type="text" name="deal-price" id="deal-price-record" class="record-form-input form-input">
                 </label>
                 <label>
-                    <div>買(+)/賣(-)股數</div>
+                    <div>買(+)賣(-)股數</div>
                     <input type="text" name="deal-quantity" id="deal-quantity-record" class="record-form-input form-input">
                 </label>
                 <label>
@@ -68,11 +68,12 @@
         <div class=tab-container>
             <div class="tabs clearfix">
                 <div id="trade-record-tab" class="tab active">交易紀錄</div>
-                <div id="stock-info-tab" class="tab">證券資訊</div>
+                <div id="stock-info-tab" class="tab">本日資訊</div>
+                <div id="stock-warehouse-tab" class="tab">持股倉位</div>
             </div>
         </div>
         <div id="table-and-stock-info-container">
-            <div class="table-container" id="trade-record-table-container">
+            <div class="table-container active" id="trade-record-table-container">
                 <table id="trade-record-table" class="table">
                     <tr id="trade-record-table-head">
                         <th style="display: none;">ID</th>
@@ -86,7 +87,7 @@
                     </tr>
                 </table>
             </div>
-            <div class="table-container" id="stock-info-table-container">
+            <div class="table-container close" id="stock-info-table-container">
                 <table id="stock-info-table" class="table">
                     <tr id="stock-info-table-head">
                         <th>證券代號</th>
@@ -103,6 +104,7 @@
                     </tr>
                 </table>
             </div>
+            <div class="table-container close" id="stock-warehouse-container"></div>
         </div>
         <div id="create-error">Info Not Sufficient!</div>
     </div>

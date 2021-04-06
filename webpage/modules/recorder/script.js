@@ -17,6 +17,8 @@ const createErrorDiv = document.getElementById("create-error");
 const allTabs = document.getElementsByClassName("tab");
 const tradeRecordTab = document.getElementById("trade-record-tab");
 const stockInfoTab = document.getElementById("stock-info-tab");
+const stockWarehouseTab = document.getElementById("stock-warehouse-tab");
+const allTableContainers = document.getElementsByClassName("table-container");
 const tradeRecordTableContainer = document.getElementById("trade-record-table-container");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 const stockInfoTableContainer = document.getElementById("stock-info-table-container");
@@ -363,22 +365,27 @@ function componentChartData() {
         for (let eachResult of result) {
             if (eachStock["證券代號"] == eachResult[0]) {
                 if (typeof eachResult[1] == "number") {
-                    eachResult[1] *= parseFloat(eachStock["收盤價"]);
+                    eachResult[1] *= parseFloat(eachStock["收盤價"].split(",").join(""));
                     securityMktVal += eachResult[1];
                 }
             }
         }
     }
-    // merge small numbers into "others"
+    // Merge small numbers into "others"
     let smallNum = result.filter(i => typeof i[1] == "number" && i[1] / securityMktVal < 0.05);
     result = result.filter(i => i[1] == "Market Value" || (typeof i[1] == "number" && i[1] / securityMktVal >= 0.05));
     let numForOthers = 0;
-    for (let each of smallNum) {
-        if (typeof each[1] == "number") {
-            numForOthers += each[1];
+    if (smallNum.length > 1) {
+        for (let each of smallNum) {
+            if (typeof each[1] == "number") {
+                numForOthers += each[1];
+            }
         }
+        result.push(["Others", numForOthers]);
     }
-    result.push(["Others", numForOthers]);
+    else {
+        result.push(...smallNum);
+    }
     return result;
 }
 function getDatesArray(startDate, endDate) {
@@ -564,29 +571,18 @@ function controlTab() {
     }
 }
 function highlightTab(e) {
-    if (e.target instanceof HTMLElement && tradeRecordTableContainer instanceof HTMLElement && stockInfoTableContainer instanceof HTMLElement) {
-        if (e.target.innerText == "交易紀錄") {
-            tradeRecordTab === null || tradeRecordTab === void 0 ? void 0 : tradeRecordTab.classList.add("active");
-            stockInfoTab === null || stockInfoTab === void 0 ? void 0 : stockInfoTab.classList.remove("active");
-            tradeRecordTableContainer.classList.remove("close");
-            stockInfoTableContainer.classList.remove("active");
+    for (let i = 0; i < allTabs.length; i++) {
+        if (allTabs[i] == e.currentTarget && allTableContainers[i] instanceof HTMLElement) {
+            allTabs[i].classList.add("active");
+            allTableContainers[i].classList.add("active");
+            allTableContainers[i].classList.remove("close");
         }
         else {
-            stockInfoTab === null || stockInfoTab === void 0 ? void 0 : stockInfoTab.classList.add("active");
-            tradeRecordTab === null || tradeRecordTab === void 0 ? void 0 : tradeRecordTab.classList.remove("active");
-            tradeRecordTableContainer.classList.add("close");
-            stockInfoTableContainer.classList.add("active");
+            allTabs[i].classList.remove("active");
+            allTableContainers[i].classList.add("close");
+            allTableContainers[i].classList.remove("active");
         }
     }
-    // for (let each of allTabs) {
-    //     if (each instanceof HTMLElement && e.target instanceof HTMLElement) {
-    //         if (each.innerText != e.target.innerText) {
-    //             each.classList.remove("active");
-    //         } else {
-    //             each.classList.add("active");
-    //         }
-    //     }
-    // }
 }
 function getDateStr(endDate, interval) {
     if (interval == "aMonth") {
