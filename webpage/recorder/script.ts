@@ -1,3 +1,5 @@
+const viewToggler = document.getElementById("view-toggler");
+const togglerMask = document.getElementById("toggler-mask");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
 const createRecordContainer = document.getElementById("create-trade-record-form-container");
 const createRecordForm = document.getElementById("create-record-form");
@@ -573,6 +575,19 @@ function buildStockInfoTb(myData: any[]): void {
     }
 }
 
+function controlToggler(): void {
+    if (togglerMask != null && viewToggler != null) {
+        togglerMask.style.left = "-1%";
+        viewToggler.addEventListener("click", moveTogglerMask);
+    }
+}
+
+function moveTogglerMask(e: Event): void {
+    if (togglerMask instanceof HTMLElement) {
+        togglerMask.style.left = (-1 * parseFloat(togglerMask.style.left) + 50) + "%";
+    }
+}
+
 function controlTab(): void {
     for (let each of allTabs) {
         if (each instanceof HTMLElement) {
@@ -611,6 +626,7 @@ async function main(): Promise<void> {
     if (createRecordBtn != null) {
         createRecordBtn.addEventListener("click", expandTradeRecordForm);
     }
+    controlToggler();
     controlTab();
     // The cash-invested chart need info in trade-record table, so this need to be await
     tradeRecordJson = await tradeRecordCRUD({ "mode": "read" });

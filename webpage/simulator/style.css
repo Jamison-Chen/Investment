@@ -41,7 +41,6 @@ html {
     font-family: "微軟正黑體", Arial, Helvetica, sans-serif;
     font-size: 0.9rem;
     cursor: default;
-    height: 100vh;
     user-select: none;
 }
 
@@ -60,7 +59,7 @@ body {
 
 #header {
     position: relative;
-    min-height: 40px;
+    height: 40px;
     width: 98%;
     display: flex;
     justify-content: flex-end;
@@ -123,17 +122,16 @@ body {
 }
 
 #graph-container {
-    min-height: 70vh;
+    min-height: calc(70vh);
     width: 100%;
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
     gap: 0.5rem;
     justify-items: stretch;
-    /* justify-content: center; */
 }
 
 #lower-part {
-    height: 35vh;
+    height: calc(30vh - 40px);
     width: 100%;
     background-color: #000;
 }

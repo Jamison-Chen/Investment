@@ -4,6 +4,7 @@ const assetsFraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
 const bhmixgridOption = document.getElementById("bh-mix-grid");
 const gridconstqOption = document.getElementById("grid-constant-q");
+const startBtn = document.getElementById("start-btn");
 
 function applyPriceChart(dataIn: (string | number)[][]): void {
     if (priceGraph != null) {
@@ -59,7 +60,7 @@ function simulatePriceFluct(initP: number, nDays: number): number[] {
     // let deltaPList = [1];
     let pList = [initP];
     for (let i = 0; i < nDays - 1; i++) {
-        pList.push(pList[pList.length - 1] * normal(1, 0.04));
+        pList.push(pList[pList.length - 1] * normal(1, 0.035));
     }
     return pList;
 }
@@ -121,8 +122,9 @@ function simulatorMain(): void {
     if (bhmixgridOption != null && gridconstqOption != null) {
         bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b) })
         gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq) })
+        bhmixgridOption.click();
+        startBtn?.addEventListener("click", _ => location.reload());
     }
-
 }
 
 simulatorMain();

@@ -8,6 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+const viewToggler = document.getElementById("view-toggler");
+const togglerMask = document.getElementById("toggler-mask");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
 const createRecordContainer = document.getElementById("create-trade-record-form-container");
 const createRecordForm = document.getElementById("create-record-form");
@@ -563,6 +565,17 @@ function buildStockInfoTb(myData) {
         }
     }
 }
+function controlToggler() {
+    if (togglerMask != null && viewToggler != null) {
+        togglerMask.style.left = "-1%";
+        viewToggler.addEventListener("click", moveTogglerMask);
+    }
+}
+function moveTogglerMask(e) {
+    if (togglerMask instanceof HTMLElement) {
+        togglerMask.style.left = (-1 * parseFloat(togglerMask.style.left) + 50) + "%";
+    }
+}
 function controlTab() {
     for (let each of allTabs) {
         if (each instanceof HTMLElement) {
@@ -601,6 +614,7 @@ function main() {
         if (createRecordBtn != null) {
             createRecordBtn.addEventListener("click", expandTradeRecordForm);
         }
+        controlToggler();
         controlTab();
         // The cash-invested chart need info in trade-record table, so this need to be await
         tradeRecordJson = yield tradeRecordCRUD({ "mode": "read" });

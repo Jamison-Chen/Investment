@@ -61,16 +61,54 @@ body {
     position: relative;
     min-height: 40px;
     display: flex;
-    justify-content: flex-end;
+    justify-content: center;
     align-items: center;
     padding: 0 20px;
 }
 
+#view-toggler {
+    position: relative;
+    display: flex;
+    border: 1px solid #888;
+    border-radius: 100px;
+    height: 20px;
+    width: 80px;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    margin: 0;
+}
+
+.view-option {
+    margin: 0 5px;
+    color: #888;
+    display: flex;
+    align-items: center;
+    font-size: 0.8rem;
+    height: 100%;
+}
+
+#toggler-mask {
+    position: absolute;
+    top: 0;
+    background-color: #888;
+    border-radius: 100px;
+    width: 50%;
+    height: 105%;
+    padding: 0;
+    margin: 0;
+    transition-duration: 300ms;
+}
+
 #mode-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
     border-radius: 50%;
     height: fit-content;
     width: fit-content;
-    padding: 8px;
+    padding: 10px;
+    margin: 0 10px;
     display: flex;
     flex-direction: column;
     justify-content: center;
