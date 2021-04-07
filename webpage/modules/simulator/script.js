@@ -1,9 +1,10 @@
-import { BHmixGrid, GridConstQ } from './simulator.js';
+import { BHmixGrid, GridConstQ, Chicken } from './simulator.js';
 const priceGraph = document.getElementById("price-graph");
 const assetsFraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
 const bhmixgridOption = document.getElementById("bh-mix-grid");
 const gridconstqOption = document.getElementById("grid-constant-q");
+const chickenOption = document.getElementById("chicken");
 const startBtn = document.getElementById("start-btn");
 function applyPriceChart(dataIn) {
     if (priceGraph != null) {
@@ -16,8 +17,8 @@ function applyPriceChart(dataIn) {
                 color: "#777"
             },
             curveType: 'none',
-            width: priceGraph.offsetWidth,
-            height: priceGraph.offsetHeight,
+            width: priceGraph.offsetWidth - 1,
+            height: priceGraph.offsetHeight - 1,
             legend: { position: 'none' },
         };
         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", priceGraph));
@@ -34,8 +35,8 @@ function applyAssetsCharts(dataIn) {
                 color: "#777"
             },
             curveType: 'none',
-            width: assetsFraph.offsetWidth,
-            height: assetsFraph.offsetHeight,
+            width: assetsFraph.offsetWidth - 1,
+            height: assetsFraph.offsetHeight - 1,
         };
         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", assetsFraph));
     }
@@ -72,6 +73,7 @@ function selectStrategy(e, s) {
 }
 function execStrategy(s) {
     s.followStrategy();
+    console.log(s.totalAssetsList);
     let comprehensiveData = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
     let priceData = [["Day", "Price"]];
     for (let i = 0; i < s.nDays; i++) {
@@ -99,11 +101,13 @@ function simulatorMain() {
     let gq = new GridConstQ(initTotalAssets, baseQ, nDays, pList, maxPrice, minPrice, nTable);
     // Grid Strategy (const ratio)
     // Chicken Strategy
-    if (bhmixgridOption != null && gridconstqOption != null) {
+    let c = new Chicken(initTotalAssets, nDays, pList, r);
+    if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null) {
         bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b); });
         gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq); });
+        chickenOption.addEventListener("click", (e) => { selectStrategy(e, c); });
         bhmixgridOption.click();
-        startBtn === null || startBtn === void 0 ? void 0 : startBtn.addEventListener("click", _ => location.reload());
+        startBtn.addEventListener("click", _ => location.reload());
     }
 }
 simulatorMain();

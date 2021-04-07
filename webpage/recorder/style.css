@@ -163,6 +163,7 @@ body {
     margin: 0 0 20px 0;
     display: flex;
     justify-content: space-around;
+    height: calc(100vh / 2.5);
 }
 
 #cash-invested-chart,

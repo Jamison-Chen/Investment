@@ -20,16 +20,24 @@
 
     * all
 
-2. Add search bar in the lower section of the page. When user types in any thing, try to search and filter any content that has the words entered.
+2. Provide both overview and individual view of stocks.
 
-3. Improve the appearance of the trade record table.
+---
 
-### Things that has problem to realize
+### Things that has problem to implement
 
 1. Draw a graph that describe the fluctuation of the holding-securities' market value.
 
     If a user suddenly add a trade record that happened many years ago, the local backend server then need to query lots of historical data from the remote server and then store all of them, which is very time and space-consuming.
     Moreover, if the action that user had done is just "by mistake", the whole process will then be considered waste of both time and space.
+
+---
+
+### Things that you should know
+
+1. FIFO
+
+    When selling stocks, we assume that you always sell from the first one you bought in. (This will be reflected when calculating how much cash you've invested.)
 
 ---
 

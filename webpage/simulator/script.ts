@@ -1,9 +1,10 @@
-import { BHmixGrid, GridConstQ } from './simulator.js';
+import { BHmixGrid, GridConstQ, Chicken } from './simulator.js';
 const priceGraph = document.getElementById("price-graph");
 const assetsFraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
 const bhmixgridOption = document.getElementById("bh-mix-grid");
 const gridconstqOption = document.getElementById("grid-constant-q");
+const chickenOption = document.getElementById("chicken");
 const startBtn = document.getElementById("start-btn");
 
 function applyPriceChart(dataIn: (string | number)[][]): void {
@@ -17,8 +18,8 @@ function applyPriceChart(dataIn: (string | number)[][]): void {
                 color: "#777"
             },
             curveType: 'none',
-            width: priceGraph.offsetWidth,
-            height: priceGraph.offsetHeight,
+            width: priceGraph.offsetWidth - 1,
+            height: priceGraph.offsetHeight - 1,
             legend: { position: 'none' },
             // hAxis: {
             //     title: "Day"
@@ -39,8 +40,8 @@ function applyAssetsCharts(dataIn: (string | number)[][]): void {
                 color: "#777"
             },
             curveType: 'none',
-            width: assetsFraph.offsetWidth,
-            height: assetsFraph.offsetHeight,
+            width: assetsFraph.offsetWidth - 1,
+            height: assetsFraph.offsetHeight - 1,
             // legend: { position: 'none' },
             // hAxis: {
             //     title: "Day"
@@ -72,7 +73,7 @@ function normal(mu: number, std: number): number {
     return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
 }
 
-function selectStrategy(e: Event, s: BHmixGrid | GridConstQ): void {
+function selectStrategy(e: Event, s: BHmixGrid | GridConstQ | Chicken): void {
     for (let each of allOptions) {
         each.classList.remove("active");
     }
@@ -82,8 +83,9 @@ function selectStrategy(e: Event, s: BHmixGrid | GridConstQ): void {
     execStrategy(s);
 }
 
-function execStrategy(s: BHmixGrid | GridConstQ): void {
+function execStrategy(s: BHmixGrid | GridConstQ | Chicken): void {
     s.followStrategy();
+    console.log(s.totalAssetsList)
     let comprehensiveData: (string | number)[][] = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
     let priceData: (string | number)[][] = [["Day", "Price"]];
     for (let i = 0; i < s.nDays; i++) {
@@ -117,13 +119,14 @@ function simulatorMain(): void {
 
 
     // Chicken Strategy
+    let c = new Chicken(initTotalAssets, nDays, pList, r);
 
-
-    if (bhmixgridOption != null && gridconstqOption != null) {
+    if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null) {
         bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b) })
         gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq) })
+        chickenOption.addEventListener("click", (e) => { selectStrategy(e, c) })
         bhmixgridOption.click();
-        startBtn?.addEventListener("click", _ => location.reload());
+        startBtn.addEventListener("click", _ => location.reload());
     }
 }
 
