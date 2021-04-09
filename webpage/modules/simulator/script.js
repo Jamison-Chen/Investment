@@ -4,6 +4,7 @@ const assetsFraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
 const bhmixgridOption = document.getElementById("bh-mix-grid");
 const gridconstqOption = document.getElementById("grid-constant-q");
+const gridconstratioOption = document.getElementById("grid-constant-ratio");
 const chickenOption = document.getElementById("chicken");
 const startBtn = document.getElementById("start-btn");
 function applyPriceChart(dataIn) {
@@ -47,10 +48,10 @@ function drawSimulatedChart(dataIn, options, chartType, targetDiv) {
     chart.draw(data, options);
 }
 function simulatePriceFluct(initP, nDays) {
-    // let deltaPList = [1];
     let pList = [initP];
     for (let i = 0; i < nDays - 1; i++) {
-        pList.push(pList[pList.length - 1] * normal(1, 0.035));
+        // Ramdom Walk
+        pList.push(pList[pList.length - 1] * normal(1, 0.033));
     }
     return pList;
 }
@@ -73,7 +74,6 @@ function selectStrategy(e, s) {
 }
 function execStrategy(s) {
     s.followStrategy();
-    console.log(s.totalAssetsList);
     let comprehensiveData = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
     let priceData = [["Day", "Price"]];
     for (let i = 0; i < s.nDays; i++) {
@@ -102,7 +102,7 @@ function simulatorMain() {
     // Grid Strategy (const ratio)
     // Chicken Strategy
     let c = new Chicken(initTotalAssets, nDays, pList, r);
-    if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null) {
+    if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null && gridconstratioOption != null) {
         bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b); });
         gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq); });
         chickenOption.addEventListener("click", (e) => { selectStrategy(e, c); });

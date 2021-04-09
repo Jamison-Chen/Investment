@@ -48,13 +48,11 @@ class Strategy {
     }
 }
 export class BHmixGrid extends Strategy {
-    public r: number;
     constructor(initTotalAsset: number, nDays: number, pList: number[], r: number) {
         super();
         this.totalAssetsList = [initTotalAsset];
         this.nDays = nDays;
         this.pList = pList;
-        this.r = r;
         let p0 = this.pList[0];
         let q0 = this.calcQToday(initTotalAsset, p0, p0, (1 + r) * p0);
         this.cumulInvestCashList = [q0 * p0];
@@ -197,9 +195,19 @@ export class Chicken extends Strategy {
                 // Once price falls, sell almost all out.
             } else if (this.pList[i] < this.pList[i - 1]) {
                 for (let eachPrice in buyHistory) {
-                    if (parseFloat(eachPrice) < this.pList[i]) {
-                        qToday -= buyHistory[eachPrice];
-                        buyHistory[eachPrice] = 0;
+                    if (buyHistory[eachPrice] > 0) {
+                        if (parseFloat(eachPrice) < this.pList[i]) {
+                            qToday -= buyHistory[eachPrice];
+                            buyHistory[eachPrice] = 0;
+                        }
+                        // And slighly lower the lowest price that you're willing to sell.
+                        else {
+                            let newKey = Math.round((parseFloat(eachPrice) * 0.999 + Number.EPSILON) * 1000) / 1000;
+                            // Sometimes newKey will equal the original key, so we have to do it in this way...
+                            let tempQ = buyHistory[eachPrice];
+                            buyHistory[eachPrice] = 0;
+                            buyHistory[`${newKey}`] = tempQ;
+                        }
                     }
                 }
                 latestMinP = this.pList[i];
