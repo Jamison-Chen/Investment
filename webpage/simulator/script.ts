@@ -1,4 +1,4 @@
-import { BHmixGrid, GridConstQ, Chicken } from './simulator.js';
+import { Strategy, BHmixGrid, GridConstQ, Chicken } from './simulator.js';
 const priceGraph = document.getElementById("price-graph");
 const assetsFraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
@@ -74,7 +74,7 @@ function normal(mu: number, std: number): number {
     return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
 }
 
-function selectStrategy(e: Event, s: BHmixGrid | GridConstQ | Chicken): void {
+function selectStrategy(e: Event, s: Strategy): void {
     for (let each of allOptions) {
         each.classList.remove("active");
     }
@@ -84,7 +84,7 @@ function selectStrategy(e: Event, s: BHmixGrid | GridConstQ | Chicken): void {
     execStrategy(s);
 }
 
-function execStrategy(s: BHmixGrid | GridConstQ | Chicken): void {
+function execStrategy(s: Strategy): void {
     s.followStrategy();
     let comprehensiveData: (string | number)[][] = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
     let priceData: (string | number)[][] = [["Day", "Price"]];

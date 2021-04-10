@@ -1,4 +1,4 @@
-class Strategy {
+export class Strategy {
     constructor() {
         this.nDays = 0;
         this.dailyQList = [];
@@ -39,6 +39,7 @@ class Strategy {
         this.calcRateOfReturn(i);
         this.totalAssetsList.push(this.cashList[i] + this.securMktValList[i]);
     }
+    followStrategy() { }
 }
 export class BHmixGrid extends Strategy {
     constructor(initTotalAsset, nDays, pList, r) {

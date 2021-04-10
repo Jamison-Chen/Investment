@@ -298,7 +298,7 @@ function cashInvChartData(endDateStr, tradeRecordData) {
                 if (q >= 0) { // When buying
                     // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
                     // dataRow[idx] += p*q;
-                    // if in JavaScript.
+                    // if in Pure JavaScript.
                     dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (p * q);
                 }
                 else { // When selling
@@ -439,13 +439,14 @@ function applyComponentChart(dataIn) {
     };
     google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "PieChart", componentChart));
 }
-function applyCompareChart(cashInvested, securityMktVal, cashExtracted) {
+function applyCompareChart(cashInvested, securityMktVal, cashExtracted, handlingFee) {
     google.charts.load('current', { 'packages': ['corechart', 'bar'] });
     let dataIn = [
         ["Assets", "Value", { role: "style" }],
         ["Cash Invested", cashInvested, "#0a5"],
         ["Security Mkt Val", securityMktVal, "#b00"],
-        ["Cash Extracted", cashExtracted, "#00b"]
+        ["Cash Extracted", cashExtracted, "#00b"],
+        ["Fee", handlingFee, "#f0f"]
     ];
     let options = {
         title: '現金與市值',
@@ -533,10 +534,11 @@ function decideURL(date = "", sidList = [], companyNameList = []) {
         return "";
     }
 }
-function buildStockInfoTb(myData) {
+function buildStockInfoTable(myData) {
     if (stockInfoTableContainer != null && stockInfoTableBody != null) {
         stockInfoTableContainer.classList.remove("waiting-data");
         stockInfoTableContainer.classList.add("data-arrived");
+        console.log(myData);
         for (let eachStock of myData) {
             if (allHoldingSids.has(eachStock["證券代號"])) {
                 let tr = document.createElement("tr");
@@ -544,7 +546,7 @@ function buildStockInfoTb(myData) {
                 let temp;
                 for (let eachField in eachStock) {
                     if (eachField) {
-                        if (eachField.indexOf("最後") == -1) {
+                        if (eachField.indexOf("最後") == -1 && eachField.indexOf("開盤價") == -1) {
                             if (eachField.indexOf("價差") == -1) {
                                 let td = document.createElement("td");
                                 td.className = eachField;
@@ -624,13 +626,16 @@ function main() {
         let cashInvestedData = cashInvChartData(todayStr, tradeRecordJson["data"]);
         let startDateStr = getDateStr(new Date(), "aMonth");
         applyCashInvestedChart(startDateStr, cashInvestedData);
-        // The component chart need info in stock-info table, so this need to be await
+        // The component chart need info in stock-info table, so this need to be await.
+        // But the stock-info table need to be drawn after plotting.
         stockInfoJson = yield fetchStockSingleDay("", [...allHoldingSids]);
         let componentData = componentChartData();
         applyComponentChart(componentData);
-        applyCompareChart(cashInvested, securityMktVal, cashExtracted);
+        applyCompareChart(cashInvested, securityMktVal, cashExtracted, handlingFee);
         buildRecordTable(tradeRecordJson["data"]);
-        buildStockInfoTb(stockInfoJson["data"]);
+        // The following step must br done after plotting the component graph
+        // because there will be some stocks' balance quantity ending up to be 0 after buying and selling.
+        buildStockInfoTable(stockInfoJson["data"]);
     });
 }
 main();

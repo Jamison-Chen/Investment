@@ -5,8 +5,8 @@
 
 @media screen and (min-width:1024px) {
      :root {
-        --tradeRecordTableWidth: 700px;
-        --stockInfoTableWidth: 925px;
+        --tradeRecordTableWidth: 610px;
+        --stockInfoTableWidth: 845px;
     }
 }
 
@@ -382,12 +382,14 @@ body {
 
 .table {
     border-collapse: collapse;
-    text-align: center;
+    text-align: end;
+    margin-bottom: 50px;
 }
 
 .table th {
     position: sticky;
     top: 0;
+    text-align: center;
 }
 
 #trade-record-table {
