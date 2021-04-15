@@ -1,4 +1,4 @@
-import { BHmixGrid, GridConstQ, Chicken } from './simulator.js';
+import { BHmixGrid, GridConstQ, Chicken, GridConstRatio } from './simulator.js';
 const priceGraph = document.getElementById("price-graph");
 const assetsFraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
@@ -101,6 +101,8 @@ function simulatorMain() {
     let argsGQ = [maxPrice, minPrice, nTable, 0];
     let gq = new GridConstQ(initTotalAssets, nDays, pList);
     // Grid Strategy (const ratio)
+    let argsGR = [maxPrice, minPrice, nTable, 0.5, 0];
+    let gr = new GridConstRatio(initTotalAssets, nDays, pList);
     // Chicken Strategy
     let r2 = 0.1;
     let argsC = [r2, 0];
@@ -108,6 +110,7 @@ function simulatorMain() {
     if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null && gridconstratioOption != null) {
         bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b, argsB); });
         gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq, argsGQ); });
+        gridconstratioOption.addEventListener("click", (e) => { selectStrategy(e, gr, argsGR); });
         chickenOption.addEventListener("click", (e) => { selectStrategy(e, c, argsC); });
         bhmixgridOption.click();
         startBtn.addEventListener("click", _ => location.reload());

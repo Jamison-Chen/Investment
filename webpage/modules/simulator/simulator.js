@@ -128,7 +128,7 @@ export class GridConstQ extends Strategy {
                 }
                 else if (newStandAt > standAt) { // If price falls,
                     let qIfAllIn = Math.floor(this.cashList[i - 1] / this.pList[i]);
-                    if (newStandAt < nTable) { // If price isn't too low, buy some.
+                    if (newStandAt <= nTable) { // If price isn't too low, buy some.
                         qToday = Math.floor((qIfAllIn / (nTable - standAt)) * (newStandAt - standAt));
                         // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?(還有剩下多少目前價格以下的網格?)
                         // (newStandAt - standAt): 上次所處網格與這次所處網格的距離
@@ -137,6 +137,62 @@ export class GridConstQ extends Strategy {
                         qToday = qIfAllIn;
                     }
                     qStack.push(qToday);
+                }
+                standAt = newStandAt;
+            }
+            this.recordAllInfo(qToday, i);
+        }
+    }
+    calcStandAt(price, aList) {
+        let result = 0;
+        for (let each of aList) {
+            if (price >= each) {
+                return result;
+            }
+            result++;
+        }
+        return result;
+    }
+}
+export class GridConstRatio extends Strategy {
+    followStrategy(maxPrice, minPrice, nTable, securityRatio, startDay) {
+        // Draw divide lines
+        // numbers in divideLines are in descending order
+        let divideLines = [];
+        for (let i = 0; i < nTable + 1; i++) {
+            divideLines.push((minPrice * i / nTable) + (maxPrice * (nTable - i) / nTable));
+        }
+        let standAt = this.calcStandAt(this.pList[startDay], divideLines);
+        for (let i = startDay; i < this.nDays; i++) {
+            let qToday = 0;
+            if (i == 0) {
+                qToday = Math.floor(this.totalAssetsList[i] * securityRatio / this.pList[i]);
+            }
+            else {
+                let newStandAt = this.calcStandAt(this.pList[i], divideLines);
+                if (newStandAt < standAt) { // If price rises,
+                    if (this.cumulQList[i - 1] > 0) {
+                        if (newStandAt > 0) { // If price isn't too high, sell a part.
+                            while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) > (this.cashList[i - 1] - qToday * this.pList[i])) {
+                                qToday--;
+                            }
+                            qToday = Math.max(-1 * this.cumulQList[i - 1], qToday);
+                        }
+                        else { // If price is too high, sell all out.
+                            qToday = -1 * this.cumulQList[i - 1];
+                        }
+                    }
+                }
+                else if (newStandAt > standAt) { // If price falls,
+                    let qIfAllIn = Math.floor(this.cashList[i - 1] / this.pList[i]);
+                    if (newStandAt <= nTable) { // If price isn't too low, buy some.
+                        while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) < (this.cashList[i - 1] - qToday * this.pList[i])) {
+                            qToday++;
+                        }
+                    }
+                    else { // If price is too low, buy all in.
+                        qToday = qIfAllIn;
+                    }
                 }
                 standAt = newStandAt;
             }
