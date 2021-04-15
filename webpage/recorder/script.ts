@@ -563,10 +563,11 @@ function buildStockInfoTable(myData: any[]): void {
                                 tr.appendChild(td);
                                 if (eachField.indexOf("(+/-)") != -1) {
                                     temp = td;
-                                } else if (eachField.indexOf("成交股數") != -1) {
-                                    let tradeQToday = parseInt(eachStock[eachField].split(",").join("")) / 1000;
-                                    td.innerHTML = tradeQToday.toLocaleString();
                                 }
+                                // else if (eachField.indexOf("成交股數") != -1) {
+                                //     let tradeQToday = parseInt(eachStock[eachField].split(",").join("")) / 1000;
+                                //     td.innerHTML = tradeQToday.toLocaleString();
+                                // }
                             } else if (temp instanceof HTMLElement) {
                                 if (temp.innerHTML == "+") {
                                     tr.style.color = "#F00";

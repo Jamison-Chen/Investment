@@ -111,11 +111,10 @@ function simulatorMain(): void {
     let b = new BHmixGrid(initTotalAssets, nDays, pList);
 
     // Grid Strategy (const q)
-    let baseQ = 5;
     let maxPrice = 300;
-    let minPrice = 0;
-    let nTable = 50;
-    let argsGQ: (number | string)[] = [baseQ, maxPrice, minPrice, nTable, 0];
+    let minPrice = 25;
+    let nTable = 55;
+    let argsGQ: (number | string)[] = [maxPrice, minPrice, nTable, 0];
     let gq = new GridConstQ(initTotalAssets, nDays, pList);
 
     // Grid Strategy (const ratio)

@@ -95,11 +95,10 @@ function simulatorMain() {
     let argsB = [r, 0];
     let b = new BHmixGrid(initTotalAssets, nDays, pList);
     // Grid Strategy (const q)
-    let baseQ = 5;
     let maxPrice = 300;
-    let minPrice = 0;
-    let nTable = 50;
-    let argsGQ = [baseQ, maxPrice, minPrice, nTable, 0];
+    let minPrice = 25;
+    let nTable = 55;
+    let argsGQ = [maxPrice, minPrice, nTable, 0];
     let gq = new GridConstQ(initTotalAssets, nDays, pList);
     // Grid Strategy (const ratio)
     // Chicken Strategy
