@@ -51,11 +51,11 @@ function simulatePriceFluct(initP, nDays) {
     let pList = [initP];
     for (let i = 0; i < nDays - 1; i++) {
         // Ramdom Walk
-        pList.push(pList[pList.length - 1] * normal(1, 0.033));
+        pList.push(pList[pList.length - 1] * normalSample(1, 0.033));
     }
     return pList;
 }
-function normal(mu, std) {
+function normalSample(mu, std) {
     let u = 0, v = 0;
     while (u === 0)
         u = Math.random(); //Converting [0,1) to (0,1)
@@ -63,17 +63,17 @@ function normal(mu, std) {
         v = Math.random();
     return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
 }
-function selectStrategy(e, s) {
+function selectStrategy(e, s, args) {
     for (let each of allOptions) {
         each.classList.remove("active");
     }
     if (e.currentTarget instanceof HTMLElement) {
         e.currentTarget.classList.add("active");
     }
-    execStrategy(s);
+    execStrategy(s, args);
 }
-function execStrategy(s) {
-    s.followStrategy();
+function execStrategy(s, args) {
+    s.followStrategy(...args);
     let comprehensiveData = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
     let priceData = [["Day", "Price"]];
     for (let i = 0; i < s.nDays; i++) {
@@ -92,20 +92,24 @@ function simulatorMain() {
     let pList = simulatePriceFluct(initP, nDays);
     // BHmixGrid Strategy
     let r = 0.05;
-    let b = new BHmixGrid(initTotalAssets, nDays, pList, r);
+    let argsB = [r, 0];
+    let b = new BHmixGrid(initTotalAssets, nDays, pList);
     // Grid Strategy (const q)
+    let baseQ = 5;
     let maxPrice = 300;
     let minPrice = 0;
     let nTable = 50;
-    let baseQ = 5;
-    let gq = new GridConstQ(initTotalAssets, baseQ, nDays, pList, maxPrice, minPrice, nTable);
+    let argsGQ = [baseQ, maxPrice, minPrice, nTable, 0];
+    let gq = new GridConstQ(initTotalAssets, nDays, pList);
     // Grid Strategy (const ratio)
     // Chicken Strategy
-    let c = new Chicken(initTotalAssets, nDays, pList, r);
+    let r2 = 0.1;
+    let argsC = [r2, 0];
+    let c = new Chicken(initTotalAssets, nDays, pList);
     if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null && gridconstratioOption != null) {
-        bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b); });
-        gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq); });
-        chickenOption.addEventListener("click", (e) => { selectStrategy(e, c); });
+        bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b, argsB); });
+        gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq, argsGQ); });
+        chickenOption.addEventListener("click", (e) => { selectStrategy(e, c, argsC); });
         bhmixgridOption.click();
         startBtn.addEventListener("click", _ => location.reload());
     }

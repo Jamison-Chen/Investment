@@ -5,8 +5,8 @@
 
 @media screen and (min-width:1024px) {
      :root {
-        --tradeRecordTableWidth: 610px;
-        --stockInfoTableWidth: 845px;
+        --tradeRecordTableWidth: 600px;
+        --stockInfoTableWidth: 630px;
     }
 }
 
@@ -421,8 +421,7 @@ body {
     color: var(--bgc);
 }
 
-#trade-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)),
-#stock-info-table tr:nth-child(even)>:nth-child(n) {
+#trade-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)) {
     background-color: #f2f2f2;
 }
 
@@ -431,10 +430,11 @@ body {
     background-color: #ddd;
 }
 
-.trade-record-table-row .id {
+
+/* .trade-record-table-row .id {
     font-size: 0.8rem;
     color: #888;
-}
+} */
 
 .trade-record-table-row span.input {
     border: 1px solid transparent;

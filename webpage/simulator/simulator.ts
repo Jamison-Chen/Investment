@@ -1,23 +1,26 @@
-export class Strategy {
-    public nDays: number;
-    public dailyQList: number[];
-    public cumulQList: number[];
-    public pList: number[];
-    public cumulInvestCashList: number[];
-    public cashList: number[];
-    public rateOfReturnList: number[];
-    public securMktValList: number[];
-    public totalAssetsList: number[];
-    constructor() {
-        this.nDays = 0;
+export interface Strategy {
+    nDays: number;
+    dailyQList: number[];
+    cumulQList: number[];
+    pList: number[];
+    cumulInvestCashList: number[];
+    cashList: number[];
+    rateOfReturnList: number[];
+    securMktValList: number[];
+    totalAssetsList: number[];
+    followStrategy(...args: any[]): void;
+}
+export class Strategy implements Strategy {
+    constructor(initTotalAsset: number, nDays: number, pList: number[]) {
+        this.totalAssetsList = [initTotalAsset];
+        this.nDays = nDays;
+        this.pList = pList;
         this.dailyQList = [];
         this.cumulQList = [];
-        this.pList = [];
         this.cumulInvestCashList = [];
         this.cashList = [];
         this.rateOfReturnList = [];
         this.securMktValList = [];
-        this.totalAssetsList = [];
     }
     public recordQuantity(qToday: number, i: number): void {
         this.dailyQList.push(qToday);
@@ -40,47 +43,45 @@ export class Strategy {
         }
     }
     public recordAllInfo(qToday: number, i: number): void {
-        this.recordQuantity(qToday, i);
-        this.recordCashFlow(qToday, i);
-        this.securMktValList.push(this.cumulQList[i] * this.pList[i]);
-        this.calcRateOfReturn(i);
-        this.totalAssetsList.push(this.cashList[i] + this.securMktValList[i])
+        if (i == 0) {
+            this.cumulInvestCashList = [qToday * this.pList[i]];
+            this.cashList = [this.totalAssetsList[i] - qToday * this.pList[i]];
+            this.securMktValList = [qToday * this.pList[i]];
+            this.rateOfReturnList = [0];
+            this.cumulQList = [qToday];
+            this.dailyQList = [qToday];
+        } else {
+            this.recordQuantity(qToday, i);
+            this.recordCashFlow(qToday, i);
+            this.securMktValList.push(this.cumulQList[i] * this.pList[i]);
+            this.calcRateOfReturn(i);
+            this.totalAssetsList.push(this.cashList[i] + this.securMktValList[i]);
+        }
     }
-    public followStrategy(): void { }
 }
 export class BHmixGrid extends Strategy {
-    constructor(initTotalAsset: number, nDays: number, pList: number[], r: number) {
-        super();
-        this.totalAssetsList = [initTotalAsset];
-        this.nDays = nDays;
-        this.pList = pList;
-        let p0 = this.pList[0];
-        let q0 = this.calcQToday(initTotalAsset, p0, p0, (1 + r) * p0);
-        this.cumulInvestCashList = [q0 * p0];
-        this.cashList = [initTotalAsset - q0 * p0];
-        this.securMktValList = [q0 * p0];
-        this.rateOfReturnList = [0];
-        this.cumulQList = [q0];
-        this.dailyQList = [q0];
-    }
-    public followStrategy(): void {
-        let latestMaxP = this.pList[0];
-        let latestMinP = this.pList[0];
-        for (let i = 1; i < this.nDays; i++) {
+    public followStrategy(r: number, startDay: number): void {
+        let latestMaxP = this.pList[startDay];
+        let latestMinP = this.pList[startDay];
+        for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
-                if (this.cumulQList[i - 1] == 0) {
+            if (i == 0) {
+                qToday = this.calcQToday(this.totalAssetsList[i], this.pList[i], this.pList[i], (1 + r) * this.pList[i]);
+            } else {
+                if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
+                    if (this.cumulQList[i - 1] == 0) {
+                        latestMaxP = this.pList[i];
+                    }
+                    qToday = this.calcQToday(this.cashList[i - 1], this.pList[i], latestMaxP, latestMinP);
+                    if (qToday > 0) {
+                        latestMinP = this.pList[i];
+                    }
+                } else if (this.pList[i] > latestMaxP) {
+                    // Sell all out
+                    qToday = -1 * this.cumulQList[i - 1];
                     latestMaxP = this.pList[i];
-                }
-                qToday = this.calcQToday(this.cashList[i - 1], this.pList[i], latestMaxP, latestMinP);
-                if (qToday > 0) {
                     latestMinP = this.pList[i];
                 }
-            } else if (this.pList[i] > latestMaxP) {
-                // Sell all out
-                qToday = -1 * this.cumulQList[i - 1];
-                latestMaxP = this.pList[i];
-                latestMinP = this.pList[i];
             }
             this.recordAllInfo(qToday, i);
         }
@@ -101,56 +102,41 @@ export class BHmixGrid extends Strategy {
     }
 }
 export class GridConstQ extends Strategy {
-    public baseQ: number;
-    public maxPrice: number;
-    public minPrice: number;
-    public nTable: number;
-    constructor(initTotalAsset: number, baseQ: number, nDays: number, pList: number[], maxPrice: number, minPrice: number, nTable: number) {
-        super();
-        this.baseQ = baseQ;
-        this.nDays = nDays;
-        this.totalAssetsList = [initTotalAsset];
-        this.cumulInvestCashList = [baseQ * pList[0]];
-        this.cashList = [initTotalAsset - baseQ * pList[0]];
-        this.securMktValList = [baseQ * pList[0]];
-        this.rateOfReturnList = [0];
-        this.pList = pList;
-        this.cumulQList = [baseQ];
-        this.dailyQList = [baseQ];
-        this.maxPrice = maxPrice;
-        this.minPrice = minPrice;
-        this.nTable = nTable;
-    }
-    public followStrategy(): void {
+    public followStrategy(baseQ: number, maxPrice: number, minPrice: number, nTable: number, startDay: number): void {
+        // Draw divide lines
         // numbers in divideLines are in descending order
         let divideLines: number[] = [];
-        for (let i = 0; i < this.nTable + 1; i++) {
-            divideLines.push(this.minPrice * i / this.nTable + this.maxPrice * (this.nTable - i) / this.nTable);
+        for (let i = 0; i < nTable + 1; i++) {
+            divideLines.push(minPrice * i / nTable + maxPrice * (nTable - i) / nTable);
         }
-        let standAt = this.calcStandAt(this.pList[0], divideLines);
-        for (let i = 1; i < this.nDays; i++) {
-            let newStandAt = this.calcStandAt(this.pList[i], divideLines);
-            // If price rises, sell.
+        let standAt = this.calcStandAt(this.pList[startDay], divideLines);
+        for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (newStandAt < standAt) {
-                // If price isn't too high
-                if (newStandAt > 0) {
-                    if (this.cumulQList[i - 1] > 0) {
-                        qToday = Math.max(-1 * this.cumulQList[i - 1], -1 * this.baseQ);
+            if (i == 0) {
+                qToday = baseQ;
+            } else {
+                let newStandAt = this.calcStandAt(this.pList[i], divideLines);
+                // If price rises,
+                if (newStandAt < standAt) {
+                    // If price isn't too high, sell.
+                    if (newStandAt > 0) {
+                        if (this.cumulQList[i - 1] > 0) {
+                            qToday = Math.max(-1 * this.cumulQList[i - 1], -1 * baseQ);
+                        }
+                    }
+                    // If price falls,
+                } else if (newStandAt > standAt) {
+                    // If price isn't too low, buy.
+                    if (newStandAt < nTable) {
+                        qToday = baseQ;
                     }
                 }
-                // If price falls, buy.
-            } else if (newStandAt > standAt) {
-                // If price isn't too low
-                if (newStandAt < this.nTable) {
-                    qToday = this.baseQ;
-                }
+                standAt = newStandAt;
             }
             this.recordAllInfo(qToday, i);
-            standAt = newStandAt;
         }
     }
-    public calcStandAt(price: number, aList: number[]) {
+    public calcStandAt(price: number, aList: number[]): number {
         let result = 0;
         for (let each of aList) {
             if (price >= each) {
@@ -162,56 +148,44 @@ export class GridConstQ extends Strategy {
     }
 }
 export class Chicken extends Strategy {
-    public r: number;
-    constructor(initTotalAsset: number, nDays: number, pList: number[], r: number) {
-        super();
-        this.totalAssetsList = [initTotalAsset];
-        this.nDays = nDays;
-        this.pList = pList;
-        this.r = r;
-        let p0 = this.pList[0];
-        let q0 = this.calcQToday(r, initTotalAsset, p0, p0);
-        this.cumulInvestCashList = [q0 * p0];
-        this.cashList = [initTotalAsset - q0 * p0];
-        this.securMktValList = [q0 * p0];
-        this.rateOfReturnList = [0];
-        this.cumulQList = [q0];
-        this.dailyQList = [q0];
-    }
-    public followStrategy(): void {
-        let latestMinP = this.pList[0];
+    public followStrategy(r: number, startDay: number): void {
+        let latestMinP = this.pList[startDay];
         let buyHistory: any = {};
-        for (let i = 1; i < this.nDays; i++) {
+        for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            // If price rises, buy in.
-            if (this.pList[i] > this.pList[i - 1]) {
-                qToday = this.calcQToday(this.r, this.cashList[i - 1], this.pList[i], latestMinP);
-                // round to the 3rd decimal
-                let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
-                if (buyHistory[`${key}`] == undefined) {
-                    buyHistory[`${key}`] = qToday;
-                } else {
-                    buyHistory[`${key}`] += qToday;
-                }
-                // Once price falls, sell almost all out.
-            } else if (this.pList[i] < this.pList[i - 1]) {
-                for (let eachPrice in buyHistory) {
-                    if (buyHistory[eachPrice] > 0) {
-                        if (parseFloat(eachPrice) < this.pList[i]) {
-                            qToday -= buyHistory[eachPrice];
-                            buyHistory[eachPrice] = 0;
-                        }
-                        // And slighly lower the lowest price that you're willing to sell.
-                        else {
-                            let newKey = Math.round((parseFloat(eachPrice) * 0.999 + Number.EPSILON) * 1000) / 1000;
-                            // Sometimes newKey will equal the original key, so we have to do it in this way...
-                            let tempQ = buyHistory[eachPrice];
-                            buyHistory[eachPrice] = 0;
-                            buyHistory[`${newKey}`] = tempQ;
+            if (i == 0) {
+                qToday = this.calcQToday(r, this.totalAssetsList[i], this.pList[i], this.pList[i]);
+            } else {
+                // If price rises, buy in.
+                if (this.pList[i] > this.pList[i - 1]) {
+                    qToday = this.calcQToday(r, this.cashList[i - 1], this.pList[i], latestMinP);
+                    // round to the 3rd decimal
+                    let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
+                    if (buyHistory[`${key}`] == undefined) {
+                        buyHistory[`${key}`] = qToday;
+                    } else {
+                        buyHistory[`${key}`] += qToday;
+                    }
+                    // Once price falls, sell almost all out.
+                } else if (this.pList[i] < this.pList[i - 1]) {
+                    for (let eachPrice in buyHistory) {
+                        if (buyHistory[eachPrice] > 0) {
+                            if (parseFloat(eachPrice) < this.pList[i]) {
+                                qToday -= buyHistory[eachPrice];
+                                buyHistory[eachPrice] = 0;
+                            }
+                            // And slighly lower the lowest price that you're willing to sell.
+                            else {
+                                let newKey = Math.round((parseFloat(eachPrice) * 0.999 + Number.EPSILON) * 1000) / 1000;
+                                // Sometimes newKey will equal the original key, so we have to do it in this way...
+                                let tempQ = buyHistory[eachPrice];
+                                buyHistory[eachPrice] = 0;
+                                buyHistory[`${newKey}`] = tempQ;
+                            }
                         }
                     }
+                    latestMinP = this.pList[i];
                 }
-                latestMinP = this.pList[i];
             }
             this.recordAllInfo(qToday, i);
         }
@@ -220,9 +194,9 @@ export class Chicken extends Strategy {
         let qIfAllIn = cashOwned / pToday;
         let baseQ = r * qIfAllIn;
         // 3 strategies for deciding multiplier are given:
-        // let multiplier = 1
-        let multiplier = latestMinP / pToday;
-        // let multiplier = (latestMinP / pToday)**2;
+        let multiplier = 1
+        // let multiplier = (latestMinP / pToday) ** 5;
+        // let multiplier = 1 / (1 + pToday - latestMinP);
         return Math.floor(baseQ * multiplier);
     }
 }

@@ -548,7 +548,6 @@ function buildStockInfoTable(myData: any[]): void {
     if (stockInfoTableContainer != null && stockInfoTableBody != null) {
         stockInfoTableContainer.classList.remove("waiting-data");
         stockInfoTableContainer.classList.add("data-arrived");
-        console.log(myData)
         for (let eachStock of myData) {
             if (allHoldingSids.has(eachStock["證券代號"])) {
                 let tr = document.createElement("tr");
@@ -556,7 +555,7 @@ function buildStockInfoTable(myData: any[]): void {
                 let temp: HTMLElement | undefined;
                 for (let eachField in eachStock) {
                     if (eachField) {
-                        if (eachField.indexOf("最後") == -1 && eachField.indexOf("開盤價") == -1) {
+                        if (eachField.indexOf("最後") == -1 && eachField.indexOf("開盤價") == -1 && eachField.indexOf("最高價") == -1 && eachField.indexOf("最低價") == -1 && eachField.indexOf("成交筆數") == -1) {
                             if (eachField.indexOf("價差") == -1) {
                                 let td = document.createElement("td");
                                 td.className = eachField;
@@ -564,8 +563,20 @@ function buildStockInfoTable(myData: any[]): void {
                                 tr.appendChild(td);
                                 if (eachField.indexOf("(+/-)") != -1) {
                                     temp = td;
+                                } else if (eachField.indexOf("成交股數") != -1) {
+                                    let tradeQToday = parseInt(eachStock[eachField].split(",").join("")) / 1000;
+                                    td.innerHTML = tradeQToday.toLocaleString();
                                 }
                             } else if (temp instanceof HTMLElement) {
+                                if (temp.innerHTML == "+") {
+                                    tr.style.color = "#F00";
+                                    temp.innerHTML = "▲";
+                                } else if (temp.innerHTML == "-") {
+                                    tr.style.color = "#0B0";
+                                    temp.innerHTML = "▼";
+                                } else {
+                                    tr.style.color = "#888";
+                                }
                                 temp.innerHTML += eachStock[eachField];
                             }
                         }
