@@ -1,5 +1,6 @@
 export class Strategy {
-    constructor(initTotalAsset, nDays, pList) {
+    constructor(strategyName, initTotalAsset, nDays, pList) {
+        this.name = strategyName;
         this.totalAssetsList = [initTotalAsset];
         this.nDays = nDays;
         this.pList = pList;

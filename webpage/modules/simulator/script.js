@@ -6,6 +6,7 @@ const bhmixgridOption = document.getElementById("bh-mix-grid");
 const gridconstqOption = document.getElementById("grid-constant-q");
 const gridconstratioOption = document.getElementById("grid-constant-ratio");
 const chickenOption = document.getElementById("chicken");
+const comparisonOption = document.getElementById("comparison");
 const startBtn = document.getElementById("start-btn");
 function applyPriceChart(dataIn) {
     if (priceGraph != null) {
@@ -25,11 +26,11 @@ function applyPriceChart(dataIn) {
         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", priceGraph));
     }
 }
-function applyAssetsCharts(dataIn) {
+function applyAssetsCharts(title, dataIn) {
     if (assetsFraph != null) {
         google.charts.load('current', { 'packages': ["corechart"] });
         let options = {
-            title: '各項資產',
+            title: title,
             titleTextStyle: {
                 fontSize: 16,
                 bold: false,
@@ -73,7 +74,9 @@ function selectStrategy(e, s, args) {
     execStrategy(s, args);
 }
 function execStrategy(s, args) {
-    s.followStrategy(...args);
+    if (s.dailyQList.length == 0) {
+        s.followStrategy(...args);
+    }
     let comprehensiveData = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
     let priceData = [["Day", "Price"]];
     for (let i = 0; i < s.nDays; i++) {
@@ -83,7 +86,31 @@ function execStrategy(s, args) {
         priceData.push(eachPrice);
     }
     applyPriceChart(priceData);
-    applyAssetsCharts(comprehensiveData);
+    applyAssetsCharts("各項資產", comprehensiveData);
+}
+function compareStrategies(e, strategies) {
+    for (let each of allOptions) {
+        each.classList.remove("active");
+    }
+    if (e.currentTarget instanceof HTMLElement) {
+        e.currentTarget.classList.add("active");
+    }
+    let comparedData = [["Day"]];
+    for (let eachStrategy of strategies) {
+        comparedData[0].push(eachStrategy[0].name);
+        if (eachStrategy[0].dailyQList.length == 0) {
+            eachStrategy[0].followStrategy(...eachStrategy[1]);
+        }
+        for (let i = 0; i < eachStrategy[0].totalAssetsList.length; i++) {
+            try {
+                comparedData[i + 1].push(eachStrategy[0].totalAssetsList[i]);
+            }
+            catch (_a) {
+                comparedData.push([i + 1, eachStrategy[0].totalAssetsList[i]]);
+            }
+        }
+    }
+    applyAssetsCharts("獲利比較", comparedData);
 }
 function simulatorMain() {
     let initP = 100;
@@ -93,25 +120,26 @@ function simulatorMain() {
     // BHmixGrid Strategy
     let r = 0.05;
     let argsB = [r, 0];
-    let b = new BHmixGrid(initTotalAssets, nDays, pList);
+    let b = new BHmixGrid("BHmixGrid", initTotalAssets, nDays, pList);
     // Grid Strategy (const q)
     let maxPrice = 300;
     let minPrice = 25;
     let nTable = 55;
     let argsGQ = [maxPrice, minPrice, nTable, 0];
-    let gq = new GridConstQ(initTotalAssets, nDays, pList);
+    let gq = new GridConstQ("GridConstQ", initTotalAssets, nDays, pList);
     // Grid Strategy (const ratio)
     let argsGR = [maxPrice, minPrice, nTable, 0.5, 0];
-    let gr = new GridConstRatio(initTotalAssets, nDays, pList);
+    let gr = new GridConstRatio("GridConstRatio", initTotalAssets, nDays, pList);
     // Chicken Strategy
     let r2 = 0.1;
     let argsC = [r2, 0];
-    let c = new Chicken(initTotalAssets, nDays, pList);
-    if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null && gridconstratioOption != null) {
+    let c = new Chicken("Chicken", initTotalAssets, nDays, pList);
+    if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null && gridconstratioOption != null && comparisonOption != null) {
         bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b, argsB); });
         gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq, argsGQ); });
         gridconstratioOption.addEventListener("click", (e) => { selectStrategy(e, gr, argsGR); });
         chickenOption.addEventListener("click", (e) => { selectStrategy(e, c, argsC); });
+        comparisonOption.addEventListener("click", (e) => { compareStrategies(e, [[b, argsB], [gq, argsGQ], [gr, argsGR], [c, argsC]]); });
         bhmixgridOption.click();
         startBtn.addEventListener("click", _ => location.reload());
     }

@@ -1,4 +1,5 @@
 export interface Strategy {
+    name: string;
     nDays: number;
     dailyQList: number[];
     cumulQList: number[];
@@ -11,7 +12,8 @@ export interface Strategy {
     followStrategy(...args: any[]): void;
 }
 export class Strategy implements Strategy {
-    constructor(initTotalAsset: number, nDays: number, pList: number[]) {
+    constructor(strategyName: string, initTotalAsset: number, nDays: number, pList: number[]) {
+        this.name = strategyName;
         this.totalAssetsList = [initTotalAsset];
         this.nDays = nDays;
         this.pList = pList;
