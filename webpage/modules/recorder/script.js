@@ -316,7 +316,7 @@ function cashInvChartData(endDateStr, tradeRecordData) {
                                     }
                                     else {
                                         stockWarehouse[s][eachT][eachP] = 0;
-                                        dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (parseFloat(eachP) * eachQ);
+                                        dataRow[idx] = parseFloat(`${dataRow[idx]}`) - (parseFloat(eachP) * eachQ);
                                         cashExtracted += (p - parseFloat(eachP)) * eachQ;
                                         q = diff;
                                     }
@@ -365,9 +365,9 @@ function componentChartData() {
     // Q * market value
     for (let eachStock of stockInfoJson["data"]) {
         for (let eachResult of result) {
-            if (eachStock["證券代號"] == eachResult[0]) {
+            if (eachStock["sid"] == eachResult[0]) {
                 if (typeof eachResult[1] == "number") {
-                    eachResult[1] *= parseFloat(eachStock["收盤價"].split(",").join(""));
+                    eachResult[1] *= parseFloat(eachStock["close"]);
                     securityMktVal += eachResult[1];
                 }
             }
@@ -539,39 +539,40 @@ function buildStockInfoTable(myData) {
         stockInfoTableContainer.classList.remove("waiting-data");
         stockInfoTableContainer.classList.add("data-arrived");
         for (let eachStock of myData) {
-            if (allHoldingSids.has(eachStock["證券代號"])) {
+            if (allHoldingSids.has(eachStock["sid"])) {
                 let tr = document.createElement("tr");
                 tr.className = "stock-info-table-row";
-                let temp;
                 for (let eachField in eachStock) {
                     if (eachField) {
-                        if (eachField.indexOf("最後") == -1 && eachField.indexOf("開盤價") == -1 && eachField.indexOf("最高價") == -1 && eachField.indexOf("最低價") == -1 && eachField.indexOf("成交筆數") == -1) {
-                            if (eachField.indexOf("價差") == -1) {
-                                let td = document.createElement("td");
-                                td.className = eachField;
-                                td.innerHTML = eachStock[eachField];
-                                tr.appendChild(td);
-                                if (eachField.indexOf("(+/-)") != -1) {
-                                    temp = td;
-                                }
-                                // else if (eachField.indexOf("成交股數") != -1) {
-                                //     let tradeQToday = parseInt(eachStock[eachField].split(",").join("")) / 1000;
-                                //     td.innerHTML = tradeQToday.toLocaleString();
-                                // }
-                            }
-                            else if (temp instanceof HTMLElement) {
-                                if (temp.innerHTML == "+") {
+                        if (eachField.indexOf("date") == -1 && eachField.indexOf("trade-type") == -1 && eachField.indexOf("open") == -1 && eachField.indexOf("highest") == -1 && eachField.indexOf("lowest") == -1) {
+                            let td = document.createElement("td");
+                            td.className = eachField;
+                            td.innerHTML = eachStock[eachField];
+                            tr.appendChild(td);
+                            if (eachField == "fluct-price") {
+                                if (parseFloat(eachStock[eachField]) > 0) {
+                                    td.innerHTML = "▲" + Math.abs(parseFloat(eachStock[eachField]));
                                     tr.style.color = "#F00";
-                                    temp.innerHTML = "▲";
                                 }
-                                else if (temp.innerHTML == "-") {
+                                else if (parseFloat(eachStock[eachField]) < 0) {
+                                    td.innerHTML = "▼" + Math.abs(parseFloat(eachStock[eachField]));
                                     tr.style.color = "#0B0";
-                                    temp.innerHTML = "▼";
                                 }
                                 else {
                                     tr.style.color = "#888";
                                 }
-                                temp.innerHTML += eachStock[eachField];
+                            }
+                            else if (eachField == "quantity" || eachField == "close") {
+                                td.innerHTML = parseFloat(eachStock[eachField]).toLocaleString();
+                            }
+                            else if (eachField == "fluct-rate") {
+                                let rate = Math.abs(Math.round((parseFloat(eachStock[eachField]) * 100 + Number.EPSILON) * 100) / 100);
+                                if (parseFloat(eachStock[eachField]) > 0) {
+                                    td.innerHTML = "▲" + rate + "%";
+                                }
+                                else if (parseFloat(eachStock[eachField]) < 0) {
+                                    td.innerHTML = "▼" + rate + "%";
+                                }
                             }
                         }
                     }
