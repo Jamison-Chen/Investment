@@ -14,9 +14,12 @@ const allLowerTableContainers = document.getElementsByClassName("lower-table-con
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
+const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row")
 const cashInvestedChart = document.getElementById('cash-invested-chart');
 const componentChart = document.getElementById('component-chart');
 const compareChart = document.getElementById('compare-chart');
+const individualPriceQuantityChart = document.getElementById("individual-price-quantity-chart");
+const individualCompareChart = document.getElementById("individual-compare-chart");
 
 let tradeRecordJson: any = {};
 let stockInfoJson: any = {};
@@ -448,8 +451,51 @@ function applyCompareChart(cashInvested: number, securityMktVal: number, cashExt
         ["Assets", "Value", { role: "style" }],
         ["Cash Invested", cashInvested, "#0a5"],
         ["Security Mkt Val", securityMktVal, "#b00"],
-        ["Cash Extracted", cashExtracted, "#00b"],
-        ["Fee", handlingFee, "#f0f"]
+        ["Cash Extracted", cashExtracted, "#37e"],
+        ["Fee", handlingFee, "#aaa"]
+    ];
+    let options = {
+        title: '現金與市值',
+        titleTextStyle: {
+            fontSize: 14,
+            bold: true,
+            color: "#000"
+        },
+        vAxis: {
+            minValue: 0,
+            scaleType: 'mirrorLog'
+        },
+        bar: { groupWidth: "40%" },
+        width: window.innerWidth / 3.5,
+        height: window.innerHeight / 2.5,
+        legend: { position: "none" }
+    };
+    google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "ColumnChart", compareChart));
+}
+
+function applyIndividualPriceQuantityChart(dataIn: any[][]): void {
+    google.charts.load("current", { packages: ["corechart"] });
+    let options = {
+        title: '量價分配',
+        legend: { position: 'none' },
+        titleTextStyle: {
+            fontSize: 14,
+            bold: true,
+            color: "#000"
+        },
+        colors: ['#37e'],
+        width: window.innerWidth / 3.5,
+        height: window.innerHeight / 2.5
+    };
+    google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "Histogram", individualPriceQuantityChart));
+}
+
+function applyIndividualCompareChart(cashInvested: number, securityMktVal: number): void {
+    google.charts.load('current', { 'packages': ['corechart', 'bar'] });
+    let dataIn = [
+        ["Assets", "Value", { role: "style" }],
+        ["Cash Invested", cashInvested, "#0a5"],
+        ["Market Value", securityMktVal, "#b00"],
     ];
     let options = {
         title: '現金與市值',
@@ -466,8 +512,10 @@ function applyCompareChart(cashInvested: number, securityMktVal: number, cashExt
         height: window.innerHeight / 2.5,
         legend: { position: "none" }
     };
-    google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "ColumnChart", compareChart));
+    google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "ColumnChart", individualCompareChart));
 }
+
+
 
 function configAndDrawChart(dataIn: any[][], options: any, chartType: string, targetDiv: HTMLElement | null): void {
     let data = google.visualization.arrayToDataTable(dataIn);
@@ -682,11 +730,43 @@ function buildStockWarehouseTable(myData: any[]): void {
                 }
             }
             quantityTd.innerHTML = `${individualQ}`;
-            mktValTd.innerHTML = `${Math.round((price * individualQ + Number.EPSILON) * 100) / 100}`;
+            let mktVal = Math.round((price * individualQ + Number.EPSILON) * 100) / 100;
+            mktValTd.innerHTML = mktVal.toLocaleString();
+
+            tr.addEventListener("click", (e) => { showDetail(e, eachSid, mktVal) });
             stockWarehouseTableBody.appendChild(tr);
         }
     }
+}
 
+function showDetail(e: Event, sid: string, individualMktVal: number): void {
+    // control which to highlight
+    for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
+        if (allStockWarehouseTableRows[i] == e.currentTarget) {
+            allStockWarehouseTableRows[i].classList.add("active");
+        } else {
+            allStockWarehouseTableRows[i].classList.remove("active");
+        }
+    }
+
+    // count individual cash invested
+    let individualCashInvested = 0;
+    for (let eachDate in stockWarehouse[sid]) {
+        for (let eachP in stockWarehouse[sid][eachDate]) {
+            individualCashInvested += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
+        }
+    }
+
+    // arrange price quantity data
+    let pqData: (number | string)[][] = [["Date", "Price"]];
+    for (let eachDate in stockWarehouse[sid]) {
+        for (let eachP in stockWarehouse[sid][eachDate]) {
+            for (let i = 0; i < parseInt(stockWarehouse[sid][eachDate][eachP]); i++)
+                pqData.push([eachDate, parseFloat(eachP)])
+        }
+    }
+    applyIndividualPriceQuantityChart(pqData);
+    applyIndividualCompareChart(individualCashInvested, individualMktVal);
 }
 
 async function main(): Promise<void> {
@@ -719,10 +799,6 @@ async function main(): Promise<void> {
     // because there will be some stocks' balance quantity ending up to be 0 after buying and selling.
     buildStockInfoTable(stockInfoJson["data"]);
 
-
-    console.log(stockWarehouse)
-    console.log(stockInfoJson["data"])
-    console.log(allHoldingSids)
     buildStockWarehouseTable(stockInfoJson["data"]);
 }
 

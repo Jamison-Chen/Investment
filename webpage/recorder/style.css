@@ -187,6 +187,11 @@ body {
     width: max-content;
 }
 
+#individual-price-quantity-chart,
+#individual-compare-chart {
+    min-width: calc(100vh / 3);
+}
+
 .upper-table-container {
     width: fit-content;
     flex-direction: column;
@@ -198,7 +203,12 @@ body {
 }
 
 #stock-warehouse-table {
-    width: 420px;
+    width: 350px;
+}
+
+.stock-warehouse-table-row.active,
+.stock-warehouse-table-row.active:hover {
+    background-color: rgb(179, 217, 255) !important;
 }
 
 #create-trade-record-btn-container {
@@ -459,8 +469,8 @@ body {
 }
 
 #trade-record-table tr:not(:nth-child(1)):hover>:nth-child(n):not(:nth-last-child(1)),
-#stock-info-table tr:not(:nth-child(1)):hover>:nth-child(n),
-#stock-warehouse-table tr:not(:nth-child(1)):hover>:nth-child(n) {
+#stock-info-table tr:not(:nth-child(1)):hover,
+#stock-warehouse-table tr:not(:nth-child(1)):hover {
     background-color: #ddd;
 }
 
