@@ -10,6 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 const viewToggler = document.getElementById("view-toggler");
 const togglerMask = document.getElementById("toggler-mask");
+const upperPart = document.getElementById("upper-part");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
 const createRecordContainer = document.getElementById("create-trade-record-form-container");
 const createRecordForm = document.getElementById("create-record-form");
@@ -17,13 +18,11 @@ const allRecordFormInputs = document.getElementsByClassName("record-form-input")
 const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
 const allTabs = document.getElementsByClassName("tab");
-// const tradeRecordTab = document.getElementById("trade-record-tab");
-// const stockInfoTab = document.getElementById("stock-info-tab");
-// const stockWarehouseTab = document.getElementById("stock-warehouse-tab");
-const allTableContainers = document.getElementsByClassName("table-container");
-const tradeRecordTableContainer = document.getElementById("trade-record-table-container");
+const allLowerTableContainers = document.getElementsByClassName("lower-table-container");
+// const tradeRecordTableContainer = document.getElementById("trade-record-table-container");
+// const stockInfoTableContainer = document.getElementById("stock-info-table-container");
+const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
-const stockInfoTableContainer = document.getElementById("stock-info-table-container");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
 const cashInvestedChart = document.getElementById('cash-invested-chart');
 const componentChart = document.getElementById('component-chart');
@@ -89,19 +88,19 @@ function buildRecordTable(myData) {
     }
 }
 function buildStockWarehouse(myData) {
-    for (let each of allHoldingSids) {
-        stockWarehouse[each] = {};
+    for (let eachSid of allHoldingSids) {
+        stockWarehouse[eachSid] = {};
     }
-    for (let each in myData) {
-        let s = myData[each]["sid"];
-        let t = myData[each]["deal-time"];
+    for (let eachTradeRecord in myData) {
+        let s = myData[eachTradeRecord]["sid"];
+        let t = myData[eachTradeRecord]["deal-time"];
         stockWarehouse[s][t] = {};
     }
-    for (let each in myData) {
-        let s = myData[each]["sid"];
-        let t = myData[each]["deal-time"];
-        let p = myData[each]["deal-price"];
-        let q = parseFloat(myData[each]["deal-quantity"]);
+    for (let eachTradeRecord in myData) {
+        let s = myData[eachTradeRecord]["sid"];
+        let t = myData[eachTradeRecord]["deal-time"];
+        let p = myData[eachTradeRecord]["deal-price"];
+        let q = parseInt(myData[eachTradeRecord]["deal-quantity"]);
         if (stockWarehouse[s][t][p]) {
             stockWarehouse[s][t][p] += q;
         }
@@ -291,9 +290,9 @@ function cashInvChartData(endDateStr, tradeRecordData) {
             if (t == parseInt(eachDateStr)) {
                 let s = eachRecord["sid"];
                 let p = parseFloat(eachRecord["deal-price"]);
-                let q = parseFloat(eachRecord["deal-quantity"]);
+                let q = parseInt(eachRecord["deal-quantity"]);
                 let f = parseFloat(eachRecord["handling-fee"]);
-                handlingFee += f; // currently not used
+                handlingFee += f; // this will be used in compare chart
                 let idx = [...allHoldingSids].indexOf(s) + 1;
                 if (q >= 0) { // When buying
                     // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
@@ -507,10 +506,10 @@ function initAllHoldingSid() {
 }
 function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
     const url = decideURL(date, sidList, companyNameList);
-    if (stockInfoTableContainer != null) {
-        stockInfoTableContainer.classList.add("waiting-data");
-        stockInfoTableContainer.classList.remove("data-arrived");
-    }
+    // if (stockInfoTableContainer != null) {
+    //     stockInfoTableContainer.classList.add("waiting-data");
+    //     stockInfoTableContainer.classList.remove("data-arrived");
+    // }
     return fetch(url)
         .then(function (response) {
         return response.json();
@@ -535,9 +534,9 @@ function decideURL(date = "", sidList = [], companyNameList = []) {
     }
 }
 function buildStockInfoTable(myData) {
-    if (stockInfoTableContainer != null && stockInfoTableBody != null) {
-        stockInfoTableContainer.classList.remove("waiting-data");
-        stockInfoTableContainer.classList.add("data-arrived");
+    if (stockInfoTableBody != null) {
+        // stockInfoTableContainer.classList.remove("waiting-data");
+        // stockInfoTableContainer.classList.add("data-arrived");
         for (let eachStock of myData) {
             if (allHoldingSids.has(eachStock["sid"])) {
                 let tr = document.createElement("tr");
@@ -589,8 +588,14 @@ function controlToggler() {
     }
 }
 function moveTogglerMask(e) {
-    if (togglerMask instanceof HTMLElement) {
+    if (togglerMask instanceof HTMLElement && upperPart instanceof HTMLElement) {
         togglerMask.style.left = (-1 * parseFloat(togglerMask.style.left) + 50) + "%";
+        if (upperPart.className == "overview") {
+            upperPart.className = "individual";
+        }
+        else {
+            upperPart.className = "overview";
+        }
     }
 }
 function controlTab() {
@@ -602,15 +607,15 @@ function controlTab() {
 }
 function highlightTab(e) {
     for (let i = 0; i < allTabs.length; i++) {
-        if (allTabs[i] == e.currentTarget && allTableContainers[i] instanceof HTMLElement) {
+        if (allTabs[i] == e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
             allTabs[i].classList.add("active");
-            allTableContainers[i].classList.add("active");
-            allTableContainers[i].classList.remove("close");
+            allLowerTableContainers[i].classList.add("active");
+            allLowerTableContainers[i].classList.remove("close");
         }
         else {
             allTabs[i].classList.remove("active");
-            allTableContainers[i].classList.add("close");
-            allTableContainers[i].classList.remove("active");
+            allLowerTableContainers[i].classList.add("close");
+            allLowerTableContainers[i].classList.remove("active");
         }
     }
 }
@@ -625,6 +630,49 @@ function getDateStr(endDate, interval) {
     }
     let result = endDate.toISOString().slice(0, 10);
     return result;
+}
+function buildStockWarehouseTable(myData) {
+    if (stockWarehouseTableBody != null) {
+        for (let eachSid of allHoldingSids) {
+            let tr = document.createElement("tr");
+            tr.className = "stock-warehouse-table-row";
+            let sidTd = document.createElement("td");
+            sidTd.className = "sid";
+            let nameTd = document.createElement("td");
+            nameTd.className = "name";
+            let quantityTd = document.createElement("td");
+            quantityTd.className = "total";
+            let priceTd = document.createElement("td");
+            priceTd.className = "price";
+            let mktValTd = document.createElement("td");
+            mktValTd.className = "mktVal";
+            tr.appendChild(sidTd);
+            tr.appendChild(nameTd);
+            tr.appendChild(quantityTd);
+            tr.appendChild(priceTd);
+            tr.appendChild(mktValTd);
+            let price = 0;
+            sidTd.innerHTML = eachSid;
+            // find name and price from myData(stockInfo)
+            for (let eachStockInfo of myData) {
+                if (eachSid == eachStockInfo["sid"]) {
+                    nameTd.innerHTML = eachStockInfo["name"];
+                    priceTd.innerHTML = eachStockInfo["close"];
+                    price = parseFloat(eachStockInfo["close"]);
+                }
+            }
+            // count indovidual stock total quantity
+            let individualQ = 0;
+            for (let eachDate in stockWarehouse[eachSid]) {
+                for (let eachP in stockWarehouse[eachSid][eachDate]) {
+                    individualQ += parseInt(stockWarehouse[eachSid][eachDate][eachP]);
+                }
+            }
+            quantityTd.innerHTML = `${individualQ}`;
+            mktValTd.innerHTML = `${Math.round((price * individualQ + Number.EPSILON) * 100) / 100}`;
+            stockWarehouseTableBody.appendChild(tr);
+        }
+    }
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -651,6 +699,10 @@ function main() {
         // The following step must br done after plotting the component graph
         // because there will be some stocks' balance quantity ending up to be 0 after buying and selling.
         buildStockInfoTable(stockInfoJson["data"]);
+        console.log(stockWarehouse);
+        console.log(stockInfoJson["data"]);
+        console.log(allHoldingSids);
+        buildStockWarehouseTable(stockInfoJson["data"]);
     });
 }
 main();

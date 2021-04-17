@@ -31,10 +31,27 @@
                 <a id="simulator-option" class="mode-option" href="../simulator/">Simulator</a>
             </div>
         </div>
-        <div class="chart-container">
-            <div id="cash-invested-chart"></div>
-            <div id="component-chart"></div>
-            <div id="compare-chart"></div>
+        <div id="upper-part" class="overview">
+            <div class="chart-container">
+                <div id="cash-invested-chart"></div>
+                <div id="component-chart"></div>
+                <div id="compare-chart"></div>
+            </div>
+            <div class="chart-container">
+                <div class="upper-table-container">
+                    <table id="stock-warehouse-table" class="table">
+                        <tbody>
+                            <tr id="stock-warehouse-table-head">
+                                <th>證券代號</th>
+                                <th>商品名稱</th>
+                                <th>商品庫存</th>
+                                <th>商品現價</th>
+                                <th>商品現值</th>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <div id="create-trade-record-btn-container">
@@ -74,37 +91,39 @@
             <div class="tabs clearfix">
                 <div id="trade-record-tab" class="tab active">交易紀錄</div>
                 <div id="stock-info-tab" class="tab">本日資訊</div>
-                <!-- <div id="stock-warehouse-tab" class="tab">持股倉位</div> -->
             </div>
         </div>
         <div id="table-and-stock-info-container">
-            <div class="table-container active" id="trade-record-table-container">
+            <div class="lower-table-container active" id="trade-record-table-container">
                 <table id="trade-record-table" class="table">
-                    <tr id="trade-record-table-head">
-                        <th style="display: none;">ID</th>
-                        <th>成交日期</th>
-                        <th>證券代號</th>
-                        <th>公司名稱</th>
-                        <th>每股價格</th>
-                        <th>成交股數</th>
-                        <th>費用</th>
-                        <th></th>
-                    </tr>
+                    <tbody>
+                        <tr id="trade-record-table-head">
+                            <th style="display: none;">ID</th>
+                            <th>成交日期</th>
+                            <th>證券代號</th>
+                            <th>商品名稱</th>
+                            <th>每股價格</th>
+                            <th>成交股數</th>
+                            <th>費用</th>
+                            <th></th>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
-            <div class="table-container close" id="stock-info-table-container">
+            <div class="lower-table-container close" id="stock-info-table-container">
                 <table id="stock-info-table" class="table">
-                    <tr id="stock-info-table-head">
-                        <th>證券代號</th>
-                        <th>公司名稱</th>
-                        <th>成交張數</th>
-                        <th>收盤價</th>
-                        <th>漲跌價</th>
-                        <th>漲跌百分比</th>
-                    </tr>
+                    <tbody>
+                        <tr id="stock-info-table-head">
+                            <th>證券代號</th>
+                            <th>商品名稱</th>
+                            <th>成交張數</th>
+                            <th>收盤價</th>
+                            <th>漲跌價</th>
+                            <th>百分比</th>
+                        </tr>
+                    </tbody>
                 </table>
             </div>
-            <div class="table-container close" id="stock-warehouse-container"></div>
         </div>
         <div id="create-error">Info Not Sufficient!</div>
     </div>

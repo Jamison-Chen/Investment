@@ -6,7 +6,7 @@
 @media screen and (min-width:1024px) {
      :root {
         --tradeRecordTableWidth: 600px;
-        --stockInfoTableWidth: 480px;
+        --stockInfoTableWidth: 470px;
     }
 }
 
@@ -43,6 +43,7 @@ html {
     cursor: default;
     height: 100vh;
     user-select: none;
+    overflow-x: hidden;
 }
 
 body {
@@ -158,8 +159,22 @@ body {
     background-color: #f5f5f5;
 }
 
+#upper-part {
+    width: 200vw;
+    display: flex;
+    transition-duration: 500ms;
+}
+
+#upper-part.individual {
+    transform: translateX(-100vw);
+}
+
+#upper-part.overview {
+    transform: translateX(0);
+}
+
 .chart-container {
-    width: inherit;
+    width: 100vw;
     margin: 0 0 20px 0;
     display: flex;
     justify-content: space-around;
@@ -170,6 +185,20 @@ body {
 #component-chart,
 #compare-chart {
     width: max-content;
+}
+
+.upper-table-container {
+    width: fit-content;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    overflow-y: scroll;
+    padding: 0 0 0 10px;
+    border-top: 3px solid var(--bgc);
+}
+
+#stock-warehouse-table {
+    width: 420px;
 }
 
 #create-trade-record-btn-container {
@@ -353,7 +382,7 @@ body {
     text-decoration: none;
 }
 
-.table-container {
+.lower-table-container {
     width: 100%;
     flex-direction: column;
     align-items: center;
@@ -363,11 +392,11 @@ body {
     border-top: 3px solid var(--bgc);
 }
 
-.table-container.active {
+.lower-table-container.active {
     display: flex !important;
 }
 
-.table-container.close {
+.lower-table-container.close {
     display: none !important;
 }
 
@@ -403,7 +432,9 @@ body {
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)),
 #trade-record-table td:nth-child(n):not(:nth-last-child(1)),
 #stock-info-table th:nth-child(n),
-#stock-info-table td:nth-child(n) {
+#stock-info-table td:nth-child(n),
+#stock-warehouse-table th:nth-child(n),
+#stock-warehouse-table td:nth-child(n) {
     border-left: 0;
     border-right: 0;
     border-top: 1px solid #ddd;
@@ -416,17 +447,20 @@ body {
 }
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)),
-#stock-info-table th:nth-child(n) {
+#stock-info-table th:nth-child(n),
+#stock-warehouse-table th:nth-child(n) {
     background-color: #555;
     color: var(--bgc);
 }
 
-#trade-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)) {
+#trade-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)),
+#stock-warehouse-table tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
 #trade-record-table tr:not(:nth-child(1)):hover>:nth-child(n):not(:nth-last-child(1)),
-#stock-info-table tr:not(:nth-child(1)):hover>:nth-child(n) {
+#stock-info-table tr:not(:nth-child(1)):hover>:nth-child(n),
+#stock-warehouse-table tr:not(:nth-child(1)):hover>:nth-child(n) {
     background-color: #ddd;
 }
 
