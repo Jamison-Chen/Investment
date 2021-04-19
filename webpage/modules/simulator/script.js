@@ -1,11 +1,11 @@
-import { BHmixGrid, GridConstQ, Chicken, GridConstRatio } from './simulator.js';
+import { BHmixGrid, PlannedBHmixGrid, Chicken, GridConstRatio } from './simulator.js';
 const priceGraph = document.getElementById("price-graph");
 const assetsFraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
-const bhmixgridOption = document.getElementById("bh-mix-grid");
-const gridconstqOption = document.getElementById("grid-constant-q");
-const gridconstratioOption = document.getElementById("grid-constant-ratio");
-const chickenOption = document.getElementById("chicken");
+const option1 = document.getElementById("option1");
+const option2 = document.getElementById("option2");
+const option3 = document.getElementById("option3");
+const option4 = document.getElementById("option4");
 const comparisonOption = document.getElementById("comparison");
 const startBtn = document.getElementById("start-btn");
 function applyPriceChart(dataIn) {
@@ -118,29 +118,35 @@ function simulatorMain() {
     let nDays = 360;
     let pList = simulatePriceFluct(initP, nDays);
     // BHmixGrid Strategy
-    let r = 0.05;
-    let argsB = [r, 0];
+    let rb = 0.05;
+    let argsB = [rb, 0];
     let b = new BHmixGrid("BHmixGrid", initTotalAssets, nDays, pList);
+    // Planned BHmixGrid Strategy
+    let pb = new PlannedBHmixGrid("PlannedBHmixGrid", initTotalAssets, nDays, pList);
     // Grid Strategy (const q)
     let maxPrice = 300;
     let minPrice = 25;
     let nTable = 55;
-    let argsGQ = [maxPrice, minPrice, nTable, 0];
-    let gq = new GridConstQ("GridConstQ", initTotalAssets, nDays, pList);
+    // let argsGQ: (number | string)[] = [maxPrice, minPrice, nTable, 0];
+    // let gq = new GridConstQ("GridConstQ", initTotalAssets, nDays, pList);
     // Grid Strategy (const ratio)
     let argsGR = [maxPrice, minPrice, nTable, 0.5, 0];
     let gr = new GridConstRatio("GridConstRatio", initTotalAssets, nDays, pList);
     // Chicken Strategy
-    let r2 = 0.1;
-    let argsC = [r2, 0];
+    let rc = 0.1;
+    let argsC = [rc, 0];
     let c = new Chicken("Chicken", initTotalAssets, nDays, pList);
-    if (bhmixgridOption != null && gridconstqOption != null && chickenOption != null && startBtn != null && gridconstratioOption != null && comparisonOption != null) {
-        bhmixgridOption.addEventListener("click", (e) => { selectStrategy(e, b, argsB); });
-        gridconstqOption.addEventListener("click", (e) => { selectStrategy(e, gq, argsGQ); });
-        gridconstratioOption.addEventListener("click", (e) => { selectStrategy(e, gr, argsGR); });
-        chickenOption.addEventListener("click", (e) => { selectStrategy(e, c, argsC); });
-        comparisonOption.addEventListener("click", (e) => { compareStrategies(e, [[b, argsB], [gq, argsGQ], [gr, argsGR], [c, argsC]]); });
-        bhmixgridOption.click();
+    if (option1 != null && option2 != null && option3 != null && startBtn != null && option4 != null && comparisonOption != null) {
+        option1.innerHTML = b.name;
+        option1.addEventListener("click", (e) => { selectStrategy(e, b, argsB); });
+        option2.innerHTML = pb.name;
+        option2.addEventListener("click", (e) => { selectStrategy(e, pb, argsB); });
+        option3.innerHTML = gr.name;
+        option3.addEventListener("click", (e) => { selectStrategy(e, gr, argsGR); });
+        option4.innerHTML = c.name;
+        option4.addEventListener("click", (e) => { selectStrategy(e, c, argsC); });
+        comparisonOption.addEventListener("click", (e) => { compareStrategies(e, [[b, argsB], [pb, argsB], [gr, argsGR], [c, argsC]]); });
+        option1.click();
         startBtn.addEventListener("click", _ => location.reload());
     }
 }

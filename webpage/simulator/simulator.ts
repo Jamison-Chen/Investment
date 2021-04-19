@@ -91,16 +91,71 @@ export class BHmixGrid extends Strategy {
     public calcQToday(cashOwned: number, pToday: number, latestMaxP: number, latestMinP: number): number {
         let qIfAllIn = cashOwned / pToday;
         // 2 strtegies are given:
-        let baseQ = (latestMinP - pToday) / latestMinP * qIfAllIn;
+        let baseQ = ((latestMinP - pToday) / latestMinP) * qIfAllIn;
         // let baseQ = r * qIfAllIn;
 
-        // 5 strtegies are given:
-        let multiplier = latestMaxP / pToday;
-        // let multiplier = -2 * ((pToday / latestMaxP) ** 2) + 3;
-        // let multiplier = -2 * (pToday/latestMaxP) + 3;
+        // a few strtegies are given:
+        // let multiplier = latestMaxP / pToday;
+
+        // because 1.313 * tanh(1) ~= 1
+        // let multiplier = latestMaxP / (1.313 * Math.tanh(pToday / latestMaxP) * pToday);
+        // let multiplier = latestMaxP / (1.738 / Math.exp(1 / (1.81 * (pToday / latestMaxP))) * pToday);
+        let multiplier = (40 * (((pToday / latestMaxP) - 1) ** 4)) + 1;
         // let multiplier = 1;
         // let multiplier = pToday/latestMaxP;
         return Math.floor(baseQ * multiplier);
+    }
+}
+export class PlannedBHmixGrid extends BHmixGrid {
+    public followStrategy(r: number, startDay: number): void {
+        let latestMaxP = this.pList[startDay];
+        let latestMinP = this.pList[startDay];
+        let buyHistory: any = {};
+        for (let i = startDay; i < this.nDays; i++) {
+            let qToday = 0;
+            if (i == 0) {
+                qToday = this.calcQToday(this.totalAssetsList[i], this.pList[i], this.pList[i], (1 + r) * this.pList[i]);
+                // round to the 3rd decimal
+                let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
+                if (buyHistory[`${key}`] == undefined) {
+                    buyHistory[`${key}`] = qToday;
+                } else {
+                    buyHistory[`${key}`] += qToday;
+                }
+            } else {
+                if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
+                    if (this.cumulQList[i - 1] == 0) {
+                        latestMaxP = this.pList[i];
+                    }
+                    qToday = this.calcQToday(this.cashList[i - 1], this.pList[i], latestMaxP, latestMinP);
+                    if (qToday > 0) {
+                        latestMinP = this.pList[i];
+                        // round to the 3rd decimal
+                        let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
+                        if (buyHistory[`${key}`] == undefined) {
+                            buyHistory[`${key}`] = qToday;
+                        } else {
+                            buyHistory[`${key}`] += qToday;
+                        }
+                    }
+                }
+                for (let eachP in buyHistory) {
+                    let targetSellP = parseFloat(eachP) * (1 + (latestMaxP - parseFloat(eachP) + 0.01 * latestMaxP) / latestMaxP);
+                    if (this.pList[i] >= targetSellP) {
+                        qToday -= buyHistory[eachP];
+                        delete buyHistory[eachP];
+                        if (parseFloat(eachP) > latestMinP) {
+                            latestMinP = parseFloat(eachP);
+                        }
+                    }
+                }
+                if (this.pList[i] > latestMaxP) {
+                    latestMaxP = this.pList[i];
+                    latestMinP = this.pList[i];
+                }
+            }
+            this.recordAllInfo(qToday, i);
+        }
     }
 }
 export class GridConstQ extends Strategy {
@@ -238,14 +293,14 @@ export class Chicken extends Strategy {
                         if (buyHistory[eachPrice] > 0) {
                             if (parseFloat(eachPrice) < this.pList[i]) {
                                 qToday -= buyHistory[eachPrice];
-                                buyHistory[eachPrice] = 0;
+                                delete buyHistory[eachPrice];
                             }
                             // And slighly lower the lowest price that you're willing to sell.
                             else {
                                 let newKey = Math.round((parseFloat(eachPrice) * 0.999 + Number.EPSILON) * 1000) / 1000;
                                 // Sometimes newKey will equal the original key, so we have to do it in this way...
                                 let tempQ = buyHistory[eachPrice];
-                                buyHistory[eachPrice] = 0;
+                                delete buyHistory[eachPrice];
                                 buyHistory[`${newKey}`] = tempQ;
                             }
                         }
