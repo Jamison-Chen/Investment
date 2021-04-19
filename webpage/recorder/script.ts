@@ -492,10 +492,14 @@ function applyIndividualPriceQuantityChart(dataIn: any[][]): void {
 
 function applyIndividualCompareChart(cashInvested: number, securityMktVal: number): void {
     google.charts.load('current', { 'packages': ['corechart', 'bar'] });
+    let mktColor = "#0a5";
+    if (securityMktVal > cashInvested) {
+        mktColor = "#b00";
+    }
     let dataIn = [
         ["Assets", "Value", { role: "style" }],
-        ["Cash Invested", cashInvested, "#0a5"],
-        ["Market Value", securityMktVal, "#b00"],
+        ["Cash Invested", cashInvested, "#aaa"],
+        ["Market Value", securityMktVal, mktColor],
     ];
     let options = {
         title: '現金與市值',
@@ -514,8 +518,6 @@ function applyIndividualCompareChart(cashInvested: number, securityMktVal: numbe
     };
     google.charts.setOnLoadCallback(() => configAndDrawChart(dataIn, options, "ColumnChart", individualCompareChart));
 }
-
-
 
 function configAndDrawChart(dataIn: any[][], options: any, chartType: string, targetDiv: HTMLElement | null): void {
     let data = google.visualization.arrayToDataTable(dataIn);
@@ -561,7 +563,6 @@ function initAllHoldingSid(): void {
         allHoldingSids.add(each["sid"]);
     }
 }
-
 
 function fetchStockSingleDay(date: string = "", sidList: string[] = [], companyNameList: string[] = []): Promise<void> {
     const url: string | null = decideURL(date, sidList, companyNameList);
@@ -699,14 +700,14 @@ function buildStockWarehouseTable(myData: any[]): void {
             quantityTd.className = "total";
             let priceTd = document.createElement("td");
             priceTd.className = "price";
-            let mktValTd = document.createElement("td");
-            mktValTd.className = "mktVal"
+            let avgPriceTd = document.createElement("td");
+            avgPriceTd.className = "avgPrice";
 
             tr.appendChild(sidTd);
             tr.appendChild(nameTd);
             tr.appendChild(quantityTd);
             tr.appendChild(priceTd);
-            tr.appendChild(mktValTd);
+            tr.appendChild(avgPriceTd);
 
             let price = 0;
 
@@ -730,9 +731,9 @@ function buildStockWarehouseTable(myData: any[]): void {
                 }
             }
             quantityTd.innerHTML = `${individualQ}`;
+            let individualCashInvested = Math.round((countIndividualCashInvested(eachSid) / individualQ + Number.EPSILON) * 100) / 100;
+            avgPriceTd.innerHTML = individualCashInvested.toLocaleString();
             let mktVal = Math.round((price * individualQ + Number.EPSILON) * 100) / 100;
-            mktValTd.innerHTML = mktVal.toLocaleString();
-
             tr.addEventListener("click", (e) => { showDetail(e, eachSid, mktVal) });
             stockWarehouseTableBody.appendChild(tr);
         }
@@ -749,13 +750,7 @@ function showDetail(e: Event, sid: string, individualMktVal: number): void {
         }
     }
 
-    // count individual cash invested
-    let individualCashInvested = 0;
-    for (let eachDate in stockWarehouse[sid]) {
-        for (let eachP in stockWarehouse[sid][eachDate]) {
-            individualCashInvested += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
-        }
-    }
+    let individualCashInvested = countIndividualCashInvested(sid);
 
     // arrange price quantity data
     let pqData: (number | string)[][] = [["Date", "Price"]];
@@ -767,6 +762,16 @@ function showDetail(e: Event, sid: string, individualMktVal: number): void {
     }
     applyIndividualPriceQuantityChart(pqData);
     applyIndividualCompareChart(individualCashInvested, individualMktVal);
+}
+
+function countIndividualCashInvested(sid: string): number {
+    let individualCashInvested = 0;
+    for (let eachDate in stockWarehouse[sid]) {
+        for (let eachP in stockWarehouse[sid][eachDate]) {
+            individualCashInvested += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
+        }
+    }
+    return individualCashInvested;
 }
 
 async function main(): Promise<void> {

@@ -486,10 +486,14 @@ function applyIndividualPriceQuantityChart(dataIn) {
 }
 function applyIndividualCompareChart(cashInvested, securityMktVal) {
     google.charts.load('current', { 'packages': ['corechart', 'bar'] });
+    let mktColor = "#0a5";
+    if (securityMktVal > cashInvested) {
+        mktColor = "#b00";
+    }
     let dataIn = [
         ["Assets", "Value", { role: "style" }],
-        ["Cash Invested", cashInvested, "#0a5"],
-        ["Market Value", securityMktVal, "#b00"],
+        ["Cash Invested", cashInvested, "#aaa"],
+        ["Market Value", securityMktVal, mktColor],
     ];
     let options = {
         title: '現金與市值',
@@ -688,13 +692,13 @@ function buildStockWarehouseTable(myData) {
             quantityTd.className = "total";
             let priceTd = document.createElement("td");
             priceTd.className = "price";
-            let mktValTd = document.createElement("td");
-            mktValTd.className = "mktVal";
+            let avgPriceTd = document.createElement("td");
+            avgPriceTd.className = "avgPrice";
             tr.appendChild(sidTd);
             tr.appendChild(nameTd);
             tr.appendChild(quantityTd);
             tr.appendChild(priceTd);
-            tr.appendChild(mktValTd);
+            tr.appendChild(avgPriceTd);
             let price = 0;
             sidTd.innerHTML = eachSid;
             // find name and price from myData(stockInfo)
@@ -713,8 +717,9 @@ function buildStockWarehouseTable(myData) {
                 }
             }
             quantityTd.innerHTML = `${individualQ}`;
+            let individualCashInvested = Math.round((countIndividualCashInvested(eachSid) / individualQ + Number.EPSILON) * 100) / 100;
+            avgPriceTd.innerHTML = individualCashInvested.toLocaleString();
             let mktVal = Math.round((price * individualQ + Number.EPSILON) * 100) / 100;
-            mktValTd.innerHTML = mktVal.toLocaleString();
             tr.addEventListener("click", (e) => { showDetail(e, eachSid, mktVal); });
             stockWarehouseTableBody.appendChild(tr);
         }
@@ -730,13 +735,7 @@ function showDetail(e, sid, individualMktVal) {
             allStockWarehouseTableRows[i].classList.remove("active");
         }
     }
-    // count individual cash invested
-    let individualCashInvested = 0;
-    for (let eachDate in stockWarehouse[sid]) {
-        for (let eachP in stockWarehouse[sid][eachDate]) {
-            individualCashInvested += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
-        }
-    }
+    let individualCashInvested = countIndividualCashInvested(sid);
     // arrange price quantity data
     let pqData = [["Date", "Price"]];
     for (let eachDate in stockWarehouse[sid]) {
@@ -747,6 +746,15 @@ function showDetail(e, sid, individualMktVal) {
     }
     applyIndividualPriceQuantityChart(pqData);
     applyIndividualCompareChart(individualCashInvested, individualMktVal);
+}
+function countIndividualCashInvested(sid) {
+    let individualCashInvested = 0;
+    for (let eachDate in stockWarehouse[sid]) {
+        for (let eachP in stockWarehouse[sid][eachDate]) {
+            individualCashInvested += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
+        }
+    }
+    return individualCashInvested;
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
