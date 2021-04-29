@@ -1,6 +1,6 @@
 import { BHmixGrid, PlannedBHmixGrid, Chicken, GridConstRatio } from './simulator.js';
 const priceGraph = document.getElementById("price-graph");
-const assetsFraph = document.getElementById("assets-graph");
+const assetsGraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
 const option1 = document.getElementById("option1");
 const option2 = document.getElementById("option2");
@@ -27,7 +27,7 @@ function applyPriceChart(dataIn) {
     }
 }
 function applyAssetsCharts(title, dataIn) {
-    if (assetsFraph != null) {
+    if (assetsGraph != null) {
         google.charts.load('current', { 'packages': ["corechart"] });
         let options = {
             title: title,
@@ -37,10 +37,10 @@ function applyAssetsCharts(title, dataIn) {
                 color: "#777"
             },
             curveType: 'none',
-            width: assetsFraph.offsetWidth - 1,
-            height: assetsFraph.offsetHeight - 1,
+            width: assetsGraph.offsetWidth - 1,
+            height: assetsGraph.offsetHeight - 1,
         };
-        google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", assetsFraph));
+        google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", assetsGraph));
     }
 }
 function drawSimulatedChart(dataIn, options, chartType, targetDiv) {
