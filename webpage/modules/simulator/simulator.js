@@ -269,7 +269,7 @@ export class GridConstRatio extends Strategy {
     }
 }
 export class Chicken extends Strategy {
-    followStrategy(r, startDay) {
+    followStrategy(r, startDay, runawayRate) {
         let latestMinP = this.pList[startDay];
         let buyHistory = {};
         for (let i = startDay; i < this.nDays; i++) {
@@ -280,7 +280,7 @@ export class Chicken extends Strategy {
             else {
                 let maxCostHolding = Object.keys(buyHistory).length > 0 ? Math.max(...Object.keys(buyHistory).map(e => parseFloat(e))) : 0;
                 // If price rises, and higher than maxCostHolding, buy in.
-                if (this.pList[i] > this.pList[i - 1] && this.pList[i] > maxCostHolding) {
+                if (this.pList[i] > maxCostHolding) {
                     qToday = this.calcQToday(r, this.cashList[i - 1], this.pList[i], latestMinP);
                     // round to the 3rd decimal
                     let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
@@ -292,23 +292,24 @@ export class Chicken extends Strategy {
                     }
                     // Once price falls, sell almost all out.
                 }
-                else if (this.pList[i] < this.pList[i - 1]) {
+                else if (this.pList[i] < maxCostHolding * runawayRate) {
+                    // } else if (this.pList[i] < this.pList[i - 1]) {
                     for (let eachPrice in buyHistory) {
                         if (buyHistory[eachPrice] > 0) {
-                            if (parseFloat(eachPrice) < this.pList[i]) {
-                                qToday -= buyHistory[eachPrice];
-                                delete buyHistory[eachPrice];
-                            }
+                            // if (parseFloat(eachPrice) < this.pList[i]) {
+                            qToday -= buyHistory[eachPrice];
+                            delete buyHistory[eachPrice];
+                            // }
                             // And slighly lower the lowest price that you're willing to sell.(Optional)
-                            else {
-                                let newKey = Math.round((parseFloat(eachPrice) * 0.996 + Number.EPSILON) * 1000) / 1000;
-                                // Sometimes newKey will equal the original key, so we have to do it in this way...
-                                let tempQ = buyHistory[eachPrice];
-                                delete buyHistory[eachPrice];
-                                buyHistory[`${newKey}`] = tempQ;
-                            }
+                            // else {
+                            //     let newKey = Math.round((parseFloat(eachPrice) * 0.997 + Number.EPSILON) * 1000) / 1000;
+                            //     // Sometimes newKey will equal the original key, so we have to do it in this way...
+                            //     let tempQ = buyHistory[eachPrice];
+                            //     delete buyHistory[eachPrice];
+                            //     buyHistory[`${newKey}`] = tempQ;
+                            // }
                         }
-                        else if (buyHistory[eachPrice] = 0) {
+                        else {
                             delete buyHistory[eachPrice];
                         }
                     }
@@ -317,7 +318,6 @@ export class Chicken extends Strategy {
             }
             this.recordAllInfo(qToday, i);
         }
-        console.log(buyHistory);
     }
     calcQToday(r, cashOwned, pToday, latestMinP) {
         let qIfAllIn = cashOwned / pToday;
