@@ -278,8 +278,9 @@ export class Chicken extends Strategy {
                 qToday = this.calcQToday(r, this.totalAssetsList[i], this.pList[i], this.pList[i]);
             }
             else {
-                // If price rises, buy in.
-                if (this.pList[i] > this.pList[i - 1]) {
+                let maxCostHolding = Object.keys(buyHistory).length > 0 ? Math.max(...Object.keys(buyHistory).map(e => parseFloat(e))) : 0;
+                // If price rises, and higher than maxCostHolding, buy in.
+                if (this.pList[i] > this.pList[i - 1] && this.pList[i] > maxCostHolding) {
                     qToday = this.calcQToday(r, this.cashList[i - 1], this.pList[i], latestMinP);
                     // round to the 3rd decimal
                     let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
@@ -298,14 +299,17 @@ export class Chicken extends Strategy {
                                 qToday -= buyHistory[eachPrice];
                                 delete buyHistory[eachPrice];
                             }
-                            // And slighly lower the lowest price that you're willing to sell.
+                            // And slighly lower the lowest price that you're willing to sell.(Optional)
                             else {
-                                let newKey = Math.round((parseFloat(eachPrice) * 0.999 + Number.EPSILON) * 1000) / 1000;
+                                let newKey = Math.round((parseFloat(eachPrice) * 0.996 + Number.EPSILON) * 1000) / 1000;
                                 // Sometimes newKey will equal the original key, so we have to do it in this way...
                                 let tempQ = buyHistory[eachPrice];
                                 delete buyHistory[eachPrice];
                                 buyHistory[`${newKey}`] = tempQ;
                             }
+                        }
+                        else if (buyHistory[eachPrice] = 0) {
+                            delete buyHistory[eachPrice];
                         }
                     }
                     latestMinP = this.pList[i];
@@ -313,6 +317,7 @@ export class Chicken extends Strategy {
             }
             this.recordAllInfo(qToday, i);
         }
+        console.log(buyHistory);
     }
     calcQToday(r, cashOwned, pToday, latestMinP) {
         let qIfAllIn = cashOwned / pToday;
