@@ -276,6 +276,9 @@ export class Chicken extends Strategy {
             let qToday = 0;
             if (i == 0) {
                 qToday = this.calcQToday(r, this.totalAssetsList[i], this.pList[i], this.pList[i]);
+                // round to the 3rd decimal
+                let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
+                buyHistory[`${key}`] = qToday;
             } else {
                 let maxCostHolding = Object.keys(buyHistory).length > 0 ? Math.max(...Object.keys(buyHistory).map(e => parseFloat(e))) : 0;
                 // If price rises, and higher than maxCostHolding, buy in.
