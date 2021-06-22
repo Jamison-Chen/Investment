@@ -88,7 +88,7 @@ export class BHmixGrid extends Strategy {
             this.recordAllInfo(qToday, i);
         }
     }
-    public calcQToday(cashOwned: number, pToday: number, latestMaxP: number, latestMinP: number): number {
+    protected calcQToday(cashOwned: number, pToday: number, latestMaxP: number, latestMinP: number): number {
         let qIfAllIn = cashOwned / pToday;
         // 2 strtegies are given:
         let baseQ = ((latestMinP - pToday) / latestMinP) * qIfAllIn;
@@ -205,7 +205,7 @@ export class GridConstQ extends Strategy {
             this.recordAllInfo(qToday, i);
         }
     }
-    public calcStandAt(price: number, aList: number[]): number {
+    private calcStandAt(price: number, aList: number[]): number {
         let result = 0;
         for (let each of aList) {
             if (price >= each) {
@@ -257,7 +257,7 @@ export class GridConstRatio extends Strategy {
             this.recordAllInfo(qToday, i);
         }
     }
-    public calcStandAt(price: number, aList: number[]): number {
+    private calcStandAt(price: number, aList: number[]): number {
         let result = 0;
         for (let each of aList) {
             if (price >= each) {
@@ -318,13 +318,15 @@ export class Chicken extends Strategy {
             this.recordAllInfo(qToday, i);
         }
     }
-    public calcQToday(r: number, cashOwned: number, pToday: number, latestMinP: number): number {
-        let qIfAllIn = cashOwned / pToday;
+    private calcQToday(r: number, cashOwned: number, pToday: number, latestMinP: number): number {
+        const qIfAllIn = cashOwned / pToday;
+        if (qIfAllIn < 1) return 0;
         let baseQ = r * qIfAllIn;
         // 3 strategies for deciding multiplier are given:
         let multiplier = 1
         // let multiplier = (latestMinP / pToday) ** 5;
         // let multiplier = 1 / (1 + pToday - latestMinP);
-        return Math.floor(baseQ * multiplier);
+        let qToday = Math.floor(baseQ * multiplier)
+        return qToday > 1 ? qToday : 1;
     }
 }

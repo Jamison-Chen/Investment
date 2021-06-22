@@ -153,7 +153,7 @@ function simulatorMain(): void {
 
     // Chicken Strategy
     let rc = 0.1;
-    let runawayRate = 0.8;
+    let runawayRate = 0.85;
     let argsC: (number | string)[] = [rc, 0, runawayRate];
     let c = new Chicken("Chicken", initTotalAssets, nDays, pList);
 

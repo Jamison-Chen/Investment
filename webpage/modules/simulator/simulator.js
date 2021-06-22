@@ -323,12 +323,15 @@ export class Chicken extends Strategy {
         }
     }
     calcQToday(r, cashOwned, pToday, latestMinP) {
-        let qIfAllIn = cashOwned / pToday;
+        const qIfAllIn = cashOwned / pToday;
+        if (qIfAllIn < 1)
+            return 0;
         let baseQ = r * qIfAllIn;
         // 3 strategies for deciding multiplier are given:
         let multiplier = 1;
         // let multiplier = (latestMinP / pToday) ** 5;
         // let multiplier = 1 / (1 + pToday - latestMinP);
-        return Math.floor(baseQ * multiplier);
+        let qToday = Math.floor(baseQ * multiplier);
+        return qToday > 1 ? qToday : 1;
     }
 }
