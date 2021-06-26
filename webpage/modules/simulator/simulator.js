@@ -10,6 +10,7 @@ export class Strategy {
         this.cashList = [];
         this.rateOfReturnList = [];
         this.securMktValList = [];
+        this.buyHistory = {};
     }
     recordQuantity(qToday, i) {
         this.dailyQList.push(qToday);
@@ -29,8 +30,17 @@ export class Strategy {
         if (this.cumulInvestCashList[i] > 0) {
             this.rateOfReturnList.push((this.securMktValList[i] - this.cumulInvestCashList[i]) / this.cumulInvestCashList[i]);
         }
-        else {
+        else
             this.rateOfReturnList.push(0);
+    }
+    recordBuyHistory(qToday, i) {
+        if (qToday > 0) {
+            // round to the 3rd decimal
+            let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
+            if (this.buyHistory[`${key}`] == undefined)
+                this.buyHistory[`${key}`] = qToday;
+            else
+                this.buyHistory[`${key}`] += qToday;
         }
     }
     recordAllInfo(qToday, i) {
@@ -49,6 +59,7 @@ export class Strategy {
             this.calcRateOfReturn(i);
             this.totalAssetsList.push(this.cashList[i] + this.securMktValList[i]);
         }
+        this.recordBuyHistory(qToday, i);
     }
 }
 export class BHmixGrid extends Strategy {
@@ -100,46 +111,25 @@ export class PlannedBHmixGrid extends BHmixGrid {
     followStrategy(r, startDay) {
         let latestMaxP = this.pList[startDay];
         let latestMinP = this.pList[startDay];
-        let buyHistory = {};
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
             if (i == 0) {
                 qToday = this.calcQToday(this.totalAssetsList[i], this.pList[i], this.pList[i], (1 + r) * this.pList[i]);
-                // round to the 3rd decimal
-                let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
-                if (buyHistory[`${key}`] == undefined) {
-                    buyHistory[`${key}`] = qToday;
-                }
-                else {
-                    buyHistory[`${key}`] += qToday;
-                }
             }
             else {
                 if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
-                    if (this.cumulQList[i - 1] == 0) {
+                    if (this.cumulQList[i - 1] == 0)
                         latestMaxP = this.pList[i];
-                    }
                     qToday = this.calcQToday(this.cashList[i - 1], this.pList[i], latestMaxP, latestMinP);
-                    if (qToday > 0) {
-                        latestMinP = this.pList[i];
-                        // round to the 3rd decimal
-                        let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
-                        if (buyHistory[`${key}`] == undefined) {
-                            buyHistory[`${key}`] = qToday;
-                        }
-                        else {
-                            buyHistory[`${key}`] += qToday;
-                        }
-                    }
+                    latestMinP = this.pList[i];
                 }
-                for (let eachP in buyHistory) {
+                for (let eachP in this.buyHistory) {
                     let targetSellP = parseFloat(eachP) * (1 + (latestMaxP - parseFloat(eachP) + 0.01 * latestMaxP) / latestMaxP);
                     if (this.pList[i] >= targetSellP) {
-                        qToday -= buyHistory[eachP];
-                        delete buyHistory[eachP];
-                        if (parseFloat(eachP) > latestMinP) {
+                        qToday -= this.buyHistory[eachP];
+                        delete this.buyHistory[eachP];
+                        if (parseFloat(eachP) > latestMinP)
                             latestMinP = parseFloat(eachP);
-                        }
                     }
                 }
                 if (this.pList[i] > latestMaxP) {
@@ -272,38 +262,27 @@ export class Chicken extends Strategy {
     followStrategy(r, startDay, runawayRate) {
         let latestMaxP = 0;
         let latestMinP = this.pList[startDay];
-        let buyHistory = {};
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i == 0) {
+            if (i == 0)
                 qToday = this.calcQToday(r, this.totalAssetsList[i], this.pList[i], this.pList[i]);
-                // round to the 3rd decimal
-                let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
-                buyHistory[`${key}`] = qToday;
-            }
             else {
-                let maxCostHolding = Object.keys(buyHistory).length > 0 ? Math.max(...Object.keys(buyHistory).map(e => parseFloat(e))) : 0;
+                let maxCostHolding = Object.keys(this.buyHistory).length > 0 ? Math.max(...Object.keys(this.buyHistory).map(e => parseFloat(e))) : 0;
                 // If price rises, and higher than maxCostHolding, buy in.
                 if (this.pList[i] > Math.max(maxCostHolding, latestMaxP)) {
                     qToday = this.calcQToday(r, this.cashList[i - 1], this.pList[i], latestMinP);
-                    // round to the 3rd decimal
-                    let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
-                    if (buyHistory[`${key}`] == undefined)
-                        buyHistory[`${key}`] = qToday;
-                    else
-                        buyHistory[`${key}`] += qToday;
                     latestMaxP = this.pList[i];
                 }
                 else if (this.pList[i] < Math.max(maxCostHolding, latestMaxP) * runawayRate) {
                     // } else if (this.pList[i] < this.pList[i - 1]) {
-                    for (let eachPrice in buyHistory) {
-                        if (buyHistory[eachPrice] > 0) { // sell all out
-                            // if (parseFloat(eachPrice) < this.pList[i]) {  // only sell those who have lower cost
-                            qToday -= buyHistory[eachPrice];
-                            delete buyHistory[eachPrice];
+                    for (let eachPrice in this.buyHistory) {
+                        if (this.buyHistory[eachPrice] > 0) { // sell all out
+                            // if (parseFloat(eachPrice) < this.pList[i]) {  // only sell those with lower buy-in costs
+                            qToday -= this.buyHistory[eachPrice];
+                            delete this.buyHistory[eachPrice];
                         }
                         else
-                            delete buyHistory[eachPrice];
+                            delete this.buyHistory[eachPrice];
                     }
                     latestMinP = this.pList[i];
                     latestMaxP = 0;
