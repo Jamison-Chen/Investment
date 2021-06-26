@@ -19,8 +19,6 @@ const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
 const allTabs = document.getElementsByClassName("tab");
 const allLowerTableContainers = document.getElementsByClassName("lower-table-container");
-// const tradeRecordTableContainer = document.getElementById("trade-record-table-container");
-// const stockInfoTableContainer = document.getElementById("stock-info-table-container");
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
@@ -71,9 +69,8 @@ function buildRecordTable(myData) {
                 innerInput.innerHTML = eachRecord[eachField];
                 td.appendChild(innerInput);
                 // Do not show the id in the table.
-                if (eachField.toLowerCase() == "id") {
+                if (eachField.toLowerCase() == "id")
                     td.style.display = "none";
-                }
                 tr.appendChild(td);
             }
             // show the update/delete btn at the end of each row
@@ -104,12 +101,10 @@ function buildStockWarehouse(myData) {
         let t = myData[eachTradeRecord]["deal-time"];
         let p = myData[eachTradeRecord]["deal-price"];
         let q = parseInt(myData[eachTradeRecord]["deal-quantity"]);
-        if (stockWarehouse[s][t][p]) {
+        if (stockWarehouse[s][t][p])
             stockWarehouse[s][t][p] += q;
-        }
-        else {
+        else
             stockWarehouse[s][t][p] = q;
-        }
     }
 }
 function createTradeRecord(e) {
@@ -118,21 +113,18 @@ function createTradeRecord(e) {
         let hasEmpty = false;
         for (let each of allRecordFormInputs) {
             if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
-                if (each.value != "") {
+                if (each.value != "")
                     data[each.name] = each.value;
-                }
-                else {
+                else
                     hasEmpty = true;
-                }
             }
         }
         if (!hasEmpty) {
             yield tradeRecordCRUD(data);
             location.reload();
         }
-        else {
+        else
             infoNotSufficientErr();
-        }
     });
 }
 function appendUpdateDeleteDiv(btnConfigList) {
@@ -179,9 +171,8 @@ function deleteTradeRecord(e) {
         if (targetRowDOM instanceof HTMLElement) {
             for (let each of targetRowDOM.childNodes) {
                 if (each instanceof HTMLElement) {
-                    if (each.className == "id") {
+                    if (each.className == "id")
                         data[each.className] = each.innerText;
-                    }
                 }
             }
         }
@@ -270,9 +261,8 @@ function changeRowEndDiv(type, targetRowDOM, args) {
     }
 }
 function noSpaceAndNewLine(e) {
-    if (e instanceof KeyboardEvent && (e.keyCode == 13 || e.keyCode == 32)) {
+    if (e instanceof KeyboardEvent && (e.keyCode == 13 || e.keyCode == 32))
         e.preventDefault();
-    }
 }
 function cashInvChartData(endDateStr, tradeRecordData) {
     let startDateStr = tradeRecordData[tradeRecordData.length - 1]["deal-time"].slice(0, 4) + "-" + tradeRecordData[tradeRecordData.length - 1]["deal-time"].slice(4, 6) + "-" + tradeRecordData[tradeRecordData.length - 1]["deal-time"].slice(6);
@@ -285,9 +275,8 @@ function cashInvChartData(endDateStr, tradeRecordData) {
         if (result[result.length - 1] != undefined) {
             dataRow = [eachDateStr, ...result[result.length - 1].slice(1, -1)];
         }
-        else {
+        else
             dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
-        }
         for (let eachRecord of tradeRecordData) {
             let t = parseInt(eachRecord["deal-time"]);
             if (t == parseInt(eachDateStr)) {
@@ -341,9 +330,8 @@ function cashInvChartData(endDateStr, tradeRecordData) {
     // result = [["Date", ...allHoldingSids, "Total"], ...result];
     result = [["Date", "Cash Invested"], ...result.map(i => [i[0], i[i.length - 1]])]; // only use the "total" field
     let latestCashInv = result[result.length - 1][1];
-    if (typeof latestCashInv == "number") {
+    if (typeof latestCashInv == "number")
         cashInvested = latestCashInv;
-    }
     return result;
 }
 function componentChartData() {
@@ -356,13 +344,10 @@ function componentChartData() {
                 eachRow[1] += stockWarehouse[eachStock][eachDay][eachP];
             }
         }
-        if (eachRow[1] != 0) {
+        if (eachRow[1] != 0)
             result.push(eachRow);
-        }
-        else {
-            // update allHoldingSids
-            allHoldingSids.delete(eachStock);
-        }
+        else
+            allHoldingSids.delete(eachStock); // update allHoldingSids
     }
     // Q * market value
     for (let eachStock of stockInfoJson["data"]) {
@@ -381,15 +366,13 @@ function componentChartData() {
     let numForOthers = 0;
     if (smallNum.length > 1) {
         for (let each of smallNum) {
-            if (typeof each[1] == "number") {
+            if (typeof each[1] == "number")
                 numForOthers += each[1];
-            }
         }
         result.push(["Others", numForOthers]);
     }
-    else {
+    else
         result.push(...smallNum);
-    }
     return result;
 }
 function getDatesArray(startDate, endDate) {
@@ -605,21 +588,18 @@ function buildStockInfoTable(myData) {
                                     td.innerHTML = "▼" + Math.abs(parseFloat(eachStock[eachField]));
                                     tr.style.color = "#0B0";
                                 }
-                                else {
+                                else
                                     tr.style.color = "#888";
-                                }
                             }
                             else if (eachField == "quantity" || eachField == "close") {
                                 td.innerHTML = parseFloat(eachStock[eachField]).toLocaleString();
                             }
                             else if (eachField == "fluct-rate") {
                                 let rate = Math.abs(Math.round((parseFloat(eachStock[eachField]) * 100 + Number.EPSILON) * 100) / 100);
-                                if (parseFloat(eachStock[eachField]) > 0) {
+                                if (parseFloat(eachStock[eachField]) > 0)
                                     td.innerHTML = "▲" + rate + "%";
-                                }
-                                else if (parseFloat(eachStock[eachField]) < 0) {
+                                else if (parseFloat(eachStock[eachField]) < 0)
                                     td.innerHTML = "▼" + rate + "%";
-                                }
                             }
                         }
                     }
@@ -638,19 +618,16 @@ function controlToggler() {
 function moveTogglerMask(e) {
     if (togglerMask instanceof HTMLElement && upperPart instanceof HTMLElement) {
         togglerMask.style.left = (-1 * parseFloat(togglerMask.style.left) + 50) + "%";
-        if (upperPart.className == "overview") {
+        if (upperPart.className == "overview")
             upperPart.className = "individual";
-        }
-        else {
+        else
             upperPart.className = "overview";
-        }
     }
 }
 function controlTab() {
     for (let each of allTabs) {
-        if (each instanceof HTMLElement) {
+        if (each instanceof HTMLElement)
             each.addEventListener("click", highlightTab);
-        }
     }
 }
 function highlightTab(e) {
@@ -758,9 +735,8 @@ function countIndividualCashInvested(sid) {
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (createRecordBtn != null) {
+        if (createRecordBtn != null)
             createRecordBtn.addEventListener("click", expandTradeRecordForm);
-        }
         controlToggler();
         controlTab();
         // The cash-invested chart need info in trade-record table, so this need to be await

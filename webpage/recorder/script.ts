@@ -9,8 +9,6 @@ const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
 const allTabs = document.getElementsByClassName("tab");
 const allLowerTableContainers = document.getElementsByClassName("lower-table-container");
-// const tradeRecordTableContainer = document.getElementById("trade-record-table-container");
-// const stockInfoTableContainer = document.getElementById("stock-info-table-container");
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
@@ -66,9 +64,7 @@ function buildRecordTable(myData: any[]): void {
                 innerInput.innerHTML = eachRecord[eachField];
                 td.appendChild(innerInput);
                 // Do not show the id in the table.
-                if (eachField.toLowerCase() == "id") {
-                    td.style.display = "none";
-                }
+                if (eachField.toLowerCase() == "id") td.style.display = "none";
                 tr.appendChild(td)
             }
             // show the update/delete btn at the end of each row
@@ -100,11 +96,8 @@ function buildStockWarehouse(myData: any[]): void {
         let t = myData[eachTradeRecord]["deal-time"];
         let p = myData[eachTradeRecord]["deal-price"];
         let q = parseInt(myData[eachTradeRecord]["deal-quantity"]);
-        if (stockWarehouse[s][t][p]) {
-            stockWarehouse[s][t][p] += q;
-        } else {
-            stockWarehouse[s][t][p] = q;
-        }
+        if (stockWarehouse[s][t][p]) stockWarehouse[s][t][p] += q;
+        else stockWarehouse[s][t][p] = q;
     }
 }
 
@@ -113,19 +106,14 @@ async function createTradeRecord(e: Event): Promise<void> {
     let hasEmpty = false;
     for (let each of allRecordFormInputs) {
         if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
-            if (each.value != "") {
-                data[each.name] = each.value;
-            } else {
-                hasEmpty = true;
-            }
+            if (each.value != "") data[each.name] = each.value;
+            else hasEmpty = true;
         }
     }
     if (!hasEmpty) {
         await tradeRecordCRUD(data);
         location.reload();
-    } else {
-        infoNotSufficientErr();
-    }
+    } else infoNotSufficientErr();
 }
 
 function appendUpdateDeleteDiv(btnConfigList: { "btnClassName": string, "btnDisplayName": string, "cllbackFunc": Function, "args": any }[]): HTMLDivElement {
@@ -178,9 +166,7 @@ function deleteTradeRecord(e: Event): void {
         if (targetRowDOM instanceof HTMLElement) {
             for (let each of targetRowDOM.childNodes) {
                 if (each instanceof HTMLElement) {
-                    if (each.className == "id") {
-                        data[each.className] = each.innerText;
-                    }
+                    if (each.className == "id") data[each.className] = each.innerText;
                 }
             }
         }
@@ -271,9 +257,7 @@ function changeRowEndDiv(type: string, targetRowDOM: HTMLElement, args: any): vo
 }
 
 function noSpaceAndNewLine(e: Event): void {
-    if (e instanceof KeyboardEvent && (e.keyCode == 13 || e.keyCode == 32)) {
-        e.preventDefault();
-    }
+    if (e instanceof KeyboardEvent && (e.keyCode == 13 || e.keyCode == 32)) e.preventDefault();
 }
 
 function cashInvChartData(endDateStr: string, tradeRecordData: any[]): (string | number)[][] {
@@ -287,9 +271,7 @@ function cashInvChartData(endDateStr: string, tradeRecordData: any[]): (string |
         // Create a new row whose values is the copy of the values of the previous(last) row.
         if (result[result.length - 1] != undefined) {
             dataRow = [eachDateStr, ...result[result.length - 1].slice(1, -1)];
-        } else {
-            dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
-        }
+        } else dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
         for (let eachRecord of tradeRecordData) {
             let t = parseInt(eachRecord["deal-time"]);
             if (t == parseInt(eachDateStr)) {
@@ -341,9 +323,7 @@ function cashInvChartData(endDateStr: string, tradeRecordData: any[]): (string |
     // result = [["Date", ...allHoldingSids, "Total"], ...result];
     result = [["Date", "Cash Invested"], ...result.map(i => [i[0], i[i.length - 1]])];  // only use the "total" field
     let latestCashInv = result[result.length - 1][1];
-    if (typeof latestCashInv == "number") {
-        cashInvested = latestCashInv;
-    }
+    if (typeof latestCashInv == "number") cashInvested = latestCashInv;
     return result;
 }
 
@@ -357,12 +337,8 @@ function componentChartData(): (string | number)[][] {
                 eachRow[1] += stockWarehouse[eachStock][eachDay][eachP]
             }
         }
-        if (eachRow[1] != 0) {
-            result.push(eachRow);
-        } else {
-            // update allHoldingSids
-            allHoldingSids.delete(eachStock);
-        }
+        if (eachRow[1] != 0) result.push(eachRow);
+        else allHoldingSids.delete(eachStock);   // update allHoldingSids
     }
 
     // Q * market value
@@ -383,14 +359,10 @@ function componentChartData(): (string | number)[][] {
     let numForOthers = 0;
     if (smallNum.length > 1) {
         for (let each of smallNum) {
-            if (typeof each[1] == "number") {
-                numForOthers += each[1];
-            }
+            if (typeof each[1] == "number") numForOthers += each[1];
         }
         result.push(["Others", numForOthers]);
-    } else {
-        result.push(...smallNum);
-    }
+    } else result.push(...smallNum);
     return result;
 }
 
@@ -613,18 +585,13 @@ function buildStockInfoTable(myData: any[]): void {
                                 } else if (parseFloat(eachStock[eachField]) < 0) {
                                     td.innerHTML = "▼" + Math.abs(parseFloat(eachStock[eachField]))
                                     tr.style.color = "#0B0";
-                                } else {
-                                    tr.style.color = "#888";
-                                }
+                                } else tr.style.color = "#888";
                             } else if (eachField == "quantity" || eachField == "close") {
                                 td.innerHTML = parseFloat(eachStock[eachField]).toLocaleString();
                             } else if (eachField == "fluct-rate") {
                                 let rate = Math.abs(Math.round((parseFloat(eachStock[eachField]) * 100 + Number.EPSILON) * 100) / 100);
-                                if (parseFloat(eachStock[eachField]) > 0) {
-                                    td.innerHTML = "▲" + rate + "%"
-                                } else if (parseFloat(eachStock[eachField]) < 0) {
-                                    td.innerHTML = "▼" + rate + "%"
-                                }
+                                if (parseFloat(eachStock[eachField]) > 0) td.innerHTML = "▲" + rate + "%";
+                                else if (parseFloat(eachStock[eachField]) < 0) td.innerHTML = "▼" + rate + "%";
                             }
                         }
                     }
@@ -645,19 +612,14 @@ function controlToggler(): void {
 function moveTogglerMask(e: Event): void {
     if (togglerMask instanceof HTMLElement && upperPart instanceof HTMLElement) {
         togglerMask.style.left = (-1 * parseFloat(togglerMask.style.left) + 50) + "%";
-        if (upperPart.className == "overview") {
-            upperPart.className = "individual";
-        } else {
-            upperPart.className = "overview";
-        }
+        if (upperPart.className == "overview") upperPart.className = "individual";
+        else upperPart.className = "overview";
     }
 }
 
 function controlTab(): void {
     for (let each of allTabs) {
-        if (each instanceof HTMLElement) {
-            each.addEventListener("click", highlightTab);
-        }
+        if (each instanceof HTMLElement) each.addEventListener("click", highlightTab);
     }
 }
 
@@ -717,7 +679,6 @@ function buildStockWarehouseTable(myData: any[]): void {
             for (let eachStockInfo of myData) {
                 if (eachSid == eachStockInfo["sid"]) {
                     nameTd.innerHTML = eachStockInfo["name"];
-
                     priceTd.innerHTML = eachStockInfo["close"];
                     price = parseFloat(eachStockInfo["close"])
                 }
@@ -775,9 +736,7 @@ function countIndividualCashInvested(sid: string): number {
 }
 
 async function main(): Promise<void> {
-    if (createRecordBtn != null) {
-        createRecordBtn.addEventListener("click", expandTradeRecordForm);
-    }
+    if (createRecordBtn != null) createRecordBtn.addEventListener("click", expandTradeRecordForm);
     controlToggler();
     controlTab();
     // The cash-invested chart need info in trade-record table, so this need to be await
