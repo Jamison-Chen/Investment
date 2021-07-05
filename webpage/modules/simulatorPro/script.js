@@ -3,6 +3,9 @@ import { PriceMachine } from './priceMachine.js';
 import { Stock } from "./stock.js";
 class Main {
     constructor() {
+        this.recorderOption = document.getElementById("recorder-option");
+        this.simulatorOption = document.getElementById("simulator-option");
+        this.simulatorProOption = document.getElementById("simulator-pro-option");
         this.myAssetChartCntnr = document.getElementById("my-asset-chart-container");
         this.myAssetChartHeader = document.getElementById("my-asset-chart-header");
         this.myAssetChart = document.getElementById("my-asset-chart");
@@ -279,15 +282,16 @@ class Main {
         if (this.marketEqChart != null) {
             google.charts.load('current', { 'packages': ["corechart"] });
             let options = {
-                title: 'Given Price vs. Market Equilibrium',
-                titleTextStyle: {
-                    fontSize: 16,
-                    bold: false,
-                    color: "#777"
-                },
+                // title: 'Given Price vs. Market Equilibrium',
+                // titleTextStyle: {
+                //     fontSize: 14,
+                //     bold: false,
+                //     color: "#777"
+                // },
                 curveType: 'none',
                 width: this.marketEqChart.offsetWidth,
-                height: this.marketEqChart.offsetHeight
+                height: this.marketEqChart.offsetHeight,
+                chartArea: { left: "10%", top: "5%", width: '75%', height: '90%' }
             };
             google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "LineChart", this.marketEqChart));
         }
@@ -296,16 +300,17 @@ class Main {
         if (this.dealAmountChart != null) {
             google.charts.load('current', { 'packages': ["corechart"] });
             let options = {
-                title: 'Deal Amount',
-                titleTextStyle: {
-                    fontSize: 16,
-                    bold: false,
-                    color: "#777"
-                },
+                // title: 'Deal Amount',
+                // titleTextStyle: {
+                //     fontSize: 14,
+                //     bold: false,
+                //     color: "#777"
+                // },
                 width: this.dealAmountChart.offsetWidth,
                 height: this.dealAmountChart.offsetHeight,
                 legend: { position: "none" },
-                series: { 0: { color: "#888" } }
+                series: { 0: { color: "#888" } },
+                chartArea: { left: "10%", top: "5%", width: '75%', height: '90%' }
             };
             google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "ColumnChart", this.dealAmountChart));
         }
@@ -314,17 +319,18 @@ class Main {
         if (this.curveChart != null) {
             google.charts.load('current', { 'packages': ["corechart"] });
             let options = {
-                title: 'Demand / Supply Curve',
-                titleTextStyle: {
-                    fontSize: 14,
-                    bold: false,
-                    color: "#777"
-                },
+                // title: 'Demand / Supply Curve',
+                // titleTextStyle: {
+                //     fontSize: 14,
+                //     bold: false,
+                //     color: "#777"
+                // },
                 curveType: 'none',
                 width: this.curveChart.offsetWidth,
                 height: this.curveChart.offsetHeight,
                 vAxis: { title: 'Q' },
-                hAxis: { title: 'P' }
+                hAxis: { title: 'P' },
+                chartArea: { left: "10%", top: "5%", width: '75%', height: '90%' }
             };
             google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "LineChart", this.curveChart));
         }
@@ -362,6 +368,12 @@ class Main {
         }
     }
     main() {
+        if (this.recorderOption instanceof HTMLAnchorElement && this.simulatorOption instanceof HTMLAnchorElement && this.simulatorProOption instanceof HTMLAnchorElement) {
+            this.recorderOption.href = "../recorder/";
+            this.simulatorOption.href = "../simulator/";
+            this.simulatorProOption.href = "#";
+            this.simulatorProOption.classList.add("active");
+        }
         if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.initTotalCashInput.value = "1000000";
             this.totalStockInput.value = "100000";

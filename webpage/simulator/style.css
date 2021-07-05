@@ -7,33 +7,6 @@
 
 @media screen and (max-width:1024px) {}
 
-::-webkit-scrollbar {
-    width: 5px;
-    height: 8px;
-}
-
-::-webkit-scrollbar-track {
-    margin: 5px 0;
-}
-
-::-webkit-scrollbar-thumb {
-    border-radius: 3px;
-    background: var(--lightGray);
-}
-
-html {
-    font-family: "微軟正黑體", Arial, Helvetica, sans-serif;
-    font-size: 0.9rem;
-    cursor: default;
-    user-select: none;
-}
-
-body {
-    margin: 0;
-    padding: 0;
-    height: inherit;
-}
-
 #main {
     display: flex;
     flex-direction: column;
