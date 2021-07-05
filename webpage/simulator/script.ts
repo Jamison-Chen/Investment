@@ -1,4 +1,6 @@
 import { Strategy, BHmixGrid, PlannedBHmixGrid, GridConstQ, Chicken, GridConstRatio } from './simulator.js';
+const recorderOption = document.getElementById("recorder-option");
+const simulatorOption = document.getElementById("simulator-option");
 const priceGraph = document.getElementById("price-graph");
 const assetsGraph = document.getElementById("assets-graph");
 const allOptions = document.getElementsByClassName("strategy-option");
@@ -126,6 +128,12 @@ function compareStrategies(e: Event, strategies: [Strategy, (string | number)[]]
 }
 
 function simulatorMain(): void {
+    if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement) {
+        recorderOption.href = "../recorder/";
+        simulatorOption.href = "#";
+        simulatorOption.classList.add("active");
+    }
+
     let initP = 100;
     let initTotalAssets = 10000;
     let nDays = 360;

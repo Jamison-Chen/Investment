@@ -8,6 +8,8 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+const recorderOption = document.getElementById("recorder-option");
+const simulatorOption = document.getElementById("simulator-option");
 const viewToggler = document.getElementById("view-toggler");
 const togglerMask = document.getElementById("toggler-mask");
 const upperPart = document.getElementById("upper-part");
@@ -735,6 +737,11 @@ function countIndividualCashInvested(sid) {
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
+        if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement) {
+            recorderOption.href = "#";
+            recorderOption.classList.add("active");
+            simulatorOption.href = "../simulator/";
+        }
         if (createRecordBtn != null)
             createRecordBtn.addEventListener("click", expandTradeRecordForm);
         controlToggler();

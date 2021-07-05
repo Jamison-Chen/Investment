@@ -1,3 +1,5 @@
+const recorderOption = document.getElementById("recorder-option");
+const simulatorOption = document.getElementById("simulator-option");
 const viewToggler = document.getElementById("view-toggler");
 const togglerMask = document.getElementById("toggler-mask");
 const upperPart = document.getElementById("upper-part");
@@ -736,6 +738,11 @@ function countIndividualCashInvested(sid: string): number {
 }
 
 async function main(): Promise<void> {
+    if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement) {
+        recorderOption.href = "#";
+        recorderOption.classList.add("active");
+        simulatorOption.href = "../simulator/";
+    }
     if (createRecordBtn != null) createRecordBtn.addEventListener("click", expandTradeRecordForm);
     controlToggler();
     controlTab();

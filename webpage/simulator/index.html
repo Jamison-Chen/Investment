@@ -6,26 +6,16 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <link rel="stylesheet" href="../public/css/header.css">
     <link rel="stylesheet" href="style.css">
-    <script type="module" src="../modules/script.js" defer></script>
+    <script type="module" src="../modules/public/js/script.js" defer></script>
     <script type="module" src="../modules/simulator/script.js" defer></script>
     <title>Investment Strategy Simulator</title>
 </head>
 
 <body id="body">
     <div id="main">
-        <div id="header">
-            <div id="mode-btn">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="#888" class="bi bi-grid-3x3-gap-fill" viewBox="0 0 16 16">
-                    <path d="M1 2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V2zM1 7a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V7zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V7zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1V7zM1 12a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1v-2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1v-2zm5 0a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-2z"/>
-                </svg>
-            </div>
-            <div id="mode-list">
-                <a id="recorder-option" class="mode-option" href="../recorder/">Recorder</a>
-                <hr style="width:80%;border-top:none;margin:0">
-                <a id="simulator-option" class="mode-option" href="#">Simulator</a>
-            </div>
-        </div>
+        <div id="header"></div>
         <div id="graph-container">
             <div id="price-graph"></div>
             <div id="assets-graph"></div>

@@ -80,13 +80,9 @@ export class BHmixGrid extends Strategy {
                 qToday = this.calcQToday(this.totalAssetsList[i], this.pList[i], this.pList[i], (1 + r) * this.pList[i]);
             } else {
                 if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
-                    if (this.cumulQList[i - 1] == 0) {
-                        latestMaxP = this.pList[i];
-                    }
+                    if (this.cumulQList[i - 1] == 0) latestMaxP = this.pList[i];
                     qToday = this.calcQToday(this.cashList[i - 1], this.pList[i], latestMaxP, latestMinP);
-                    if (qToday > 0) {
-                        latestMinP = this.pList[i];
-                    }
+                    if (qToday > 0) latestMinP = this.pList[i];
                 } else if (this.pList[i] > latestMaxP) {
                     // Sell all out
                     qToday = -1 * this.cumulQList[i - 1];
