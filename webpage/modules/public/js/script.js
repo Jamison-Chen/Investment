@@ -22,16 +22,22 @@ if (header != null) {
     recorderOption.classList.add("mode-option");
     recorderOption.innerText = "Recorder";
     let divideLine = document.createElement("hr");
-    divideLine.style.width = "80%";
-    divideLine.style.borderTop = "none";
-    divideLine.style.margin = "0";
+    divideLine.classList.add("mode-divide-line");
     let simulatorOption = document.createElement("a");
     simulatorOption.id = "simulator-option";
     simulatorOption.classList.add("mode-option");
     simulatorOption.innerText = "Simulator";
+    let divideLine2 = document.createElement("hr");
+    divideLine2.classList.add("mode-divide-line");
+    let simulatorProOption = document.createElement("a");
+    simulatorProOption.id = "simulator-pro-option";
+    simulatorProOption.classList.add("mode-option");
+    simulatorProOption.innerText = "Simulator Pro";
     modeList.appendChild(recorderOption);
     modeList.appendChild(divideLine);
     modeList.appendChild(simulatorOption);
+    modeList.appendChild(divideLine2);
+    modeList.appendChild(simulatorProOption);
     header.appendChild(modeList);
 }
 const modeBtn = document.getElementById("mode-btn");

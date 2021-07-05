@@ -1,0 +1,185 @@
+html {
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    cursor: default;
+    user-select: none;
+    overflow: hidden;
+}
+
+body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+}
+
+#main {
+    display: flex;
+    height: 95vh;
+}
+
+#animation-field {
+    position: relative;
+    height: 100%;
+    width: 60vw;
+    display: grid;
+    gap: 0;
+    justify-items: center;
+    align-items: center;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+#my-asset-chart-container {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    top: calc(50vh - 237px);
+    left: calc(30vw - 300px);
+    width: 600px;
+    height: 475px;
+    border-radius: 5px;
+    background-color: #FFF;
+}
+
+#my-asset-chart-container.active {
+    display: flex;
+}
+
+#my-asset-chart-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    border-radius: 5px 5px 0 0;
+    padding: 3px;
+    height: 25px;
+}
+
+#my-asset-chart-header:hover {
+    background-color: #EEE;
+    cursor: pointer;
+}
+
+#my-asset-chart {
+    border-radius: 0 0 5px 5px;
+    width: 600px;
+    height: 450px;
+}
+
+#right-side {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 40vw;
+}
+
+#market-eq-chart {
+    height: 50%;
+    width: 100%;
+}
+
+#deal-amount-chart {
+    height: 25%;
+    width: 100%;
+}
+
+#curve-chart {
+    width: 100%;
+    height: 25%;
+}
+
+#control-bar {
+    background-color: #000;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    height: 5vh;
+}
+
+#parameter-field {
+    color: #fafafa;
+    width: fit-content;
+    display: flex;
+    justify-content: center;
+}
+
+#parameter-field>div {
+    display: flex;
+    padding: 5px 10px;
+}
+
+#parameter-field>div>div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 10px;
+}
+
+#parameter-field>div>input {
+    border-radius: 5px;
+    padding-left: 5px;
+    width: 60px;
+    color: #000;
+    border: 0;
+    background-color: rgba(255, 255, 255, 1);
+}
+
+#parameter-field>div>input:focus {
+    outline: none;
+}
+
+#btn-field {
+    width: 200px;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    height: 100%;
+}
+
+#start-btn,
+#reset-btn {
+    width: 80px;
+    text-align: center;
+    background-color: #ddd;
+    border-radius: 5px;
+    border-style: none;
+    padding: 7px 0;
+    margin: auto;
+    color: #000;
+}
+
+#start-btn:hover,
+#reset-btn:hover {
+    background-color: #fff;
+    cursor: pointer;
+}
+
+#start-btn:active,
+#reset-btn:active {
+    background-color: #000;
+}
+
+#start-btn:disabled {
+    background-color: #888;
+}
+
+#start-btn:disabled:hover {
+    cursor: default;
+}
+
+.node {
+    margin: 5px;
+    border-radius: 5px;
+    color: #FFF;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.7rem;
+}
+
+.node#me:hover {
+    cursor: pointer;
+}

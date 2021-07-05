@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <link rel="stylesheet" href="./style.css">
+    <script type="module" src="../modules/simulatorPro/script.js" defer></script>
+    <title>Stock Market Simulator</title>
+</head>
+
+<body>
+    <div id="main">
+        <div id="animation-field"></div>
+        <div id="my-asset-chart-container">
+            <div id="my-asset-chart-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-x" viewBox="0 0 16 16">
+                    <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
+                </svg>
+            </div>
+            <div id="my-asset-chart"></div>
+        </div>
+        <div id="right-side">
+            <div id="market-eq-chart"></div>
+            <div id="deal-amount-chart"></div>
+            <div id="curve-chart"></div>
+        </div>
+    </div>
+    <div id="control-bar">
+        <div id="parameter-field">
+            <div>
+                <div>Initial Total Cash</div>
+                <input id="init-total-cash" type="text">
+            </div>
+            <div>
+                <div>Total Stock</div>
+                <input id="total-stock" type="text">
+            </div>
+            <div>
+                <div>Initial Equilibrium</div>
+                <input id="initial-eq" type="text">
+            </div>
+            <div>
+                <div>Day to Simulate</div>
+                <input id="day-to-simulate" type="text">
+            </div>
+            <div>
+                <div>Pause Time (ms)</div>
+                <input id="pause-time" type="text">
+            </div>
+        </div>
+        <div id="btn-field">
+            <button id="start-btn">RUN</button>
+            <button id="reset-btn">RESET</button>
+        </div>
+    </div>
+</body>
+
+</html>

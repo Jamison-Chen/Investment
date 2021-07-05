@@ -41,7 +41,9 @@
 
 .mode-option {
     text-align: center;
-    padding: 10px 20px;
+    padding: 5px 20px;
+    margin: 5px;
+    border-radius: 5px;
     text-decoration: none;
     color: #444;
 }
@@ -58,4 +60,10 @@
 
 .mode-option.active:hover {
     cursor: default;
+}
+
+.mode-divide-line {
+    width: 80%;
+    border-top: none;
+    margin: 0;
 }
