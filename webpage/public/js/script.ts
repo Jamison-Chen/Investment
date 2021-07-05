@@ -3,6 +3,7 @@ const header = document.getElementById("header");
 
 if (header != null) {
     let modeBtn = document.createElement("div");
+    modeBtn.classList.add("header-btn");
     modeBtn.id = "mode-btn";
     modeBtn.innerHTML = "<svg xmlns='http://www.w3.org/2000/svg' \
     width='20' height='20' fill='#888' class='bi bi-grid-3x3-gap-fill' \

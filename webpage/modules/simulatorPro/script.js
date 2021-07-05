@@ -3,9 +3,20 @@ import { PriceMachine } from './priceMachine.js';
 import { Stock } from "./stock.js";
 class Main {
     constructor() {
+        this.initBtn = document.getElementById("init-btn");
+        this.startBtn = document.getElementById("start-btn");
+        this.resetBtn = document.getElementById("reset-btn");
         this.recorderOption = document.getElementById("recorder-option");
         this.simulatorOption = document.getElementById("simulator-option");
         this.simulatorProOption = document.getElementById("simulator-pro-option");
+        this.settingBtn = document.getElementById("setting-btn");
+        this.settingBg = document.getElementById("setting-background");
+        this.settingCntnr = document.getElementById("setting-container");
+        this.settingHeaderMkt = document.getElementById("setting-header-market");
+        this.settingHeaderIndi = document.getElementById("setting-header-individual");
+        this.mktParamField = document.getElementById("market-parameter-field");
+        this.indiParamField = document.getElementById("individual-parameter-field");
+        this.settingFooter = document.getElementById("setting-footer");
         this.myAssetChartCntnr = document.getElementById("my-asset-chart-container");
         this.myAssetChartHeader = document.getElementById("my-asset-chart-header");
         this.myAssetChart = document.getElementById("my-asset-chart");
@@ -13,8 +24,6 @@ class Main {
         this.marketEqChart = document.getElementById("market-eq-chart");
         this.dealAmountChart = document.getElementById("deal-amount-chart");
         this.curveChart = document.getElementById("curve-chart");
-        this.startBtn = document.getElementById("start-btn");
-        this.resetBtn = document.getElementById("reset-btn");
         this.initTotalCashInput = document.getElementById("init-total-cash");
         this.totalStockInput = document.getElementById("total-stock");
         this.initialEqInput = document.getElementById("initial-eq");
@@ -169,7 +178,8 @@ class Main {
             }
             else {
                 this.showIndividualInfo();
-                this.enableControl();
+                this.enableInitBtn();
+                this.enableChangeSetting();
                 return;
             }
         }
@@ -202,8 +212,16 @@ class Main {
             if (buySideOrderQueue[i].owner != sellSideOrderQueue[j].owner) {
                 totalDealQ += dealQ;
                 dealPair.push({ "buySide": buySideOrderQueue[i].owner, "sellSide": sellSideOrderQueue[j].owner, "q": dealQ });
+            }
+            if (buySideOrderQueue[i].quantity == 0 && sellSideOrderQueue[j].quantity == 0) {
                 finalDealPrice = this.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
             }
+            else if (buySideOrderQueue[i].quantity == 0)
+                finalDealPrice = sellSideOrderQueue[j].price;
+            else if (sellSideOrderQueue[j].quantity == 0)
+                finalDealPrice = buySideOrderQueue[i].price;
+            else
+                throw "wierd!";
             if (buySideOrderQueue[i].quantity == 0)
                 i++;
             if (sellSideOrderQueue[j].quantity == 0)
@@ -348,6 +366,7 @@ class Main {
                 curveType: 'none',
                 width: this.myAssetChart.offsetWidth * 0.98,
                 height: this.myAssetChart.offsetHeight * 0.98,
+                chartArea: { left: "15%", top: "10%", width: '65%', height: '80%' }
             };
             google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "LineChart", this.myAssetChart));
         }
@@ -357,8 +376,9 @@ class Main {
         let chart = new google.visualization[chartType](targetDiv);
         chart.draw(data, options);
     }
-    enableControl() {
-        if (this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+    enableChangeSetting() {
+        if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+            this.settingBtn.disabled = false;
             this.startBtn.disabled = false;
             this.initTotalCashInput.disabled = false;
             this.totalStockInput.disabled = false;
@@ -367,13 +387,18 @@ class Main {
             this.pauseTimeInput.disabled = false;
         }
     }
-    main() {
-        if (this.recorderOption instanceof HTMLAnchorElement && this.simulatorOption instanceof HTMLAnchorElement && this.simulatorProOption instanceof HTMLAnchorElement) {
-            this.recorderOption.href = "../recorder/";
-            this.simulatorOption.href = "../simulator/";
-            this.simulatorProOption.href = "#";
-            this.simulatorProOption.classList.add("active");
+    disableChangeSetting() {
+        if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+            this.settingBtn.disabled = true;
+            this.startBtn.disabled = true;
+            this.initTotalCashInput.disabled = true;
+            this.totalStockInput.disabled = true;
+            this.initialEqInput.disabled = true;
+            this.dayToSimulateInput.disabled = true;
+            this.pauseTimeInput.disabled = true;
         }
+    }
+    initSetting() {
         if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.initTotalCashInput.value = "1000000";
             this.totalStockInput.value = "100000";
@@ -381,87 +406,144 @@ class Main {
             this.dayToSimulateInput.value = "250";
             this.pauseTimeInput.value = "3";
         }
+    }
+    readSetting() {
+        if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+            this.initTotalCash = parseInt(this.initTotalCashInput.value);
+            this.totalStock = parseInt(this.totalStockInput.value);
+            this.initialEq = parseInt(this.initialEqInput.value);
+            this.dayToSimulate = parseInt(this.dayToSimulateInput.value);
+            this.pauseTime = parseInt(this.pauseTimeInput.value);
+        }
+    }
+    initMarketComposition() {
+        this.indiviComposition = {
+            "me": {
+                // "strategySetting": {
+                //     "name": "PriceChaser"
+                // },
+                "strategySetting": {
+                    "name": "Chicken",
+                    "r": 0.2,
+                    "runawayRate": 0.9
+                },
+                "initialCash": 1000,
+                "initialStock": 0
+            },
+            "ValueFollower": {
+                "number": 0,
+                "strategySetting": {
+                    "name": "ValueFollower"
+                }
+            },
+            "PriceChaser": {
+                "number": 99,
+                "strategySetting": {
+                    "name": "PriceChaser"
+                }
+            },
+            "BHmixGrid": {
+                "number": 0,
+                "strategySetting": {
+                    "name": "BHmixGrid",
+                    "r": 0.1
+                }
+            },
+            "GridConstRatio": {
+                "number": 0,
+                "strategySetting": {
+                    "name": "GridConstRatio",
+                    "maxPrice": 30,
+                    "minPrice": 3,
+                    "nTable": 100,
+                    "stockRatio": 0.5
+                }
+            },
+            "Chicken": {
+                "number": 0,
+                "strategySetting": {
+                    "name": "Chicken",
+                    "r": 0.2,
+                    "runawayRate": 0.85
+                }
+            }
+        };
+    }
+    enableInitBtn() {
+        if (this.initBtn instanceof HTMLButtonElement)
+            this.initBtn.disabled = false;
+    }
+    disableInitBtn() {
+        if (this.initBtn instanceof HTMLButtonElement)
+            this.initBtn.disabled = true;
+    }
+    start() {
+        this.initSetting();
+        // the init button
+        if (this.initBtn != null) {
+            this.initBtn.addEventListener("click", () => {
+                this.initMarketComposition();
+                if (this.startBtn instanceof HTMLButtonElement)
+                    this.startBtn.disabled = false;
+            });
+        }
+        // mode list
+        if (this.recorderOption instanceof HTMLAnchorElement && this.simulatorOption instanceof HTMLAnchorElement && this.simulatorProOption instanceof HTMLAnchorElement) {
+            this.recorderOption.href = "../recorder/";
+            this.simulatorOption.href = "../simulator/";
+            this.simulatorProOption.href = "#";
+            this.simulatorProOption.classList.add("active");
+        }
+        // Setting Header
+        if (this.settingHeaderMkt != null && this.settingHeaderIndi != null && this.mktParamField != null && this.indiParamField != null) {
+            this.settingHeaderMkt.addEventListener("click", () => {
+                var _a, _b, _c, _d;
+                (_a = this.settingHeaderMkt) === null || _a === void 0 ? void 0 : _a.classList.add("active");
+                (_b = this.settingHeaderIndi) === null || _b === void 0 ? void 0 : _b.classList.remove("active");
+                (_c = this.mktParamField) === null || _c === void 0 ? void 0 : _c.classList.add("active");
+                (_d = this.indiParamField) === null || _d === void 0 ? void 0 : _d.classList.remove("active");
+            });
+            this.settingHeaderIndi.addEventListener("click", () => {
+                var _a, _b, _c, _d;
+                (_a = this.settingHeaderMkt) === null || _a === void 0 ? void 0 : _a.classList.remove("active");
+                (_b = this.settingHeaderIndi) === null || _b === void 0 ? void 0 : _b.classList.add("active");
+                (_c = this.mktParamField) === null || _c === void 0 ? void 0 : _c.classList.remove("active");
+                (_d = this.indiParamField) === null || _d === void 0 ? void 0 : _d.classList.add("active");
+            });
+        }
+        // the start(RUN) button
         if (this.startBtn instanceof HTMLButtonElement) {
             this.startBtn.addEventListener("click", () => {
-                if (this.startBtn instanceof HTMLButtonElement && this.animationField != null) {
+                if (this.animationField != null) {
                     this.animationField.innerHTML = "";
                     this.marketEqData = [["Day", "Given Price", "Mkt. Eq."]];
                     this.dealAmountData = [["Day", "Deal Amount"]];
                     this.myAssetData = [["Day", "Total Asset", "Stock Mkt Val", "Cash Holding"]];
                     this.individualList = [];
-                    this.startBtn.disabled = true;
-                    if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
-                        this.initTotalCash = parseInt(this.initTotalCashInput.value);
-                        this.totalStock = parseInt(this.totalStockInput.value);
-                        this.initialEq = parseInt(this.initialEqInput.value);
-                        this.dayToSimulate = parseInt(this.dayToSimulateInput.value);
-                        this.pauseTime = parseInt(this.pauseTimeInput.value);
-                        this.initTotalCashInput.disabled = true;
-                        this.totalStockInput.disabled = true;
-                        this.initialEqInput.disabled = true;
-                        this.dayToSimulateInput.disabled = true;
-                        this.pauseTimeInput.disabled = true;
-                        this.indiviComposition = {
-                            "me": {
-                                // "strategySetting": {
-                                //     "name": "PriceChaser"
-                                // },
-                                "strategySetting": {
-                                    "name": "Chicken",
-                                    "r": 0.2,
-                                    "runawayRate": 0.9
-                                },
-                                "initialCash": 1000,
-                                "initialStock": 0
-                            },
-                            "ValueFollower": {
-                                "number": 9,
-                                "strategySetting": {
-                                    "name": "ValueFollower"
-                                }
-                            },
-                            "PriceChaser": {
-                                "number": 80,
-                                "strategySetting": {
-                                    "name": "PriceChaser"
-                                }
-                            },
-                            "BHmixGrid": {
-                                "number": 0,
-                                "strategySetting": {
-                                    "name": "BHmixGrid",
-                                    "r": 0.1
-                                }
-                            },
-                            "GridConstRatio": {
-                                "number": 0,
-                                "strategySetting": {
-                                    "name": "GridConstRatio",
-                                    "maxPrice": 30,
-                                    "minPrice": 3,
-                                    "nTable": 100,
-                                    "stockRatio": 0.5
-                                }
-                            },
-                            "Chicken": {
-                                "number": 10,
-                                "strategySetting": {
-                                    "name": "Chicken",
-                                    "r": 0.2,
-                                    "runawayRate": 0.85
-                                }
-                            }
-                        };
-                        this.preset(this.indiviComposition);
-                        this.simulate();
-                    }
+                    this.disableInitBtn();
+                    this.disableChangeSetting();
+                    this.readSetting();
+                    this.preset(this.indiviComposition);
+                    this.simulate();
                 }
             });
+            // won't be enabled until the init button is clicked
+            this.startBtn.disabled = true;
         }
-        if (this.myAssetChartCntnr != null && this.myAssetChartHeader != null) {
+        if (this.myAssetChartCntnr != null && this.myAssetChartHeader != null && this.settingBtn != null && this.settingBg != null && this.settingCntnr != null && this.settingFooter != null) {
             this.myAssetChartHeader.addEventListener("click", () => {
                 var _a;
                 (_a = this.myAssetChartCntnr) === null || _a === void 0 ? void 0 : _a.classList.remove("active");
+            });
+            this.settingBtn.addEventListener("click", () => {
+                var _a, _b;
+                (_a = this.settingBg) === null || _a === void 0 ? void 0 : _a.classList.add("active");
+                (_b = this.settingCntnr) === null || _b === void 0 ? void 0 : _b.classList.add("active");
+            });
+            this.settingFooter.addEventListener("click", () => {
+                var _a, _b;
+                (_a = this.settingBg) === null || _a === void 0 ? void 0 : _a.classList.remove("active");
+                (_b = this.settingCntnr) === null || _b === void 0 ? void 0 : _b.classList.remove("active");
             });
         }
         if (this.resetBtn != null)
@@ -469,4 +551,10 @@ class Main {
     }
 }
 let main = new Main();
-main.main();
+main.start();
+// var oReq = new XMLHttpRequest();
+// oReq.addEventListener("load", () => {
+//     console.log(oReq.responseText);
+// });
+// oReq.open("GET", "./README.md");
+// oReq.send();

@@ -283,10 +283,12 @@ export class Chicken extends Strategy {
         let pd: number = ps;
         let qd: number = 0;
         let qs: number = 0;
-        if (stockHolding.length == 0 || today == 1) {
-            this.latestMinP = pd;
-            this.latestMaxP = pd;
-            qd = this.calcQToday(r, cashOwning, pd);
+        if (stockHolding.length == 0) {
+            if (pd > pToday) {
+                this.latestMinP = pd;
+                this.latestMaxP = pd;
+                qd = this.calcQToday(r, cashOwning, pd);
+            }
         } else {
             let maxCostHolding = Math.max(...stockHolding.map(e => e.buyInCost));
             // If price rises, and higher than maxCostHolding, buy in.

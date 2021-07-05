@@ -7,9 +7,196 @@ body {
     flex-direction: column;
 }
 
+#control-bar {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+#btn-field {
+    width: max-content;
+    display: flex;
+    align-items: center;
+    padding: 0;
+    height: 100%;
+}
+
+.control-btn {
+    font-size: 0.8rem;
+    font-weight: bold;
+    width: 80px;
+    height: max-content;
+    text-align: center;
+    border-radius: 5px;
+    border-style: none;
+    padding: 5px 0;
+    margin: 0 10px;
+    color: #FFF;
+}
+
+#init-btn {
+    background-color: #1aa260;
+}
+
+#start-btn {
+    background-color: #de5246;
+}
+
+#reset-btn {
+    background-color: #000;
+}
+
+.control-btn:hover {
+    opacity: 70%;
+    cursor: pointer;
+}
+
+.control-btn:active {
+    opacity: 100%;
+}
+
+.control-btn:disabled {
+    background-color: #ccc !important;
+}
+
+.control-btn:disabled:hover {
+    opacity: 100%;
+    cursor: default;
+}
+
+#setting-btn:disabled:hover {
+    cursor: not-allowed;
+}
+
+#setting-background {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: #FFF;
+    opacity: 70%;
+    z-index: 900;
+}
+
+#setting-background.active {
+    display: block;
+}
+
+#setting-container {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    top: calc(50vh - 200px);
+    left: calc(50vw - 200px);
+    width: 400px;
+    height: 300px;
+    border-radius: 8px;
+    background-color: #FFF;
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+}
+
+#setting-container.active {
+    display: flex;
+}
+
+#setting-header {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    border-radius: 5px 5px 0 0;
+    padding: 0 5px;
+    height: 15%;
+}
+
+.setting-header-tab {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    color: #888;
+    margin: 0 1%;
+    width: 48%;
+    height: 100%;
+}
+
+.setting-header-tab.active {
+    color: #4c8bf5;
+    border-bottom: 2px solid #4c8bf5;
+}
+
+.setting-header-tab:hover {
+    cursor: pointer;
+}
+
+#setting-body {
+    height: 68%;
+    margin-top: 2%;
+}
+
+.parameter-field {
+    width: 70%;
+    height: 100%;
+    padding: 0 15%;
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+}
+
+.parameter-field.active {
+    display: flex;
+}
+
+.parameter-row {
+    display: flex;
+    justify-content: space-between;
+}
+
+.parameter-label {
+    color: #888;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 1.1rem;
+}
+
+.parameter-input {
+    font-size: 1.1rem;
+    width: 75px;
+    color: #444;
+    border: 0;
+    border-bottom: 2px solid #888;
+    background-color: rgba(255, 255, 255, 1);
+}
+
+.parameter-input:focus {
+    outline: none;
+}
+
+#setting-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 0 0 5px 5px;
+    height: 15%;
+    color: #888;
+    font-size: 1.2rem;
+    font-weight: bold;
+}
+
+#setting-footer:hover {
+    border-radius: 3px;
+    background-color: #eee;
+    cursor: pointer;
+}
+
 #main {
     display: flex;
-    height: 90vh;
+    height: calc(100vh - var(--headerHeight));
 }
 
 #animation-field {
@@ -34,6 +221,7 @@ body {
     height: 475px;
     border-radius: 5px;
     background-color: #FFF;
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.3);
 }
 
 #my-asset-chart-container.active {
@@ -45,12 +233,14 @@ body {
     justify-content: flex-end;
     align-items: center;
     border-radius: 5px 5px 0 0;
-    padding: 3px;
+    padding: 0 5px;
     height: 25px;
 }
 
-#my-asset-chart-header:hover {
-    background-color: #EEE;
+#my-asset-chart-close-btn:hover {
+    border-radius: 3px;
+    background-color: #D00;
+    color: #FFF;
     cursor: pointer;
 }
 
@@ -80,85 +270,6 @@ body {
 #curve-chart {
     height: 25%;
     width: 100%;
-}
-
-#control-bar {
-    background-color: #000;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    height: calc(100vh - 90vh - var(--headerHeight));
-}
-
-#parameter-field {
-    color: #fafafa;
-    width: fit-content;
-    display: flex;
-    justify-content: center;
-}
-
-#parameter-field>div {
-    display: flex;
-    padding: 5px 10px;
-}
-
-#parameter-field>div>div {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0 10px;
-}
-
-#parameter-field>div>input {
-    border-radius: 5px;
-    padding-left: 5px;
-    width: 60px;
-    color: #000;
-    border: 0;
-    background-color: rgba(255, 255, 255, 1);
-}
-
-#parameter-field>div>input:focus {
-    outline: none;
-}
-
-#btn-field {
-    width: 200px;
-    display: flex;
-    justify-content: center;
-    padding: 0;
-    height: 100%;
-}
-
-#start-btn,
-#reset-btn {
-    width: 80px;
-    text-align: center;
-    background-color: #ddd;
-    border-radius: 5px;
-    border-style: none;
-    padding: 7px 0;
-    margin: auto;
-    color: #000;
-}
-
-#start-btn:hover,
-#reset-btn:hover {
-    background-color: #fff;
-    cursor: pointer;
-}
-
-#start-btn:active,
-#reset-btn:active {
-    background-color: #000;
-}
-
-#start-btn:disabled {
-    background-color: #888;
-}
-
-#start-btn:disabled:hover {
-    cursor: default;
 }
 
 .node {

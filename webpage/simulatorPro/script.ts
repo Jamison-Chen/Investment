@@ -3,9 +3,20 @@ import { PriceMachine } from './priceMachine.js';
 import { Stock } from "./stock.js";
 import { Order } from "./order.js";
 class Main {
+    public initBtn = document.getElementById("init-btn");
+    public startBtn = document.getElementById("start-btn");
+    public resetBtn = document.getElementById("reset-btn");
     public recorderOption = document.getElementById("recorder-option");
     public simulatorOption = document.getElementById("simulator-option");
     public simulatorProOption = document.getElementById("simulator-pro-option");
+    public settingBtn = document.getElementById("setting-btn");
+    public settingBg = document.getElementById("setting-background");
+    public settingCntnr = document.getElementById("setting-container");
+    public settingHeaderMkt = document.getElementById("setting-header-market");
+    public settingHeaderIndi = document.getElementById("setting-header-individual");
+    public mktParamField = document.getElementById("market-parameter-field");
+    public indiParamField = document.getElementById("individual-parameter-field");
+    public settingFooter = document.getElementById("setting-footer");
     public myAssetChartCntnr = document.getElementById("my-asset-chart-container");
     public myAssetChartHeader = document.getElementById("my-asset-chart-header");
     public myAssetChart = document.getElementById("my-asset-chart");
@@ -13,8 +24,6 @@ class Main {
     public marketEqChart = document.getElementById("market-eq-chart");
     public dealAmountChart = document.getElementById("deal-amount-chart");
     public curveChart = document.getElementById("curve-chart");
-    public startBtn = document.getElementById("start-btn");
-    public resetBtn = document.getElementById("reset-btn");
     public initTotalCashInput = document.getElementById("init-total-cash");
     public totalStockInput = document.getElementById("total-stock");
     public initialEqInput = document.getElementById("initial-eq");
@@ -179,7 +188,8 @@ class Main {
                 setTimeout(() => { this.simulate() }, this.pauseTime);
             } else {
                 this.showIndividualInfo();
-                this.enableControl();
+                this.enableInitBtn();
+                this.enableChangeSetting();
                 return;
             }
         }
@@ -214,8 +224,12 @@ class Main {
             if (buySideOrderQueue[i].owner != sellSideOrderQueue[j].owner) {
                 totalDealQ += dealQ;
                 dealPair.push({ "buySide": buySideOrderQueue[i].owner, "sellSide": sellSideOrderQueue[j].owner, "q": dealQ });
-                finalDealPrice = this.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
             }
+            if (buySideOrderQueue[i].quantity == 0 && sellSideOrderQueue[j].quantity == 0) {
+                finalDealPrice = this.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
+            } else if (buySideOrderQueue[i].quantity == 0) finalDealPrice = sellSideOrderQueue[j].price;
+            else if (sellSideOrderQueue[j].quantity == 0) finalDealPrice = buySideOrderQueue[i].price;
+            else throw "wierd!";
             if (buySideOrderQueue[i].quantity == 0) i++;
             if (sellSideOrderQueue[j].quantity == 0) j++;
             valid =
@@ -359,6 +373,7 @@ class Main {
                 curveType: 'none',
                 width: this.myAssetChart.offsetWidth * 0.98,
                 height: this.myAssetChart.offsetHeight * 0.98,
+                chartArea: { left: "15%", top: "10%", width: '65%', height: '80%' }
             };
             google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "LineChart", this.myAssetChart));
         }
@@ -370,8 +385,9 @@ class Main {
         chart.draw(data, options);
     }
 
-    public enableControl(): void {
-        if (this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+    public enableChangeSetting(): void {
+        if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+            this.settingBtn.disabled = false;
             this.startBtn.disabled = false;
             this.initTotalCashInput.disabled = false;
             this.totalStockInput.disabled = false;
@@ -381,13 +397,19 @@ class Main {
         }
     }
 
-    public main(): void {
-        if (this.recorderOption instanceof HTMLAnchorElement && this.simulatorOption instanceof HTMLAnchorElement && this.simulatorProOption instanceof HTMLAnchorElement) {
-            this.recorderOption.href = "../recorder/";
-            this.simulatorOption.href = "../simulator/";
-            this.simulatorProOption.href = "#";
-            this.simulatorProOption.classList.add("active");
+    public disableChangeSetting(): void {
+        if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+            this.settingBtn.disabled = true;
+            this.startBtn.disabled = true;
+            this.initTotalCashInput.disabled = true;
+            this.totalStockInput.disabled = true;
+            this.initialEqInput.disabled = true;
+            this.dayToSimulateInput.disabled = true;
+            this.pauseTimeInput.disabled = true;
         }
+    }
+
+    public initSetting(): void {
         if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.initTotalCashInput.value = "1000000";
             this.totalStockInput.value = "100000";
@@ -395,90 +417,152 @@ class Main {
             this.dayToSimulateInput.value = "250";
             this.pauseTimeInput.value = "3";
         }
+    }
+
+    public readSetting(): void {
+        if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+            this.initTotalCash = parseInt(this.initTotalCashInput.value);
+            this.totalStock = parseInt(this.totalStockInput.value);
+            this.initialEq = parseInt(this.initialEqInput.value);
+            this.dayToSimulate = parseInt(this.dayToSimulateInput.value);
+            this.pauseTime = parseInt(this.pauseTimeInput.value);
+        }
+    }
+
+    public initMarketComposition(): void {
+        this.indiviComposition = {
+            "me": {
+                // "strategySetting": {
+                //     "name": "PriceChaser"
+                // },
+                "strategySetting": {
+                    "name": "Chicken",
+                    "r": 0.2,
+                    "runawayRate": 0.9
+                },
+                "initialCash": 1000,
+                "initialStock": 0
+            },
+            "ValueFollower": {
+                "number": 0,
+                "strategySetting": {
+                    "name": "ValueFollower"
+                }
+            },
+            "PriceChaser": {
+                "number": 99,
+                "strategySetting": {
+                    "name": "PriceChaser"
+                }
+            },
+            "BHmixGrid": {
+                "number": 0,
+                "strategySetting": {
+                    "name": "BHmixGrid",
+                    "r": 0.1
+                }
+            },
+            "GridConstRatio": {
+                "number": 0,
+                "strategySetting": {
+                    "name": "GridConstRatio",
+                    "maxPrice": 30,
+                    "minPrice": 3,
+                    "nTable": 100,
+                    "stockRatio": 0.5
+                }
+            },
+            "Chicken": {
+                "number": 0,
+                "strategySetting": {
+                    "name": "Chicken",
+                    "r": 0.2,
+                    "runawayRate": 0.85
+                }
+            }
+        }
+    }
+
+    public enableInitBtn(): void {
+        if (this.initBtn instanceof HTMLButtonElement) this.initBtn.disabled = false;
+    }
+
+    public disableInitBtn(): void {
+        if (this.initBtn instanceof HTMLButtonElement) this.initBtn.disabled = true;
+    }
+
+    public start(): void {
+        this.initSetting();
+        // the init button
+        if (this.initBtn != null) {
+            this.initBtn.addEventListener("click", () => {
+                this.initMarketComposition();
+                if (this.startBtn instanceof HTMLButtonElement) this.startBtn.disabled = false;
+            })
+        }
+        // mode list
+        if (this.recorderOption instanceof HTMLAnchorElement && this.simulatorOption instanceof HTMLAnchorElement && this.simulatorProOption instanceof HTMLAnchorElement) {
+            this.recorderOption.href = "../recorder/";
+            this.simulatorOption.href = "../simulator/";
+            this.simulatorProOption.href = "#";
+            this.simulatorProOption.classList.add("active");
+        }
+        // Setting Header
+        if (this.settingHeaderMkt != null && this.settingHeaderIndi != null && this.mktParamField != null && this.indiParamField != null) {
+            this.settingHeaderMkt.addEventListener("click", () => {
+                this.settingHeaderMkt?.classList.add("active");
+                this.settingHeaderIndi?.classList.remove("active");
+                this.mktParamField?.classList.add("active");
+                this.indiParamField?.classList.remove("active");
+            });
+            this.settingHeaderIndi.addEventListener("click", () => {
+                this.settingHeaderMkt?.classList.remove("active");
+                this.settingHeaderIndi?.classList.add("active");
+                this.mktParamField?.classList.remove("active");
+                this.indiParamField?.classList.add("active");
+            })
+        }
+        // the start(RUN) button
         if (this.startBtn instanceof HTMLButtonElement) {
             this.startBtn.addEventListener("click", () => {
-                if (this.startBtn instanceof HTMLButtonElement && this.animationField != null) {
+                if (this.animationField != null) {
                     this.animationField.innerHTML = "";
                     this.marketEqData = [["Day", "Given Price", "Mkt. Eq."]];
                     this.dealAmountData = [["Day", "Deal Amount"]];
                     this.myAssetData = [["Day", "Total Asset", "Stock Mkt Val", "Cash Holding"]]
                     this.individualList = [];
-                    this.startBtn.disabled = true;
-                    if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
-                        this.initTotalCash = parseInt(this.initTotalCashInput.value);
-                        this.totalStock = parseInt(this.totalStockInput.value);
-                        this.initialEq = parseInt(this.initialEqInput.value);
-                        this.dayToSimulate = parseInt(this.dayToSimulateInput.value);
-                        this.pauseTime = parseInt(this.pauseTimeInput.value);
-                        this.initTotalCashInput.disabled = true;
-                        this.totalStockInput.disabled = true;
-                        this.initialEqInput.disabled = true;
-                        this.dayToSimulateInput.disabled = true;
-                        this.pauseTimeInput.disabled = true;
-                        this.indiviComposition = {
-                            "me": {
-                                // "strategySetting": {
-                                //     "name": "PriceChaser"
-                                // },
-                                "strategySetting": {
-                                    "name": "Chicken",
-                                    "r": 0.2,
-                                    "runawayRate": 0.9
-                                },
-                                "initialCash": 1000,
-                                "initialStock": 0
-                            },
-                            "ValueFollower": {
-                                "number": 9,
-                                "strategySetting": {
-                                    "name": "ValueFollower"
-                                }
-                            },
-                            "PriceChaser": {
-                                "number": 80,
-                                "strategySetting": {
-                                    "name": "PriceChaser"
-                                }
-                            },
-                            "BHmixGrid": {
-                                "number": 0,
-                                "strategySetting": {
-                                    "name": "BHmixGrid",
-                                    "r": 0.1
-                                }
-                            },
-                            "GridConstRatio": {
-                                "number": 0,
-                                "strategySetting": {
-                                    "name": "GridConstRatio",
-                                    "maxPrice": 30,
-                                    "minPrice": 3,
-                                    "nTable": 100,
-                                    "stockRatio": 0.5
-                                }
-                            },
-                            "Chicken": {
-                                "number": 10,
-                                "strategySetting": {
-                                    "name": "Chicken",
-                                    "r": 0.2,
-                                    "runawayRate": 0.85
-                                }
-                            }
-                        };
-                        this.preset(this.indiviComposition);
-                        this.simulate();
-                    }
+                    this.disableInitBtn();
+                    this.disableChangeSetting();
+                    this.readSetting();
+                    this.preset(this.indiviComposition);
+                    this.simulate();
                 }
             });
+            // won't be enabled until the init button is clicked
+            this.startBtn.disabled = true;
         }
-        if (this.myAssetChartCntnr != null && this.myAssetChartHeader != null) {
+        if (this.myAssetChartCntnr != null && this.myAssetChartHeader != null && this.settingBtn != null && this.settingBg != null && this.settingCntnr != null && this.settingFooter != null) {
             this.myAssetChartHeader.addEventListener("click", () => {
                 this.myAssetChartCntnr?.classList.remove("active");
             });
+            this.settingBtn.addEventListener("click", () => {
+                this.settingBg?.classList.add("active");
+                this.settingCntnr?.classList.add("active");
+            })
+            this.settingFooter.addEventListener("click", () => {
+                this.settingBg?.classList.remove("active");
+                this.settingCntnr?.classList.remove("active");
+            })
         }
         if (this.resetBtn != null) this.resetBtn.addEventListener("click", () => { location.reload() });
     }
 }
 let main = new Main();
-main.main();
+main.start();
+
+// var oReq = new XMLHttpRequest();
+// oReq.addEventListener("load", () => {
+//     console.log(oReq.responseText);
+// });
+// oReq.open("GET", "./README.md");
+// oReq.send();
