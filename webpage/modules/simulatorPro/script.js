@@ -789,6 +789,9 @@ class Main {
                     else
                         eachTab.classList.remove("active");
                 }
+                let allDetailBtns = document.getElementsByClassName("strategy-detail-btn");
+                for (let eachBtn of allDetailBtns)
+                    eachBtn.classList.remove("active");
                 (_b = this.detailCntnr) === null || _b === void 0 ? void 0 : _b.classList.remove("active");
             });
         }

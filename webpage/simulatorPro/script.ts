@@ -822,6 +822,8 @@ class Main {
                     if (eachTab == e.currentTarget) eachTab.classList.add("active");
                     else eachTab.classList.remove("active");
                 }
+                let allDetailBtns = document.getElementsByClassName("strategy-detail-btn");
+                for (let eachBtn of allDetailBtns) eachBtn.classList.remove("active");
                 this.detailCntnr?.classList.remove("active");
             });
         }
