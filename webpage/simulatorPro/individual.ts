@@ -1,4 +1,3 @@
-// import { Strategy, BHmixGrid, PlannedBHmixGrid, GridConstQ, Chicken, GridConstRatio } from "./strategy.js";
 import { Strategy, BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "./strategy.js";
 import { Stock } from "./stock.js";
 import { Order, OrderSet } from "./order.js";
@@ -128,29 +127,25 @@ export class Individual {
         let orderSetForRef: undefined | OrderSet;
         if (this._today != undefined && this._mktPriceAcquired != undefined && this._valueAssessed != undefined) {
             if (this._strategy instanceof ValueFollower) {
-                orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._valueAssessed, this._mktPriceAcquired);
+                orderSetForRef = this._strategy.followStrategy(
+                    this._today,
+                    this._cashOwning,
+                    this._stockHolding,
+                    this._valueAssessed,
+                    this._mktPriceAcquired);
             } else if (this._strategy instanceof PriceChaser) {
-                orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired);
-            } else if (this._strategy instanceof BHmixGrid) {
-                orderSetForRef = this._strategy.followStrategy(this._strategySetting.r, this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired);
-            } else if (this._strategy instanceof GridConstRatio) {
                 orderSetForRef = this._strategy.followStrategy(
-                    this._strategySetting.maxPrice,
-                    this._strategySetting.minPrice,
-                    this._strategySetting.nTable,
-                    this._strategySetting.stockRatio,
                     this._today,
                     this._cashOwning,
                     this._stockHolding,
                     this._mktPriceAcquired);
-            } else if (this._strategy instanceof Chicken) {
+            } else if (this._strategy instanceof Strategy) {
                 orderSetForRef = this._strategy.followStrategy(
-                    this._strategySetting.r,
-                    this._strategySetting.runawayRate,
                     this._today,
                     this._cashOwning,
                     this._stockHolding,
-                    this._mktPriceAcquired);
+                    this._mktPriceAcquired,
+                    this._strategySetting.params);
             } else throw "Strategy not Found when Making Order";
             if (orderSetForRef != undefined) {
                 const qd = orderSetForRef.buyOrder.quantity;

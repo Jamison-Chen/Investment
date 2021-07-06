@@ -32,10 +32,7 @@ body {
     padding: 5px 0;
     margin: 0 10px;
     color: #FFF;
-}
-
-#init-btn {
-    background-color: #1aa260;
+    cursor: pointer;
 }
 
 #start-btn {
@@ -48,7 +45,6 @@ body {
 
 .control-btn:hover {
     opacity: 70%;
-    cursor: pointer;
 }
 
 .control-btn:active {
@@ -77,7 +73,7 @@ body {
     height: 100vh;
     background-color: #FFF;
     opacity: 70%;
-    z-index: 900;
+    z-index: 800;
 }
 
 #setting-background.active {
@@ -116,7 +112,7 @@ body {
     justify-content: center;
     align-items: center;
     font-weight: bold;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: #888;
     margin: 0 1%;
     width: 48%;
@@ -152,16 +148,21 @@ body {
 
 .parameter-row {
     display: flex;
+    padding: 8px 0;
     justify-content: space-between;
 }
 
 .parameter-label {
     color: #888;
     display: flex;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     font-weight: bold;
     font-size: 1.1rem;
+}
+
+.strategy-name {
+    width: 130px;
 }
 
 .parameter-input {
@@ -177,21 +178,75 @@ body {
     outline: none;
 }
 
+.parameter-menu {
+    font-size: 1.1rem;
+    width: max-content;
+    color: #444;
+    border-radius: 5px;
+}
+
+.strategy-detail-btn {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    font-size: 0.8rem;
+    color: #bbb;
+    cursor: pointer;
+}
+
+.strategy-detail-btn.active {
+    color: #4c8bf5;
+}
+
 #setting-footer {
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 0 0 5px 5px;
+    border-radius: 0 0 8px 8px;
     height: 15%;
     color: #888;
     font-size: 1.2rem;
     font-weight: bold;
+    cursor: pointer;
 }
 
 #setting-footer:hover {
-    border-radius: 3px;
     background-color: #eee;
-    cursor: pointer;
+}
+
+#detail-container {
+    position: fixed;
+    display: none;
+    flex-direction: column;
+    top: calc(50vh - 200px);
+    left: calc(50vw - 50px);
+    width: 205px;
+    height: 250px;
+    padding: 25px;
+    border-radius: 0 8px 8px 0;
+    background-color: #FFF;
+    transition-duration: 150ms;
+    z-index: 900;
+}
+
+#detail-container.is-setting {
+    display: flex;
+}
+
+#detail-container.is-setting.active {
+    transform: translateX(245px);
+    box-shadow: 5px 5px 20px rgba(0, 0, 0, 0.3);
+}
+
+.detail-field {
+    height: 100%;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.detail-field.active {
+    display: flex;
 }
 
 #main {

@@ -3,7 +3,29 @@ import { PriceMachine } from './priceMachine.js';
 import { Stock } from "./stock.js";
 import { Order } from "./order.js";
 class Main {
-    public initBtn = document.getElementById("init-btn");
+    public STRATEGIES: any = {
+        "value-follower": {
+            "displayedName": "ValueFollower",
+            "otherDetails": []
+        },
+        "price-chaser": {
+            "displayedName": "PriceChaser",
+            "otherDetails": []
+        },
+        "bh-mix-grid": {
+            "displayedName": "BHmixGrid",
+            "otherDetails": ["r"]
+        },
+        "grid-const-ratio": {
+            "displayedName": "GridConstRatio",
+            "otherDetails": ["max-price", "min-price", "n-table", "stock-ratio"]
+        },
+        "chicken": {
+            "displayedName": "Chicken",
+            "otherDetails": ["r", "runaway-rate"]
+        }
+    };
+
     public startBtn = document.getElementById("start-btn");
     public resetBtn = document.getElementById("reset-btn");
     public recorderOption = document.getElementById("recorder-option");
@@ -12,10 +34,21 @@ class Main {
     public settingBtn = document.getElementById("setting-btn");
     public settingBg = document.getElementById("setting-background");
     public settingCntnr = document.getElementById("setting-container");
-    public settingHeaderMkt = document.getElementById("setting-header-market");
+    public allSettingHeaderTabs = document.getElementsByClassName("setting-header-tab")
+    public settingHeaderGeneral = document.getElementById("setting-header-general");
+    public settingHeaderCompose = document.getElementById("setting-header-compose");
     public settingHeaderIndi = document.getElementById("setting-header-individual");
-    public mktParamField = document.getElementById("market-parameter-field");
-    public indiParamField = document.getElementById("individual-parameter-field");
+    public allParamFields = document.getElementsByClassName("parameter-field");
+    public generalParamField = document.getElementById("general-parameter-field");
+    public initTotalCashInput = document.getElementById("init-total-cash");
+    public totalStockInput = document.getElementById("total-stock");
+    public initialEqInput = document.getElementById("initial-eq");
+    public dayToSimulateInput = document.getElementById("day-to-simulate");
+    public pauseTimeInput = document.getElementById("pause-time");
+    public composeParamField = document.getElementById("compose-parameter-field");
+    public myselfParamField = document.getElementById("myself-parameter-field");
+    public detailCntnr = document.getElementById("detail-container");
+    public allDetailFields = document.getElementsByClassName("detail-field");
     public settingFooter = document.getElementById("setting-footer");
     public myAssetChartCntnr = document.getElementById("my-asset-chart-container");
     public myAssetChartHeader = document.getElementById("my-asset-chart-header");
@@ -24,11 +57,6 @@ class Main {
     public marketEqChart = document.getElementById("market-eq-chart");
     public dealAmountChart = document.getElementById("deal-amount-chart");
     public curveChart = document.getElementById("curve-chart");
-    public initTotalCashInput = document.getElementById("init-total-cash");
-    public totalStockInput = document.getElementById("total-stock");
-    public initialEqInput = document.getElementById("initial-eq");
-    public dayToSimulateInput = document.getElementById("day-to-simulate");
-    public pauseTimeInput = document.getElementById("pause-time");
 
     public marketEqData: (number | string)[][] | undefined;
     public dealAmountData: (number | string)[][] | undefined;
@@ -43,9 +71,11 @@ class Main {
     public numOfIndividual: number | undefined;
     public dayToSimulate: number | undefined;
     public pauseTime: number | undefined;
+
     public indiviComposition: any;
 
     public me: Individual | undefined;
+    public myselfSetting: any;
 
     public suffleArray(anArray: any[]): any[] {
         for (let i = anArray.length - 1; i > 0; i--) {
@@ -87,13 +117,12 @@ class Main {
         return result;
     }
 
-    public preset(indiviComposition: any): void {
+    public applyAllSetting(): void {
         if (this.marketEqData != undefined && this.dealAmountData != undefined && this.individualList != undefined && this.initTotalCash != undefined && this.totalStock != undefined && this.initialEq != undefined && this.pauseTime != undefined) {
             // count numOfIndividual
-            this.numOfIndividual = 0;
-            for (let eachStrategy in indiviComposition) {
-                if (eachStrategy != "me") this.numOfIndividual += indiviComposition[eachStrategy].number;
-                else this.numOfIndividual++;
+            this.numOfIndividual = 1;   // one for myself(me)
+            for (let eachStrategy in this.indiviComposition) {
+                this.numOfIndividual += this.indiviComposition[eachStrategy].number;
             }
             this.pm = new PriceMachine(this.initialEq, this.numOfIndividual);
             // decide the size of each node
@@ -103,47 +132,44 @@ class Main {
                 this.animationField.style.gridTemplateColumns = `repeat(auto-fit, minmax(${this.nodeDivSize + 10}px, 1fr))`;
                 this.animationField.style.gridTemplateRows = `repeat(auto-fit, ${this.nodeDivSize + 10}px)`;
             }
-            // initialize all individuals
             let cashLeft: number = this.initTotalCash;
             let stockLeft: number = this.totalStock;
-            for (let eachStrategy in indiviComposition) {
-                let j = 0;
-                if (eachStrategy == "me") {
+            // initialize myself(me)
+            let nodeDiv = this.createNodeDiv(this.pauseTime);
+            nodeDiv.id = "me";
+            nodeDiv.addEventListener("click", () => {
+                this.myAssetChartCntnr?.classList.add("active");
+            });
+            let newName = this.genName(20);
+            let cashOwning = this.myselfSetting.initialCash;
+            let stockGot = this.myselfSetting.initialStock;
+            cashLeft -= cashOwning;
+            stockLeft -= stockGot;
+            let stockHolding: Stock[] = [];
+            for (let i = 0; i < stockGot; i++) stockHolding.push(new Stock(this.pm.equilibrium, 0));
+            this.me = new Individual(nodeDiv, newName, this.myselfSetting.strategySetting, cashOwning, stockHolding);
+            this.individualList.push(this.me);
+            // initialize all the other individuals
+            let j = 1;  // start with 1 because myself counts 1
+            for (let eachStrategy in this.indiviComposition) {
+                for (let i = 0; i < this.indiviComposition[eachStrategy].number; i++) {
                     let nodeDiv = this.createNodeDiv(this.pauseTime);
-                    nodeDiv.id = "me";
-                    nodeDiv.addEventListener("click", () => {
-                        this.myAssetChartCntnr?.classList.add("active");
-                    });
                     let newName = this.genName(20);
-                    let cashOwning = indiviComposition[eachStrategy].initialCash;
-                    let stockGot = indiviComposition[eachStrategy].initialStock;
+                    let cashOwning: number;
+                    let stockGot: number;
+                    if (j == this.numOfIndividual - 1) {
+                        cashOwning = cashLeft;
+                        stockGot = stockLeft;
+                    } else {
+                        cashOwning = Math.min(cashLeft, Math.floor(this.initTotalCash / this.numOfIndividual * Math.max(0, this.normalSample(1, 0.1))));
+                        stockGot = Math.min(stockLeft, Math.floor(this.totalStock / this.numOfIndividual * Math.max(0, this.normalSample(1, 1))));
+                    }
                     cashLeft -= cashOwning;
                     stockLeft -= stockGot;
                     let stockHolding: Stock[] = [];
                     for (let i = 0; i < stockGot; i++) stockHolding.push(new Stock(this.pm.equilibrium, 0));
-                    this.me = new Individual(nodeDiv, newName, indiviComposition[eachStrategy].strategySetting, cashOwning, stockHolding);
-                    this.individualList.push(this.me);
+                    this.individualList.push(new Individual(nodeDiv, newName, this.indiviComposition[eachStrategy].strategySetting, cashOwning, stockHolding));
                     j++;
-                } else {
-                    for (let i = 0; i < indiviComposition[eachStrategy].number; i++) {
-                        let nodeDiv = this.createNodeDiv(this.pauseTime);
-                        let newName = this.genName(20);
-                        let cashOwning: number;
-                        let stockGot: number;
-                        if (j == this.numOfIndividual - 1) {
-                            cashOwning = cashLeft;
-                            stockGot = stockLeft;
-                        } else {
-                            cashOwning = Math.min(cashLeft, Math.floor(this.initTotalCash / this.numOfIndividual * Math.max(0, this.normalSample(1, 0.1))));
-                            stockGot = Math.min(stockLeft, Math.floor(this.totalStock / this.numOfIndividual * Math.max(0, this.normalSample(1, 1))));
-                        }
-                        cashLeft -= cashOwning;
-                        stockLeft -= stockGot;
-                        let stockHolding: Stock[] = [];
-                        for (let i = 0; i < stockGot; i++) stockHolding.push(new Stock(this.pm.equilibrium, 0));
-                        this.individualList.push(new Individual(nodeDiv, newName, indiviComposition[eachStrategy].strategySetting, cashOwning, stockHolding));
-                        j++;
-                    }
                 }
             }
             // initialize market equillibrium data and deal amount data
@@ -188,7 +214,6 @@ class Main {
                 setTimeout(() => { this.simulate() }, this.pauseTime);
             } else {
                 this.showIndividualInfo();
-                this.enableInitBtn();
                 this.enableChangeSetting();
                 return;
             }
@@ -385,6 +410,193 @@ class Main {
         chart.draw(data, options);
     }
 
+    public buildCompositionSettingView(): void {
+        for (let eachStrategy in this.STRATEGIES) {
+            let paramRow = document.createElement("div");
+            paramRow.classList.add("parameter-row");
+
+            let paramLabel = document.createElement("div");
+            paramLabel.classList.add("parameter-label");
+            paramLabel.classList.add("strategy-name");
+            paramLabel.innerText = this.STRATEGIES[eachStrategy].displayedName;
+            let paramInput = document.createElement("input");
+            paramInput.classList.add("parameter-input");
+            paramInput.classList.add("strategy-number-input");
+            paramInput.type = "number";
+            paramInput.id = `${eachStrategy}-number`;
+            let strategyDetailBtn = document.createElement("label");
+            strategyDetailBtn.id = `${eachStrategy}-detail`;
+            strategyDetailBtn.classList.add("strategy-detail-btn");
+            strategyDetailBtn.htmlFor = `${eachStrategy}-detail-field`;
+            strategyDetailBtn.innerText = "detail";
+            strategyDetailBtn.addEventListener("click", (e: Event) => {
+                if (this.detailCntnr instanceof HTMLElement) {
+                    this.detailCntnr.classList.add("active");
+                    for (let eachChild of this.detailCntnr.children) eachChild.classList.remove("active");
+                }
+                if (e.currentTarget instanceof HTMLLabelElement) {
+                    document.getElementById(`${e.currentTarget.htmlFor}`)?.classList.add("active");
+                }
+                let allDetailBtns = document.getElementsByClassName("strategy-detail-btn");
+                for (let eachBtn of allDetailBtns) {
+                    if (eachBtn == e.currentTarget) eachBtn.classList.add("active");
+                    else eachBtn.classList.remove("active");
+                }
+            });
+
+            paramRow.appendChild(paramLabel);
+            paramRow.appendChild(paramInput);
+            paramRow.appendChild(strategyDetailBtn);
+
+            this.composeParamField?.appendChild(paramRow);
+        }
+        for (let eachStrategy in this.STRATEGIES) {
+            let detailField = document.createElement("div");
+            detailField.id = `${eachStrategy}-detail-field`;
+            detailField.classList.add("detail-field");
+
+            if (this.STRATEGIES[eachStrategy].otherDetails.length == 0) {
+                let paramRow = document.createElement("div");
+                paramRow.classList.add("parameter-row");
+
+                let paramLabel = document.createElement("div");
+                paramLabel.classList.add("parameter-label");
+                paramLabel.innerText = `${this.STRATEGIES[eachStrategy].displayedName} is not needed to be configured.`;
+
+                paramRow.appendChild(paramLabel);
+
+                detailField.appendChild(paramRow);
+            } else {
+                for (let eachDetail of this.STRATEGIES[eachStrategy].otherDetails) {
+                    let paramRow = document.createElement("div");
+                    paramRow.classList.add("parameter-row");
+
+                    let paramLabel = document.createElement("div");
+                    paramLabel.classList.add("parameter-label");
+                    paramLabel.innerText = `${eachDetail}`;
+                    let paramInput = document.createElement("input");
+                    paramInput.classList.add("parameter-input");
+                    paramInput.classList.add("strategy-detail-input");
+                    paramInput.id = `${eachStrategy}-${eachDetail}`;
+
+                    paramRow.appendChild(paramLabel);
+                    paramRow.appendChild(paramInput);
+
+                    detailField.appendChild(paramRow);
+                }
+            }
+            if (this.detailCntnr != null) this.detailCntnr.appendChild(detailField);
+        }
+    }
+
+    public buildMyselfSettingView(): void {
+        let paramRow = document.createElement("div");
+        paramRow.classList.add("parameter-row");
+
+        let paramLabel = document.createElement("div");
+        paramLabel.classList.add("parameter-label");
+        paramLabel.innerText = "Initial Total Cash";
+        let paramInput = document.createElement("input");
+        paramInput.classList.add("parameter-input");
+        paramInput.type = "number";
+        paramInput.id = `my-init-total-cash`;
+
+        paramRow.appendChild(paramLabel);
+        paramRow.appendChild(paramInput);
+
+        this.myselfParamField?.appendChild(paramRow);
+
+        paramRow = document.createElement("div");
+        paramRow.classList.add("parameter-row");
+
+        paramLabel = document.createElement("div");
+        paramLabel.classList.add("parameter-label");
+        paramLabel.innerText = "Initial Stock";
+        paramInput = document.createElement("input");
+        paramInput.classList.add("parameter-input");
+        paramInput.type = "number";
+        paramInput.id = `my-init-stock`;
+
+        paramRow.appendChild(paramLabel);
+        paramRow.appendChild(paramInput);
+
+        this.myselfParamField?.appendChild(paramRow);
+        // build each strategies' detail field
+        for (let eachStrategy in this.STRATEGIES) {
+            let detailField = document.createElement("div");
+            detailField.id = `my-${eachStrategy}-detail-field`;
+            detailField.classList.add("detail-field");
+
+            if (this.STRATEGIES[eachStrategy].otherDetails.length == 0) {
+                let paramRow = document.createElement("div");
+                paramRow.classList.add("parameter-row");
+
+                let paramLabel = document.createElement("div");
+                paramLabel.classList.add("parameter-label");
+                paramLabel.innerText = `${this.STRATEGIES[eachStrategy].displayedName} is not needed to be configured.`;
+
+                paramRow.appendChild(paramLabel);
+
+                detailField.appendChild(paramRow);
+            } else {
+                for (let eachDetail of this.STRATEGIES[eachStrategy].otherDetails) {
+                    let paramRow = document.createElement("div");
+                    paramRow.classList.add("parameter-row");
+
+                    let paramLabel = document.createElement("div");
+                    paramLabel.classList.add("parameter-label");
+                    paramLabel.innerText = `${eachDetail}`;
+                    let paramInput = document.createElement("input");
+                    paramInput.classList.add("parameter-input");
+                    paramInput.classList.add("strategy-detail-input");
+                    paramInput.id = `my-${eachStrategy}-${eachDetail}`;
+
+                    paramRow.appendChild(paramLabel);
+                    paramRow.appendChild(paramInput);
+
+                    detailField.appendChild(paramRow);
+                }
+            }
+            if (this.detailCntnr != null) this.detailCntnr.appendChild(detailField);
+        }
+
+        paramRow = document.createElement("div");
+        paramRow.classList.add("parameter-row");
+
+        paramLabel = document.createElement("div");
+        paramLabel.classList.add("parameter-label");
+        paramLabel.innerText = "Strategy";
+        let strategyMenu = document.createElement("select");
+        strategyMenu.classList.add("parameter-menu");
+        strategyMenu.id = "my-strategy-menu";
+        strategyMenu.addEventListener("click", (e: Event) => {
+            if (this.detailCntnr instanceof HTMLElement) {
+                this.detailCntnr.classList.add("active");
+                for (let eachChild of this.detailCntnr.children) eachChild.classList.remove("active");
+            }
+            if (e.currentTarget instanceof HTMLSelectElement) {
+                document.getElementById(`my-${e.currentTarget.value}-detail-field`)?.classList.add("active");
+            }
+            let allDetailBtns = document.getElementsByClassName("strategy-detail-btn");
+            for (let eachBtn of allDetailBtns) {
+                if (eachBtn == e.currentTarget) eachBtn.classList.add("active");
+                else eachBtn.classList.remove("active");
+            }
+        });
+        for (let eachStrategy in this.STRATEGIES) {
+            let eachOption = document.createElement("option");
+            eachOption.value = eachStrategy;
+            eachOption.innerText = this.STRATEGIES[eachStrategy].displayedName;
+            eachOption.classList.add("parameter-menu-option");
+            strategyMenu.options.add(eachOption);
+        }
+
+        paramRow.appendChild(paramLabel);
+        paramRow.appendChild(strategyMenu);
+
+        this.myselfParamField?.appendChild(paramRow);
+    }
+
     public enableChangeSetting(): void {
         if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.settingBtn.disabled = false;
@@ -409,7 +621,7 @@ class Main {
         }
     }
 
-    public initSetting(): void {
+    public initGeneralSetting(): void {
         if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.initTotalCashInput.value = "1000000";
             this.totalStockInput.value = "100000";
@@ -419,7 +631,7 @@ class Main {
         }
     }
 
-    public readSetting(): void {
+    public readGeneralSetting(): void {
         if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.initTotalCash = parseInt(this.initTotalCashInput.value);
             this.totalStock = parseInt(this.totalStockInput.value);
@@ -429,77 +641,169 @@ class Main {
         }
     }
 
-    public initMarketComposition(): void {
+    public initCompositionSetting(): void {
         this.indiviComposition = {
-            "me": {
-                // "strategySetting": {
-                //     "name": "PriceChaser"
-                // },
-                "strategySetting": {
-                    "name": "Chicken",
-                    "r": 0.2,
-                    "runawayRate": 0.9
-                },
-                "initialCash": 1000,
-                "initialStock": 0
-            },
-            "ValueFollower": {
+            "value-follower": {
                 "number": 0,
                 "strategySetting": {
-                    "name": "ValueFollower"
+                    "name": "ValueFollower",
+                    "params": {}
                 }
             },
-            "PriceChaser": {
+            "price-chaser": {
                 "number": 99,
                 "strategySetting": {
-                    "name": "PriceChaser"
+                    "name": "PriceChaser",
+                    "params": {}
                 }
             },
-            "BHmixGrid": {
+            "bh-mix-grid": {
                 "number": 0,
                 "strategySetting": {
                     "name": "BHmixGrid",
-                    "r": 0.1
+                    "params": {
+                        "r": 0.1
+                    }
                 }
             },
-            "GridConstRatio": {
+            "grid-const-ratio": {
                 "number": 0,
                 "strategySetting": {
                     "name": "GridConstRatio",
-                    "maxPrice": 30,
-                    "minPrice": 3,
-                    "nTable": 100,
-                    "stockRatio": 0.5
+                    "params": {
+                        "max-price": 30,
+                        "min-price": 3,
+                        "n-table": 100,
+                        "stock-ratio": 0.5
+                    }
                 }
             },
-            "Chicken": {
+            "chicken": {
                 "number": 0,
                 "strategySetting": {
                     "name": "Chicken",
-                    "r": 0.2,
-                    "runawayRate": 0.85
+                    "params": {
+                        "r": 0.2,
+                        "runaway-rate": 0.85
+                    }
+                }
+            }
+        }
+        for (let eachStrategy in this.indiviComposition) {
+            let eachInputDOM = document.getElementById(`${eachStrategy}-number`);
+            if (eachInputDOM instanceof HTMLInputElement) {
+                eachInputDOM.value = this.indiviComposition[eachStrategy].number;
+            }
+            for (let eachDetail in this.indiviComposition[eachStrategy].strategySetting.params) {
+                let eachInputDOM = document.getElementById(`${eachStrategy}-${eachDetail}`);
+                if (eachInputDOM instanceof HTMLInputElement) {
+                    eachInputDOM.value = this.indiviComposition[eachStrategy].strategySetting.params[eachDetail];
                 }
             }
         }
     }
 
-    public enableInitBtn(): void {
-        if (this.initBtn instanceof HTMLButtonElement) this.initBtn.disabled = false;
+    public readCompositionSetting(): void {
+        for (let eachStrategy in this.indiviComposition) {
+            let eachInputDOM = document.getElementById(`${eachStrategy}-number`);
+            if (eachInputDOM instanceof HTMLInputElement) {
+                this.indiviComposition[eachStrategy].number = parseInt(`${eachInputDOM.value}`);
+            }
+            let params: any = {};
+            for (let eachParam of this.STRATEGIES[eachStrategy].otherDetails) {
+                let eachInputDOM = document.getElementById(`${eachStrategy}-${eachParam}`);
+                if (eachInputDOM instanceof HTMLInputElement) {
+                    params[eachParam] = parseFloat(`${eachInputDOM.value}`);
+                }
+            }
+            this.indiviComposition[eachStrategy].strategySetting.params = params;
+        }
     }
 
-    public disableInitBtn(): void {
-        if (this.initBtn instanceof HTMLButtonElement) this.initBtn.disabled = true;
+    public initMyselfSetting(): void {
+        this.myselfSetting = {
+            "initialCash": 1000,
+            "initialStock": 0,
+            "strategyLabel": "chicken",
+            "strategySetting": {
+                "name": "Chicken",
+                "params": {
+                    "r": 0.2,
+                    "runaway-rate": 0.9
+                }
+            }
+        }
+        let myInitTotalCashInput = document.getElementById("my-init-total-cash");
+        if (myInitTotalCashInput instanceof HTMLInputElement) {
+            myInitTotalCashInput.value = this.myselfSetting.initialCash;
+        }
+        let myInitStockInput = document.getElementById("my-init-stock");
+        if (myInitStockInput instanceof HTMLInputElement) {
+            myInitStockInput.value = this.myselfSetting.initialStock;
+        }
+        let menuOption = document.getElementsByClassName("parameter-menu-option");
+        for (let eachOption of menuOption) {
+            if (eachOption instanceof HTMLOptionElement) {
+                if (eachOption.value == this.myselfSetting.strategyLabel) eachOption.selected = true;
+                else eachOption.selected = false;
+            }
+        }
+        for (let eachParam in this.myselfSetting.strategySetting.params) {
+            let eachInput = document.getElementById(`my-${this.myselfSetting.strategyLabel}-${eachParam}`);
+            if (eachInput instanceof HTMLInputElement) {
+                eachInput.value = this.myselfSetting.strategySetting.params[eachParam];
+            }
+        }
+    }
+
+    public readMyselfSetting(): void {
+        let myInitTotalCashInput = document.getElementById("my-init-total-cash");
+        if (myInitTotalCashInput instanceof HTMLInputElement) {
+            this.myselfSetting.initialCash = parseInt(myInitTotalCashInput.value);
+        }
+        let myInitStockInput = document.getElementById("my-init-stock");
+        if (myInitStockInput instanceof HTMLInputElement) {
+            this.myselfSetting.initialStock = parseInt(myInitStockInput.value);
+        }
+        let menuOption = document.getElementsByClassName("parameter-menu-option");
+        for (let eachOption of menuOption) {
+            if (eachOption instanceof HTMLOptionElement) {
+                if (eachOption.selected) {
+                    this.myselfSetting.strategyLabel = eachOption.value;
+                    this.myselfSetting.strategySetting.name = eachOption.innerText;
+                    for (let eachDetail of this.STRATEGIES[eachOption.value].otherDetails) {
+                        let selectedStrategyDetailInput = document.getElementById(`my-${eachOption.value}-${eachDetail}`);
+                        if (selectedStrategyDetailInput instanceof HTMLInputElement) {
+                            this.myselfSetting.strategySetting.params[eachDetail] = selectedStrategyDetailInput.value;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public refresh(): void {
+        if (this.animationField != null) this.animationField.innerHTML = "";
+        this.marketEqData = [["Day", "Given Price", "Mkt. Eq."]];
+        this.dealAmountData = [["Day", "Deal Amount"]];
+        this.myAssetData = [["Day", "Total Asset", "Stock Mkt Val", "Cash Holding"]]
+        this.individualList = [];
+        this.readGeneralSetting();
+        this.readCompositionSetting();
+        this.readMyselfSetting();
+        this.applyAllSetting();
     }
 
     public start(): void {
-        this.initSetting();
-        // the init button
-        if (this.initBtn != null) {
-            this.initBtn.addEventListener("click", () => {
-                this.initMarketComposition();
-                if (this.startBtn instanceof HTMLButtonElement) this.startBtn.disabled = false;
-            })
-        }
+        // build market composition setting view
+        this.buildCompositionSettingView();
+        this.buildMyselfSettingView();
+        // init all setting
+        this.initGeneralSetting();
+        this.initCompositionSetting();
+        this.initMyselfSetting();
+        // refresh
+        this.refresh();
         // mode list
         if (this.recorderOption instanceof HTMLAnchorElement && this.simulatorOption instanceof HTMLAnchorElement && this.simulatorProOption instanceof HTMLAnchorElement) {
             this.recorderOption.href = "../recorder/";
@@ -508,38 +812,30 @@ class Main {
             this.simulatorProOption.classList.add("active");
         }
         // Setting Header
-        if (this.settingHeaderMkt != null && this.settingHeaderIndi != null && this.mktParamField != null && this.indiParamField != null) {
-            this.settingHeaderMkt.addEventListener("click", () => {
-                this.settingHeaderMkt?.classList.add("active");
-                this.settingHeaderIndi?.classList.remove("active");
-                this.mktParamField?.classList.add("active");
-                this.indiParamField?.classList.remove("active");
+        for (let each of this.allSettingHeaderTabs) {
+            each.addEventListener("click", (e: Event) => {
+                for (let eachField of this.allParamFields) eachField.classList.remove("active");
+                if (e.currentTarget instanceof HTMLLabelElement) {
+                    document.getElementById(`${e.currentTarget.htmlFor}`)?.classList.add("active");
+                }
+                for (let eachTab of this.allSettingHeaderTabs) {
+                    if (eachTab == e.currentTarget) eachTab.classList.add("active");
+                    else eachTab.classList.remove("active");
+                }
+                this.detailCntnr?.classList.remove("active");
             });
-            this.settingHeaderIndi.addEventListener("click", () => {
-                this.settingHeaderMkt?.classList.remove("active");
-                this.settingHeaderIndi?.classList.add("active");
-                this.mktParamField?.classList.remove("active");
-                this.indiParamField?.classList.add("active");
-            })
+        }
+        //  Setting Footer
+        if (this.settingFooter != null) {
+            this.settingFooter.addEventListener("click", () => { this.refresh() });
         }
         // the start(RUN) button
         if (this.startBtn instanceof HTMLButtonElement) {
             this.startBtn.addEventListener("click", () => {
-                if (this.animationField != null) {
-                    this.animationField.innerHTML = "";
-                    this.marketEqData = [["Day", "Given Price", "Mkt. Eq."]];
-                    this.dealAmountData = [["Day", "Deal Amount"]];
-                    this.myAssetData = [["Day", "Total Asset", "Stock Mkt Val", "Cash Holding"]]
-                    this.individualList = [];
-                    this.disableInitBtn();
-                    this.disableChangeSetting();
-                    this.readSetting();
-                    this.preset(this.indiviComposition);
-                    this.simulate();
-                }
+                this.refresh();
+                this.disableChangeSetting();
+                this.simulate();
             });
-            // won't be enabled until the init button is clicked
-            this.startBtn.disabled = true;
         }
         if (this.myAssetChartCntnr != null && this.myAssetChartHeader != null && this.settingBtn != null && this.settingBg != null && this.settingCntnr != null && this.settingFooter != null) {
             this.myAssetChartHeader.addEventListener("click", () => {
@@ -548,10 +844,12 @@ class Main {
             this.settingBtn.addEventListener("click", () => {
                 this.settingBg?.classList.add("active");
                 this.settingCntnr?.classList.add("active");
+                this.detailCntnr?.classList.add("is-setting");
             })
             this.settingFooter.addEventListener("click", () => {
                 this.settingBg?.classList.remove("active");
                 this.settingCntnr?.classList.remove("active");
+                this.detailCntnr?.classList.remove("is-setting");
             })
         }
         if (this.resetBtn != null) this.resetBtn.addEventListener("click", () => { location.reload() });

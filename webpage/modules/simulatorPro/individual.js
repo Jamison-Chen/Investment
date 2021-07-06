@@ -1,5 +1,4 @@
-// import { Strategy, BHmixGrid, PlannedBHmixGrid, GridConstQ, Chicken, GridConstRatio } from "./strategy.js";
-import { BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "./strategy.js";
+import { Strategy, BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "./strategy.js";
 import { Order } from "./order.js";
 export class Individual {
     constructor(aDiv, name, strayegySetting, initCash, stockHolding) {
@@ -117,14 +116,8 @@ export class Individual {
             else if (this._strategy instanceof PriceChaser) {
                 orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired);
             }
-            else if (this._strategy instanceof BHmixGrid) {
-                orderSetForRef = this._strategy.followStrategy(this._strategySetting.r, this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired);
-            }
-            else if (this._strategy instanceof GridConstRatio) {
-                orderSetForRef = this._strategy.followStrategy(this._strategySetting.maxPrice, this._strategySetting.minPrice, this._strategySetting.nTable, this._strategySetting.stockRatio, this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired);
-            }
-            else if (this._strategy instanceof Chicken) {
-                orderSetForRef = this._strategy.followStrategy(this._strategySetting.r, this._strategySetting.runawayRate, this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired);
+            else if (this._strategy instanceof Strategy) {
+                orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired, this._strategySetting.params);
             }
             else
                 throw "Strategy not Found when Making Order";

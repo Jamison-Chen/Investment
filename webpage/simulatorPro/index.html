@@ -18,7 +18,6 @@
     <div id="header">
         <div id="control-bar">
             <div id="btn-field">
-                <button id="init-btn" class="control-btn">INIT</button>
                 <button id="start-btn" class="control-btn">RUN</button>
                 <button id="reset-btn" class="control-btn">RESET</button>
             </div>
@@ -31,11 +30,12 @@
         <div id="setting-background"></div>
         <div id="setting-container">
             <div id="setting-header">
-                <div id="setting-header-market" class="setting-header-tab active">Market</div>
-                <div id="setting-header-individual" class="setting-header-tab">You</div>
+                <label id="setting-header-general" class="setting-header-tab active" for="general-parameter-field">General</label>
+                <label id="setting-header-compose" class="setting-header-tab" for="compose-parameter-field">Composition</label>
+                <label id="setting-header-individual" class="setting-header-tab" for="myself-parameter-field">You</label>
             </div>
             <div id="setting-body">
-                <div id="market-parameter-field" class="parameter-field active">
+                <div id="general-parameter-field" class="parameter-field active">
                     <div class="parameter-row">
                         <div class="parameter-label">Initial Total Cash</div>
                         <input id="init-total-cash" type="text" class="parameter-input">
@@ -57,10 +57,12 @@
                         <input id="pause-time" type="text" class="parameter-input">
                     </div>
                 </div>
-                <div id="individual-parameter-field" class="parameter-field"></div>
+                <div id="compose-parameter-field" class="parameter-field"></div>
+                <div id="myself-parameter-field" class="parameter-field"></div>
             </div>
-            <div id="setting-footer">Close</div>
+            <div id="setting-footer">Save</div>
         </div>
+        <div id="detail-container"></div>
     </div>
     <div id="main">
         <div id="animation-field"></div>

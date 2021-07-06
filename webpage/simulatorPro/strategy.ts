@@ -105,7 +105,8 @@ export class BHmixGrid extends Strategy {
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    public followStrategy(r: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], pToday: number, otherParams: any): OrderSet {
+        let r = otherParams.r;
         // this.latestMaxP = -1 * Infinity;
         // this.latestMinP = Infinity;
         // let latestMaxP: number = -1 * Infinity;
@@ -221,7 +222,12 @@ export class GridConstRatio extends Strategy {
         this.standAt = 0
         this.divideLines = [];
     }
-    public followStrategy(maxPrice: number, minPrice: number, nTable: number, stockRatio: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], pToday: number, otherParams: any): OrderSet {
+        let maxPrice = otherParams["max-price"];
+        let minPrice = otherParams["min-price"];
+        let nTable = otherParams["n-table"];
+        let stockRatio = otherParams["stock-ratio"];
+
         let ps: number = pToday * 0.952;    // ask a little bit lower for getting dealt more easily
         let pd: number = pToday * 1.05;    // bid a little bit higher for getting dealt more easily
         let qd: number = 0;
@@ -278,7 +284,10 @@ export class Chicken extends Strategy {
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    public followStrategy(r: number, runawayRate: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], pToday: number, otherParams: any): OrderSet {
+        let r = otherParams["r"];
+        let runawayRate = otherParams["runaway-rate"];
+
         let ps: number = pToday * this.normalSample(1, 0.033);
         let pd: number = ps;
         let qd: number = 0;

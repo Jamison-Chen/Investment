@@ -88,7 +88,8 @@ export class BHmixGrid extends Strategy {
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    followStrategy(r, today, cashOwning, stockHolding, pToday) {
+    followStrategy(today, cashOwning, stockHolding, pToday, otherParams) {
+        let r = otherParams.r;
         // this.latestMaxP = -1 * Infinity;
         // this.latestMinP = Infinity;
         // let latestMaxP: number = -1 * Infinity;
@@ -205,7 +206,11 @@ export class GridConstRatio extends Strategy {
         this.standAt = 0;
         this.divideLines = [];
     }
-    followStrategy(maxPrice, minPrice, nTable, stockRatio, today, cashOwning, stockHolding, pToday) {
+    followStrategy(today, cashOwning, stockHolding, pToday, otherParams) {
+        let maxPrice = otherParams["max-price"];
+        let minPrice = otherParams["min-price"];
+        let nTable = otherParams["n-table"];
+        let stockRatio = otherParams["stock-ratio"];
         let ps = pToday * 0.952; // ask a little bit lower for getting dealt more easily
         let pd = pToday * 1.05; // bid a little bit higher for getting dealt more easily
         let qd = 0;
@@ -266,7 +271,9 @@ export class Chicken extends Strategy {
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    followStrategy(r, runawayRate, today, cashOwning, stockHolding, pToday) {
+    followStrategy(today, cashOwning, stockHolding, pToday, otherParams) {
+        let r = otherParams["r"];
+        let runawayRate = otherParams["runaway-rate"];
         let ps = pToday * this.normalSample(1, 0.033);
         let pd = ps;
         let qd = 0;
