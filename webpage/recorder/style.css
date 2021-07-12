@@ -160,26 +160,35 @@ html {
     z-index: 100;
 }
 
-#create-record-form {
+#create-trade-record-form-container.active {
     display: flex;
     flex-direction: column;
-    width: 210px;
-    font-size: 1.1rem;
-    justify-content: center;
-    padding: 20px 20px 10px 20px;
-    border-radius: 5px;
+}
+
+#create-record-form,
+#submit-btn {
+    width: 280px;
     background-color: var(--bgc);
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center;
+}
+
+#create-record-form {
+    flex-direction: column;
+    font-size: 1.1rem;
+    border-radius: 8px 8px 0 0;
 }
 
 #create-record-form>label {
     display: flex;
     justify-content: space-between;
-    margin: 5px 0;
+    margin: 10px 0;
 }
 
 .form-input {
-    width: 35%;
-    border-radius: 50px;
+    width: 50%;
+    border-radius: 100px;
     border: 1px solid #888;
     padding: 0 10px;
 }
@@ -191,8 +200,10 @@ html {
 #submit-btn {
     font-size: 1.2rem;
     font-weight: 900;
-    margin: 10px auto 0 auto;
+    margin: 0;
+    border-radius: 0 0 8px 8px;
     transition-duration: 100ms;
+    cursor: pointer;
 }
 
 #submit-btn:hover {

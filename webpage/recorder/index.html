@@ -61,19 +61,15 @@
             <form id="create-record-form">
                 <label>
                     <div>交易日期</div>
-                    <input type="text" name="deal-time" id="deal-time-record" class="record-form-input form-input">
+                    <input type="date" name="deal-time" id="deal-time-record" class="record-form-input form-input">
                 </label>
                 <label>
                     <div>證券代號</div>
                     <input type="text" name="sid" id="sid-record" class="record-form-input form-input">
                 </label>
-                <!-- <label>
-                    <div>公司名稱</div>
-                    <input type="text" name="company-name" id="company-name-record" class="record-form-input form-input">
-                </label> -->
                 <label>
                     <div>每股成交價格</div>
-                    <input type="text" name="deal-price" id="deal-price-record" class="record-form-input form-input">
+                    <input type="number" name="deal-price" id="deal-price-record" class="record-form-input form-input">
                 </label>
                 <label>
                     <div>買(+)賣(-)股數</div>
@@ -81,10 +77,10 @@
                 </label>
                 <label>
                     <div>手續費用</div>
-                    <input type="text" name="handling-fee" id="handling-fee-record" class="record-form-input form-input">
+                    <input type="number" name="handling-fee" id="handling-fee-record" class="record-form-input form-input">
                 </label>
-                <div id="submit-btn">Create</div>
             </form>
+            <div id="submit-btn">Create</div>
         </div>
         <div class=tab-container>
             <div class="tabs clearfix">

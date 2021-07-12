@@ -5,8 +5,8 @@ const viewToggler = document.getElementById("view-toggler");
 const togglerMask = document.getElementById("toggler-mask");
 const upperPart = document.getElementById("upper-part");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
-const createRecordContainer = document.getElementById("create-trade-record-form-container");
-const createRecordForm = document.getElementById("create-record-form");
+const createTradeRecordFormContainer = document.getElementById("create-trade-record-form-container");
+const dealTimeRecordInput = document.getElementById("deal-time-record");
 const allRecordFormInputs = document.getElementsByClassName("record-form-input")
 const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
@@ -35,17 +35,9 @@ const endPoint = "http://127.0.0.1:5000/";  // localhost api test
 
 // const endPoint = "https://stock-info-scraper.herokuapp.com/";    // remote api test
 
-// window.addEventListener("keydown", (e) => {
-//     if ((e instanceof KeyboardEvent && e.keyCode == 13)) {
-//         tradeRecordCRUD();
-//     }
-// });
-
 function tradeRecordCRUD(inData: any): Promise<void> {
     let outData = new URLSearchParams();
-    for (let each in inData) {
-        outData.append(each, inData[each]);
-    }
+    for (let each in inData) outData.append(each, inData[each]);
     return fetch(`${endPoint}records`, { method: 'post', body: outData })
         .then(function (response) {
             return response.json();
@@ -109,7 +101,8 @@ async function createTradeRecord(e: Event): Promise<void> {
     let hasEmpty = false;
     for (let each of allRecordFormInputs) {
         if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
-            if (each.value != "") data[each.name] = each.value;
+            if (each == dealTimeRecordInput) data[each.name] = each.value.split("-").join("");
+            else if (each.value != "") data[each.name] = each.value;
             else hasEmpty = true;
         }
     }
@@ -501,21 +494,11 @@ function configAndDrawChart(dataIn: any[][], options: any, chartType: string, ta
 }
 
 function expandTradeRecordForm(e: Event): void {
-    if (submitBtn != null && createRecordContainer != null) {
-        submitBtn.addEventListener("click", createTradeRecord);
-        createRecordContainer.removeEventListener("click", expandTradeRecordForm);
-        createRecordContainer.addEventListener("click", foldTradeRecordForm);
-        createRecordContainer.style.display = "flex";
-    }
+    createTradeRecordFormContainer?.classList.add("active");
 }
 
 function foldTradeRecordForm(e: Event): void {
-    if (submitBtn != null && createRecordContainer != null && e.target instanceof HTMLElement && e.target.id == createRecordContainer.id) {
-        submitBtn.removeEventListener("click", createTradeRecord);
-        createRecordContainer.removeEventListener("click", foldTradeRecordForm);
-        createRecordContainer.addEventListener("click", expandTradeRecordForm);
-        createRecordContainer.style.display = "none";
-    }
+    if (e.target == createTradeRecordFormContainer) createTradeRecordFormContainer?.classList.remove("active");
 }
 
 function infoNotSufficientErr(): void {
@@ -640,16 +623,15 @@ function highlightTab(e: Event): void {
     }
 }
 
-function getDateStr(endDate: Date, interval: string): string {
-    if (interval == "aMonth") {
+function getStartDateStr(endDate: Date, rollbackLength: string): string {
+    if (rollbackLength == "aMonth") {
         let m = endDate.getMonth();
         endDate.setMonth(endDate.getMonth() - 1);
         // If still in same month, set date to last day of previous month.
         if (endDate.getMonth() == m) endDate.setDate(0);
         endDate.setHours(0, 0, 0, 0);
     }
-    let result = endDate.toISOString().slice(0, 10);
-    return result;
+    return endDate.toISOString().slice(0, 10);
 }
 
 function buildStockWarehouseTable(myData: any[]): void {
@@ -738,6 +720,14 @@ function countIndividualCashInvested(sid: string): number {
     return individualCashInvested;
 }
 
+function addKeyboardEventLstnr(): void {
+    window.addEventListener("keydown", (e) => {
+        if (e.keyCode == 13) {
+            if (createTradeRecordFormContainer?.classList.contains("active")) submitBtn?.click();
+        }
+    });
+}
+
 async function main(): Promise<void> {
     if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
         recorderOption.href = "#";
@@ -746,6 +736,8 @@ async function main(): Promise<void> {
         simulatorProOption.href = "../simulatorPro/";
     }
     if (createRecordBtn != null) createRecordBtn.addEventListener("click", expandTradeRecordForm);
+    if (submitBtn != null) submitBtn.addEventListener("click", createTradeRecord);
+    if (createTradeRecordFormContainer != null) createTradeRecordFormContainer.addEventListener("click", foldTradeRecordForm);
     controlToggler();
     controlTab();
     // The cash-invested chart need info in trade-record table, so this need to be await
@@ -753,9 +745,10 @@ async function main(): Promise<void> {
     initAllHoldingSid();
     buildStockWarehouse(tradeRecordJson["data"]);
 
-    let todayStr = getDateStr(new Date(), "noInterval");
+    let todayStr = getStartDateStr(new Date(), "noInterval");
     let cashInvestedData = cashInvChartData(todayStr, tradeRecordJson["data"]);
-    let startDateStr = getDateStr(new Date(), "aMonth");
+    let startDateStr = getStartDateStr(new Date(), "aMonth");
+    if (dealTimeRecordInput instanceof HTMLInputElement) dealTimeRecordInput.value = todayStr;
     applyCashInvestedChart(startDateStr, cashInvestedData);
 
     // The component chart need info in stock-info table, so this need to be await.
@@ -763,7 +756,6 @@ async function main(): Promise<void> {
     stockInfoJson = await fetchStockSingleDay("", [...allHoldingSids]);
     let componentData = componentChartData();
     applyComponentChart(componentData);
-
     applyCompareChart(cashInvested, securityMktVal, cashExtracted, handlingFee);
 
     buildRecordTable(tradeRecordJson["data"]);
@@ -771,8 +763,9 @@ async function main(): Promise<void> {
     // The following step must br done after plotting the component graph
     // because there will be some stocks' balance quantity ending up to be 0 after buying and selling.
     buildStockInfoTable(stockInfoJson["data"]);
-
     buildStockWarehouseTable(stockInfoJson["data"]);
+
+    addKeyboardEventLstnr();
 }
 
 main();
