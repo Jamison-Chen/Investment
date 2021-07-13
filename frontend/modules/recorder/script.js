@@ -1,4 +1,3 @@
-"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -8,6 +7,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { CreateRequestBody, ReadRequestBody, UpdateRequestBody, DeleteRequestBody } from "./requestBody.js";
 const recorderOption = document.getElementById("recorder-option");
 const simulatorOption = document.getElementById("simulator-option");
 const simulatorProOption = document.getElementById("simulator-pro-option");
@@ -41,15 +41,14 @@ let cashExtracted = 0;
 let securityMktVal = 0;
 const endPoint = "http://127.0.0.1:5000/"; // localhost api test
 // const endPoint = "https://stock-info-scraper.herokuapp.com/";    // remote api test
-function tradeRecordCRUD(inData) {
-    let outData = new URLSearchParams();
-    for (let each in inData)
-        outData.append(each, inData[each]);
-    return fetch(`${endPoint}records`, { method: 'post', body: outData })
+function tradeRecordCRUD(requestBody) {
+    // let outData = new URLSearchParams();
+    // for (let each in requestBody) outData.append(each, requestBody[each]);
+    let bodyContent = requestBody.toURLSearchParams();
+    return fetch(`${endPoint}records`, { method: 'post', body: bodyContent })
         .then(function (response) {
         return response.json();
     });
-    ;
 }
 function buildRecordTable(myData) {
     if (tradeRecordTableBody != null) {
@@ -106,20 +105,20 @@ function buildStockWarehouse(myData) {
 }
 function createTradeRecord(e) {
     return __awaiter(this, void 0, void 0, function* () {
-        let data = { "mode": "create" };
+        let requestBody = new CreateRequestBody();
         let hasEmpty = false;
         for (let each of allRecordFormInputs) {
             if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
                 if (each == dealTimeRecordInput)
-                    data[each.name] = each.value.split("-").join("");
+                    requestBody.setAttribute(each.name, each.value.split("-").join(""));
                 else if (each.value != "")
-                    data[each.name] = each.value;
+                    requestBody.setAttribute(each.name, each.value);
                 else
                     hasEmpty = true;
             }
         }
         if (!hasEmpty) {
-            yield tradeRecordCRUD(data);
+            yield tradeRecordCRUD(requestBody);
             location.reload();
         }
         else
@@ -166,23 +165,21 @@ function updateTradeRecord(e) {
 function deleteTradeRecord(e) {
     if (window.confirm("確定要刪除此筆交易紀錄嗎？\n刪除後將無法復原！")) {
         let targetRowDOM = findEditedRow(e);
-        let data = { "mode": "delete" };
         if (targetRowDOM instanceof HTMLElement) {
             for (let each of targetRowDOM.childNodes) {
-                if (each instanceof HTMLElement) {
-                    if (each.className == "id")
-                        data[each.className] = each.innerText;
+                if (each instanceof HTMLElement && each.className == "id") {
+                    tradeRecordCRUD(new DeleteRequestBody(each.innerText));
+                    break;
                 }
             }
         }
-        tradeRecordCRUD(data);
         location.reload();
     }
 }
 function saveUpdate(e) {
     return __awaiter(this, void 0, void 0, function* () {
         let targetRowDOM = findEditedRow(e);
-        let newData = { "mode": "update" };
+        let requestBody = new UpdateRequestBody();
         if (targetRowDOM instanceof HTMLElement) {
             let allInputSpans = targetRowDOM.querySelectorAll(".input");
             for (let each of allInputSpans) {
@@ -192,12 +189,12 @@ function saveUpdate(e) {
                         each.classList.add("not-editing");
                         each.setAttribute("contenteditable", "false");
                     }
-                    newData[each.parentNode.className] = each.innerHTML;
+                    requestBody.setAttribute(each.parentNode.className, each.innerHTML);
                 }
             }
-            yield tradeRecordCRUD(newData);
+            yield tradeRecordCRUD(requestBody);
             // change the words displayed in the crud div of the target row
-            changeRowEndDiv("clickSave", targetRowDOM, { "copy-original": newData });
+            changeRowEndDiv("clickSave", targetRowDOM, { "copy-original": requestBody });
         }
         window.removeEventListener("keypress", noSpaceAndNewLine);
         location.reload();
@@ -521,12 +518,11 @@ function infoNotSufficientErr() {
     }
 }
 function initAllHoldingSid() {
-    for (let each of tradeRecordJson["data"]) {
+    for (let each of tradeRecordJson["data"])
         allHoldingSids.add(each["sid"]);
-    }
 }
-function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
-    const url = decideURL(date, sidList, companyNameList);
+function fetchStockSingleDay(sidList, date = "") {
+    const url = decideURL(sidList, date);
     // if (stockInfoTableContainer != null) {
     //     stockInfoTableContainer.classList.add("waiting-data");
     //     stockInfoTableContainer.classList.remove("data-arrived");
@@ -536,23 +532,15 @@ function fetchStockSingleDay(date = "", sidList = [], companyNameList = []) {
         return response.json();
     });
 }
-function decideURL(date = "", sidList = [], companyNameList = []) {
+function decideURL(sidList, date) {
     if (date != "" && sidList.length != 0) {
-        return `${endPoint}stockSingleDay?date=${date}&sid-list=${sidList.join(",")}`;
-    }
-    else if (date != "" && companyNameList.length != 0) {
-        return `${endPoint}stockSingleDay?date=${date}&companyName-list=${companyNameList.join(",")}`;
+        return `${endPoint}stockInfoScraper?date=${date}&sid-list=${sidList.join(",")}`;
     }
     else if (date == "" && sidList.length != 0) {
-        return `${endPoint}stockSingleDay?sid-list=${sidList.join(",")}`;
+        return `${endPoint}stockInfoScraper?sid-list=${sidList.join(",")}`;
     }
-    else if (date == "" && companyNameList.length != 0) {
-        return `${endPoint}stockSingleDay?companyName-list=${companyNameList.join(",")}`;
-    }
-    else {
-        console.log("Please at least input sid-list or company name.");
-        return "";
-    }
+    else
+        throw "decideURL: Info Not Sufficient";
 }
 function buildStockInfoTable(myData) {
     if (stockInfoTableBody != null) {
@@ -747,7 +735,7 @@ function main() {
         controlToggler();
         controlTab();
         // The cash-invested chart need info in trade-record table, so this need to be await
-        tradeRecordJson = yield tradeRecordCRUD({ "mode": "read" });
+        tradeRecordJson = yield tradeRecordCRUD(new ReadRequestBody());
         initAllHoldingSid();
         buildStockWarehouse(tradeRecordJson["data"]);
         let todayStr = getStartDateStr(new Date(), "noInterval");
@@ -758,7 +746,7 @@ function main() {
         applyCashInvestedChart(startDateStr, cashInvestedData);
         // The component chart need info in stock-info table, so this need to be await.
         // But the stock-info table need to be drawn after plotting.
-        stockInfoJson = yield fetchStockSingleDay("", [...allHoldingSids]);
+        stockInfoJson = yield fetchStockSingleDay([...allHoldingSids]);
         let componentData = componentChartData();
         applyComponentChart(componentData);
         applyCompareChart(cashInvested, securityMktVal, cashExtracted, handlingFee);
