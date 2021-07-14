@@ -17,6 +17,9 @@ const upperPart = document.getElementById("upper-part");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
 const createTradeRecordFormContainer = document.getElementById("create-trade-record-form-container");
 const dealTimeRecordInput = document.getElementById("deal-time-record");
+const dealPriceRecordInput = document.getElementById("deal-price-record");
+const dealQuantityRecordInput = document.getElementById("deal-quantity-record");
+const handlingFeeRecordInput = document.getElementById("handling-fee-record");
 const allRecordFormInputs = document.getElementsByClassName("record-form-input");
 const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
@@ -153,7 +156,7 @@ function readyToUpdTradeRecord(e) {
         for (let each of allInputSpans) {
             // find each table td of the row being edited
             if (each.parentNode instanceof HTMLElement && each.parentNode.className != "id" && each.parentNode.className != "company-name") {
-                each.classList.remove("not-editing");
+                each.classList.replace("not-editing", "editing");
                 each.setAttribute("contenteditable", "true");
                 // copy original data
                 copyOriginal[each.parentNode.className] = each.innerHTML;
@@ -188,7 +191,7 @@ function saveUpdate(e) {
                 // find each table td of the row being edited
                 if (each.parentNode instanceof HTMLElement) {
                     if (each.parentNode.className != "id" && each.parentNode.className != "company-name") {
-                        each.classList.add("not-editing");
+                        each.classList.replace("editing", "not-editing");
                         each.setAttribute("contenteditable", "false");
                     }
                     requestBody.setAttribute(each.parentNode.className, each.innerHTML);
@@ -209,7 +212,7 @@ function forgetUpdate(e, args) {
         for (let each of allInputSpans) {
             // find each table td of the row being edited
             if (each.parentNode instanceof HTMLElement && each.parentNode.className != "id" && each.parentNode.className != "company-name") {
-                each.classList.add("not-editing");
+                each.classList.replace("editing", "not-editing");
                 each.setAttribute("contenteditable", "false");
                 // set original data back
                 each.innerHTML = args["copy-original"][each.parentNode.className];
@@ -523,6 +526,18 @@ function infoNotSufficientErr() {
         });
     }
 }
+function autoCalcHandlingFee(e) {
+    if (dealPriceRecordInput instanceof HTMLInputElement && dealQuantityRecordInput instanceof HTMLInputElement && e.currentTarget instanceof HTMLInputElement) {
+        let dealPNum = parseFloat(dealPriceRecordInput.value);
+        let dealQNum = parseFloat(dealQuantityRecordInput.value);
+        let fee;
+        if (dealQNum >= 0)
+            fee = Math.round(dealPNum * dealQNum * 0.001425);
+        else
+            fee = Math.round(dealPNum * -1 * dealQNum * 0.004425);
+        e.currentTarget.value = fee >= 1 ? fee.toString() : "1";
+    }
+}
 function fetchStockSingleDay(sidList, date = "") {
     const url = decideURL(sidList, date);
     // if (stockInfoTableContainer != null) {
@@ -727,10 +742,12 @@ function main() {
         }
         if (createRecordBtn != null)
             createRecordBtn.addEventListener("click", expandTradeRecordForm);
+        handlingFeeRecordInput === null || handlingFeeRecordInput === void 0 ? void 0 : handlingFeeRecordInput.addEventListener("click", autoCalcHandlingFee);
         if (submitBtn != null)
             submitBtn.addEventListener("click", createTradeRecord);
         if (createTradeRecordFormContainer != null)
             createTradeRecordFormContainer.addEventListener("click", foldTradeRecordForm);
+        addKeyboardEventLstnr();
         controlToggler();
         controlTab();
         // The cash-invested chart need info in trade-record table, so this need to be await
@@ -755,7 +772,6 @@ function main() {
         applyComponentChart(componentData);
         applyCompareChart(cashInvested, securityMktVal, cashExtracted, handlingFee);
         buildStockWarehouseTable(stockInfoJson["data"]);
-        addKeyboardEventLstnr();
     });
 }
 main();
