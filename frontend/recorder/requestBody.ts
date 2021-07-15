@@ -1,9 +1,10 @@
-export interface RequestBody {
+export interface requestbody {
     mode: string;
     toURLSearchParams(): URLSearchParams;
 }
 
-export class RequestBody implements RequestBody {
+export class RequestBody implements requestbody {
+    public mode;
     constructor(mode: string) {
         this.mode = mode;
     }
