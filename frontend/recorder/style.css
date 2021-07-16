@@ -175,6 +175,7 @@ html {
 
 #create-trade-record-btn:hover {
     color: #888;
+    cursor: pointer;
 }
 
 #create-trade-record-form-container {

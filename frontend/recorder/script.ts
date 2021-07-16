@@ -342,7 +342,9 @@ function addKeyboardEventLstnr(): void {
 }
 
 async function main(): Promise<void> {
-    if (window.location.hostname == "127.0.0.1") endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
+    if (window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost") {
+        endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
+    }
     else endPoint = "https://stock-info-scraper.herokuapp.com/";
     if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
         recorderOption.href = "#";

@@ -361,8 +361,9 @@ function addKeyboardEventLstnr() {
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (window.location.hostname == "127.0.0.1")
+        if (window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost") {
             endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
+        }
         else
             endPoint = "https://stock-info-scraper.herokuapp.com/";
         if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
