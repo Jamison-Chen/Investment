@@ -100,6 +100,37 @@ html {
     width: max-content;
 }
 
+#cash-invested-chart-outter {
+    display: flex;
+    flex-direction: column;
+}
+
+#cash-invested-chart {
+    height: max-content;
+}
+
+#cash-invested-show-range-container {
+    display: flex;
+    height: max-content;
+    margin-top: 10px;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+#cash-invested-show-range-input {
+    height: 1px;
+    width: 84%;
+    outline: none;
+    transform: rotate(180deg);
+}
+
+#cash-invested-show-range-input::-webkit-slider-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    cursor: grab;
+}
+
 #individual-price-quantity-chart,
 #individual-compare-chart {
     min-width: calc(100vh / 3);
@@ -167,9 +198,9 @@ html {
 
 #create-record-form,
 #submit-btn {
-    width: 280px;
+    width: 230px;
     background-color: var(--bgc);
-    padding: 10px 20px;
+    padding: 10px 25px;
     display: flex;
     justify-content: center;
 }
@@ -187,7 +218,7 @@ html {
 }
 
 .form-input {
-    width: 50%;
+    width: 55%;
     border-radius: 100px;
     border: 1px solid #888;
     padding: 0 10px;

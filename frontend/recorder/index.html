@@ -26,7 +26,12 @@
         </div>
         <div id="upper-part" class="overview">
             <div class="chart-container">
-                <div id="cash-invested-chart"></div>
+                <div id="cash-invested-chart-outter">
+                    <div id="cash-invested-chart"></div>
+                    <div id="cash-invested-show-range-container">
+                        <input type="range" name="" id="cash-invested-show-range-input">
+                    </div>
+                </div>
                 <div id="component-chart"></div>
                 <div id="compare-chart"></div>
             </div>
@@ -68,11 +73,11 @@
                     <input type="text" name="sid" id="sid-record" class="record-form-input form-input">
                 </label>
                 <label>
-                    <div>每股成交價格</div>
+                    <div>成交單價</div>
                     <input type="number" name="deal-price" id="deal-price-record" class="record-form-input form-input">
                 </label>
                 <label>
-                    <div>買(+)賣(-)股數</div>
+                    <div>成交股數</div>
                     <input type="text" name="deal-quantity" id="deal-quantity-record" class="record-form-input form-input">
                 </label>
                 <label>
@@ -96,8 +101,8 @@
                             <th style="display: none;">ID</th>
                             <th>成交日期</th>
                             <th>證券代號</th>
-                            <th>商品名稱</th>
-                            <th>每股價格</th>
+                            <th>證券名稱</th>
+                            <th>成交單價</th>
                             <th>成交股數</th>
                             <th>費用</th>
                             <th></th>

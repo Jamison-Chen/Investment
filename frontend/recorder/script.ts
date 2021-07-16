@@ -7,6 +7,7 @@ const simulatorProOption = document.getElementById("simulator-pro-option");
 const viewToggler = document.getElementById("view-toggler");
 const togglerMask = document.getElementById("toggler-mask");
 const upperPart = document.getElementById("upper-part");
+const cashInvShowRangeInpt = document.getElementById("cash-invested-show-range-input");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
 const createTradeRecordFormContainer = document.getElementById("create-trade-record-form-container");
 const dealTimeRecordInput = document.getElementById("deal-time-record");
@@ -40,9 +41,7 @@ let mygooglechart = new MyGoogleChart();
 let traderecordtable: TradeRecordTable;
 let stockinfotable: StockInfoTable;
 let stockwarehousetable: StockWarehouseTable;
-
-const endPoint = "http://127.0.0.1:8000/stockInfoScraper/";  // localhost api test
-// const endPoint = "https://stock-info-scraper.herokuapp.com/";    // remote api test
+let endPoint: string;
 
 function tradeRecordCRUD(requestBody: RequestBody): Promise<void> {
     let bodyContent = requestBody.toURLSearchParams();
@@ -291,14 +290,15 @@ function highlightTab(e: Event): void {
     }
 }
 
-function getStartDateStr(endDate: Date, rollbackLength: string): string {
-    if (rollbackLength == "aMonth") {
-        let m = endDate.getMonth();
-        endDate.setMonth(endDate.getMonth() - 1);
-        // If still in same month, set date to last day of previous month.
-        if (endDate.getMonth() == m) endDate.setDate(0);
-        endDate.setHours(0, 0, 0, 0);
-    }
+function getStartDateStr(endDate: Date, rollbackLength: number): string {
+    // if (rollbackLength == "aMonth") {
+    //     let m = endDate.getMonth();
+    //     endDate.setMonth(endDate.getMonth() - 1);
+    //     // If still in same month, set date to last day of previous month.
+    //     if (endDate.getMonth() == m) endDate.setDate(0);
+    //     endDate.setHours(0, 0, 0, 0);
+    // }
+    endDate.setDate(endDate.getDate() - rollbackLength);
     return endDate.toISOString().slice(0, 10);
 }
 
@@ -342,6 +342,8 @@ function addKeyboardEventLstnr(): void {
 }
 
 async function main(): Promise<void> {
+    if (window.location.hostname == "127.0.0.1") endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
+    else endPoint = "https://stock-info-scraper.herokuapp.com/";
     if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
         recorderOption.href = "#";
         recorderOption.classList.add("active");
@@ -365,14 +367,28 @@ async function main(): Promise<void> {
         traderecordtable.build(tradeRecordJson["data"]);
     }
 
-    let todayStr = getStartDateStr(new Date(), "noInterval");
+    let todayStr = getStartDateStr(new Date(), 0);
     // stockWarehouse will be modified by the function below
     let cashInvestedData = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
-    let startDateStr = getStartDateStr(new Date(), "aMonth");
+    let firstDateStr = cashInvestedData[1][0]
+    if (typeof firstDateStr == "string") {
+        firstDateStr = `${firstDateStr.slice(0, 4)}-${firstDateStr.slice(4, 6)}-${firstDateStr.slice(6)}`;
+    }
+    let dateDelta = (new Date(todayStr).getTime() - new Date(firstDateStr).getTime()) / (1000 * 60 * 60 * 24);
 
     if (dealTimeRecordInput instanceof HTMLInputElement) dealTimeRecordInput.value = todayStr;
 
-    mygooglechart.drawCashInvestedChart(startDateStr, cashInvestedData, cashInvestedChart);
+    mygooglechart.drawCashInvestedChart(firstDateStr.toString(), cashInvestedData, cashInvestedChart);
+    if (cashInvShowRangeInpt instanceof HTMLInputElement) {
+        cashInvShowRangeInpt.min = "0";
+        cashInvShowRangeInpt.max = dateDelta.toString();
+        cashInvShowRangeInpt.step = "1";
+        cashInvShowRangeInpt.value = cashInvShowRangeInpt.max;
+        cashInvShowRangeInpt.addEventListener("input", () => {
+            let endDate = getStartDateStr(new Date(), parseInt(cashInvShowRangeInpt.value));
+            mygooglechart.drawCashInvestedChart(endDate, cashInvestedData, cashInvestedChart);
+        });
+    }
 
     // The component chart need info in stock-info table, so this need to be await.
     // Remember that stock info need to be fetched after getBalanceQForAllSids().
