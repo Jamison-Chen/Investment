@@ -32,7 +32,7 @@ export class MyGoogleChart {
         };
         google.charts.setOnLoadCallback(() => this.applyChart(dataIn, options, "LineChart", chartDiv));
     }
-    public drawComponentChart(dataIn: (string | number)[][], chartDiv: HTMLElement | null): void {
+    public drawMktValPieChart(dataIn: (string | number)[][], chartDiv: HTMLElement | null): void {
         google.charts.load('current', { 'packages': ["corechart"] });
         let options = {
             title: "各證券市值佔比",

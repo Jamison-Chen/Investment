@@ -1,13 +1,14 @@
 import { RequestBody, CreateRequestBody, ReadRequestBody } from "./requestBody.js";
 import { MyGoogleChart } from "./chart.js";
 import { StockInfoTable, StockWarehouseTable, TradeRecordTable } from "./table.js";
+
 const recorderOption = document.getElementById("recorder-option");
 const simulatorOption = document.getElementById("simulator-option");
 const simulatorProOption = document.getElementById("simulator-pro-option");
 const viewToggler = document.getElementById("view-toggler");
 const togglerMask = document.getElementById("toggler-mask");
 const upperPart = document.getElementById("upper-part");
-const cashInvShowRangeInpt = document.getElementById("cash-invested-show-range-input");
+const cashInvShowRangeInput = document.getElementById("cash-invested-show-range-input");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
 const createTradeRecordFormContainer = document.getElementById("create-trade-record-form-container");
 const dealTimeRecordInput = document.getElementById("deal-time-record");
@@ -24,20 +25,18 @@ const tradeRecordTableBody = document.querySelector("#trade-record-table tbody")
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
 const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row")
 const cashInvestedChart = document.getElementById('cash-invested-chart');
-const componentChart = document.getElementById('component-chart');
+const mktValPieChart = document.getElementById('component-chart');
 const compareChart = document.getElementById('compare-chart');
 const individualPriceQuantityChart = document.getElementById("individual-price-quantity-chart");
 const individualCompareChart = document.getElementById("individual-compare-chart");
 
-let tradeRecordJson: any = {};
-let stockInfoJson: any = {};
 let allHoldingSids: Set<string> = new Set();
-let stockWarehouse: any = {};  // structure: {aSid:{aPrice:curQ, ...}, ...}
-let handlingFee = 0;
-let cashInvested = 0;
+let stockWarehouse: any = {};  // structure: {aSid:{aDealTime:{aPrice:curQ, ...},  ...}, ...}
+let totalCashInvested = 0;
 let cashExtracted = 0
-let securityMktVal = 0;
-let mygooglechart = new MyGoogleChart();
+let totalMktVal = 0;
+let handlingFee = 0;
+let mygooglechart: MyGoogleChart = new MyGoogleChart();
 let traderecordtable: TradeRecordTable;
 let stockinfotable: StockInfoTable;
 let stockwarehousetable: StockWarehouseTable;
@@ -51,7 +50,7 @@ function tradeRecordCRUD(requestBody: RequestBody): Promise<void> {
         });
 }
 
-function fetchStockSingleDay(sidList: string[], date: string = ""): Promise<void> {
+function fetchStockInfo(sidList: string[], date: string = ""): Promise<void> {
     const url: string = decideURL(sidList, date);
     return fetch(url)
         .then(function (response) {
@@ -90,18 +89,19 @@ function buildStockWarehouse(data: any[]): void {
 
 async function createTradeRecord(e: Event): Promise<void> {
     let requestBody: CreateRequestBody = new CreateRequestBody();
-    let hasEmpty = false;
+    let hasUnfilledBlank = false;
     for (let each of allRecordFormInputs) {
         if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
-            if (each == dealTimeRecordInput) requestBody.setAttribute(each.name, each.value.split("-").join(""));
-            else if (each.value != "") requestBody.setAttribute(each.name, each.value);
-            else hasEmpty = true;
+            if (each == dealTimeRecordInput) {
+                requestBody.setAttribute(each.name, each.value.split("-").join(""));
+            } else if (each.value != "") requestBody.setAttribute(each.name, each.value);
+            else hasUnfilledBlank = true;
         }
     }
-    if (!hasEmpty) {
+    if (!hasUnfilledBlank) {
         await tradeRecordCRUD(requestBody);
         location.reload();
-    } else infoNotSufficientErr();
+    } else showInfoNotSufficientErr();
 }
 
 function prepareCashInvChartData(endDateStr: string, data: any[]): (string | number)[][] {
@@ -168,48 +168,52 @@ function prepareCashInvChartData(endDateStr: string, data: any[]): (string | num
     // result = [["Date", ...allHoldingSids, "Total"], ...result];
     result = [["Date", "Cash Invested"], ...result.map(i => [i[0], i[i.length - 1]])];  // only use the "total" field
     let latestCashInv = result[result.length - 1][1];
-    if (typeof latestCashInv == "number") cashInvested = latestCashInv;
+    if (typeof latestCashInv == "number") totalCashInvested = latestCashInv;
     return result;
 }
 
-function getBalanceQForAllSids(): (string | number)[][] {
-    let result: (string | number)[][] = [["Sid", "Market Value"]];
+function calcBalanceQOfEachSidAndUpdateAllHoldingSids(): any {
+    let hashMapResult: any = {};
     // Count Q for each Sid and remove those whose Q == 0
-    for (let eachStock in stockWarehouse) {
-        let eachRow = [eachStock, 0];
-        for (let eachDay in stockWarehouse[eachStock]) {
-            for (let eachP in stockWarehouse[eachStock][eachDay]) {
-                eachRow[1] += stockWarehouse[eachStock][eachDay][eachP]
+    for (let eachSid in stockWarehouse) {
+        let eachRow = [eachSid, 0];
+        for (let eachDay in stockWarehouse[eachSid]) {
+            for (let eachP in stockWarehouse[eachSid][eachDay]) {
+                eachRow[1] += stockWarehouse[eachSid][eachDay][eachP]
             }
         }
-        if (eachRow[1] != 0) result.push(eachRow);
-        else allHoldingSids.delete(eachStock);   // update allHoldingSids
+        if (eachRow[1] != 0) hashMapResult[eachRow[0]] = eachRow[1];
+        else allHoldingSids.delete(eachSid);   // update allHoldingSids
     }
-    return result;
+    return hashMapResult;
 }
 
-function prepareComponentChartData(balanceQForAllSids: (string | number)[][], stockInfoData: any[]): (string | number)[][] {
-    let result = balanceQForAllSids;
-    // Q * market value
-    for (let eachStock of stockInfoData) {
-        for (let eachResult of result) {
-            if (eachStock["sid"] == eachResult[0] && typeof eachResult[1] == "number") {
-                eachResult[1] *= eachStock["close"];
-                securityMktVal += eachResult[1];
-            }
-        }
+function calcMktValOfEachSidAndCalcTotalMktVal(balanceQOfEachSids: any, stockInfoData: any[]): any {
+    let hashMap = balanceQOfEachSids;
+    for (let eachStockInfo of stockInfoData) {
+        hashMap[eachStockInfo["sid"]] *= eachStockInfo["close"];
+        totalMktVal += hashMap[eachStockInfo["sid"]];    // calculate totalMktVal
     }
+    return hashMap;
+}
 
-    // Merge small numbers into "others"
-    let smallNum = result.filter(i => typeof i[1] == "number" && (i[1] / securityMktVal) < 0.05);
-    result = result.filter(i => i[1] == "Market Value" || (typeof i[1] == "number" && (i[1] / securityMktVal) >= 0.05));
-    let numForOthers = 0;
-    if (smallNum.length > 1) {
-        for (let each of smallNum) {
-            if (typeof each[1] == "number") numForOthers += each[1];
+function prepareMktValPieChartData(balanceQOfEachSids: any, stockInfoData: any[]): (string | number)[][] {
+    let mktValOfEachSids = calcMktValOfEachSidAndCalcTotalMktVal(balanceQOfEachSids, stockInfoData);
+    // Merge small numbers into "Others"
+    let smallMktValStocks: (string | number)[][] = [];
+    let result: (string | number)[][] = [["Sid", "Market Value"]];
+    for (let eachSid in mktValOfEachSids) {
+        if (mktValOfEachSids[eachSid] / totalMktVal < 0.05) {
+            smallMktValStocks.push([eachSid, mktValOfEachSids[eachSid]]);
+        } else result.push([eachSid, mktValOfEachSids[eachSid]]);
+    }
+    let mktValOfOthers = 0;
+    if (smallMktValStocks.length > 1) {
+        for (let each of smallMktValStocks) {
+            if (typeof each[1] == "number") mktValOfOthers += each[1];
         }
-        result.push(["Others", numForOthers]);
-    } else result.push(...smallNum);
+        result.push(["Others", mktValOfOthers]);
+    } else result.push(...smallMktValStocks);
     return result;
 }
 
@@ -226,10 +230,12 @@ function expandTradeRecordForm(e: Event): void {
 }
 
 function foldTradeRecordForm(e: Event): void {
-    if (e.target == createTradeRecordFormContainer) createTradeRecordFormContainer?.classList.remove("active");
+    if (e.target == createTradeRecordFormContainer) {
+        createTradeRecordFormContainer?.classList.remove("active");
+    }
 }
 
-function infoNotSufficientErr(): void {
+function showInfoNotSufficientErr(): void {
     if (createErrorDiv != null) {
         createErrorDiv.style.display = "unset";
         setTimeout(() => {
@@ -255,7 +261,74 @@ function autoCalcHandlingFee(e: Event): void {
     }
 }
 
-function controlToggler(): void {
+function getStartDateStr(endDate: Date, rollbackLength: number): string {
+    endDate.setDate(endDate.getDate() - rollbackLength);
+    return endDate.toISOString().slice(0, 10);
+}
+
+function showEachStockDetail(e: Event, sid: string, individualMktVal: number): void {
+    // control which to highlight
+    for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
+        if (allStockWarehouseTableRows[i] == e.currentTarget) {
+            allStockWarehouseTableRows[i].classList.add("active");
+        } else allStockWarehouseTableRows[i].classList.remove("active");
+    }
+
+    let cashInvstOfEachSid = calcCashInvstOfEachSid(sid);
+    // arrange price quantity data
+    let pqData: (number | string)[][] = [["Date", "Price"]];
+    for (let eachDate in stockWarehouse[sid]) {
+        for (let eachP in stockWarehouse[sid][eachDate]) {
+            for (let i = 0; i < parseInt(stockWarehouse[sid][eachDate][eachP]); i++) {
+                pqData.push([eachDate, parseFloat(eachP)]);
+            }
+        }
+    }
+    mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart)
+    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, individualCompareChart)
+}
+
+function calcCashInvstOfEachSid(sid: string): number {
+    let cashInvstOfEachSid = 0;
+    for (let eachDate in stockWarehouse[sid]) {
+        for (let eachP in stockWarehouse[sid][eachDate]) {
+            cashInvstOfEachSid += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
+        }
+    }
+    return cashInvstOfEachSid;
+}
+
+function decideEndPoint(): void {
+    if (window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost") {
+        endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
+    } else endPoint = "https://stock-info-scraper.herokuapp.com/";
+}
+
+function decideOptionAnchorHref(): void {
+    if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
+        recorderOption.href = "#";
+        recorderOption.classList.add("active");
+        simulatorOption.href = "../simulator/";
+        simulatorProOption.href = "../simulatorPro/";
+    }
+}
+
+function addAllLstnrAboutCreatingRecord(): void {
+    createRecordBtn?.addEventListener("click", expandTradeRecordForm);
+    handlingFeeRecordInput?.addEventListener("click", autoCalcHandlingFee);
+    submitBtn?.addEventListener("click", createTradeRecord);
+    createTradeRecordFormContainer?.addEventListener("click", foldTradeRecordForm);
+}
+
+function addKeyboardEventLstnr(): void {
+    window.addEventListener("keydown", (e) => {
+        if (e.keyCode == 13) {
+            if (createTradeRecordFormContainer?.classList.contains("active")) submitBtn?.click();
+        }
+    });
+}
+
+function makeViewTogglerControllable(): void {
     if (togglerMask != null && viewToggler != null) {
         togglerMask.style.left = "-1%";
         viewToggler.addEventListener("click", moveTogglerMask);
@@ -270,7 +343,7 @@ function moveTogglerMask(e: Event): void {
     }
 }
 
-function controlTab(): void {
+function makeTabControllable(): void {
     for (let each of allTabs) {
         if (each instanceof HTMLElement) each.addEventListener("click", highlightTab);
     }
@@ -290,77 +363,29 @@ function highlightTab(e: Event): void {
     }
 }
 
-function getStartDateStr(endDate: Date, rollbackLength: number): string {
-    // if (rollbackLength == "aMonth") {
-    //     let m = endDate.getMonth();
-    //     endDate.setMonth(endDate.getMonth() - 1);
-    //     // If still in same month, set date to last day of previous month.
-    //     if (endDate.getMonth() == m) endDate.setDate(0);
-    //     endDate.setHours(0, 0, 0, 0);
-    // }
-    endDate.setDate(endDate.getDate() - rollbackLength);
-    return endDate.toISOString().slice(0, 10);
-}
-
-function showEachStockDetail(e: Event, sid: string, individualMktVal: number): void {
-    // control which to highlight
-    for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
-        if (allStockWarehouseTableRows[i] == e.currentTarget) {
-            allStockWarehouseTableRows[i].classList.add("active");
-        } else allStockWarehouseTableRows[i].classList.remove("active");
+function setupCashInvShowRangeInput(todayStr: string, firstDayStr: string, cashInvestedData: (string | number)[][]): void {
+    if (cashInvShowRangeInput instanceof HTMLInputElement) {
+        let dayDelta = (new Date(todayStr).getTime() - new Date(firstDayStr).getTime()) / (1000 * 60 * 60 * 24);
+        cashInvShowRangeInput.min = "0";
+        cashInvShowRangeInput.max = dayDelta.toString();
+        cashInvShowRangeInput.step = "1";
+        cashInvShowRangeInput.value = cashInvShowRangeInput.max;
+        cashInvShowRangeInput.addEventListener("input", () => {
+            let endDate = getStartDateStr(new Date(), parseInt(cashInvShowRangeInput.value));
+            mygooglechart.drawCashInvestedChart(endDate, cashInvestedData, cashInvestedChart);
+        });
     }
-
-    let eachStockCashInvst = calcEachStockCashInvst(sid);
-    // arrange price quantity data
-    let pqData: (number | string)[][] = [["Date", "Price"]];
-    for (let eachDate in stockWarehouse[sid]) {
-        for (let eachP in stockWarehouse[sid][eachDate]) {
-            for (let i = 0; i < parseInt(stockWarehouse[sid][eachDate][eachP]); i++)
-                pqData.push([eachDate, parseFloat(eachP)])
-        }
-    }
-    mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart)
-    mygooglechart.drawEachStockCompareChart(eachStockCashInvst, individualMktVal, individualCompareChart)
-}
-
-function calcEachStockCashInvst(sid: string): number {
-    let eachStockCashInvst = 0;
-    for (let eachDate in stockWarehouse[sid]) {
-        for (let eachP in stockWarehouse[sid][eachDate]) {
-            eachStockCashInvst += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
-        }
-    }
-    return eachStockCashInvst;
-}
-
-function addKeyboardEventLstnr(): void {
-    window.addEventListener("keydown", (e) => {
-        if (e.keyCode == 13) {
-            if (createTradeRecordFormContainer?.classList.contains("active")) submitBtn?.click();
-        }
-    });
 }
 
 async function main(): Promise<void> {
-    if (window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost") {
-        endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
-    }
-    else endPoint = "https://stock-info-scraper.herokuapp.com/";
-    if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
-        recorderOption.href = "#";
-        recorderOption.classList.add("active");
-        simulatorOption.href = "../simulator/";
-        simulatorProOption.href = "../simulatorPro/";
-    }
-    if (createRecordBtn != null) createRecordBtn.addEventListener("click", expandTradeRecordForm);
-    handlingFeeRecordInput?.addEventListener("click", autoCalcHandlingFee);
-    if (submitBtn != null) submitBtn.addEventListener("click", createTradeRecord);
-    if (createTradeRecordFormContainer != null) createTradeRecordFormContainer.addEventListener("click", foldTradeRecordForm);
+    decideEndPoint();
+    decideOptionAnchorHref();
+    addAllLstnrAboutCreatingRecord();
     addKeyboardEventLstnr();
-    controlToggler();
-    controlTab();
+    makeViewTogglerControllable();
+    makeTabControllable();
     // The cash-invested chart need info in trade-record table, so this need to be await
-    tradeRecordJson = await tradeRecordCRUD(new ReadRequestBody());
+    let tradeRecordJson: any = await tradeRecordCRUD(new ReadRequestBody());
     initAllHoldingSid(tradeRecordJson["data"]);
     buildStockWarehouse(tradeRecordJson["data"]);
 
@@ -371,45 +396,34 @@ async function main(): Promise<void> {
 
     let todayStr = getStartDateStr(new Date(), 0);
     // stockWarehouse will be modified by the function below
-    let cashInvestedData = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
-    let firstDateStr = cashInvestedData[1][0]
-    if (typeof firstDateStr == "string") {
-        firstDateStr = `${firstDateStr.slice(0, 4)}-${firstDateStr.slice(4, 6)}-${firstDateStr.slice(6)}`;
-    }
-    let dateDelta = (new Date(todayStr).getTime() - new Date(firstDateStr).getTime()) / (1000 * 60 * 60 * 24);
+    let cashInvestedData: (string | number)[][] = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
+    let firstDayStr = cashInvestedData[1][0].toString();
+    firstDayStr = `${firstDayStr.slice(0, 4)}-${firstDayStr.slice(4, 6)}-${firstDayStr.slice(6)}`;
+    mygooglechart.drawCashInvestedChart(firstDayStr, cashInvestedData, cashInvestedChart);
 
+    // set default value for the deal-time field of the create-record form
     if (dealTimeRecordInput instanceof HTMLInputElement) dealTimeRecordInput.value = todayStr;
 
-    mygooglechart.drawCashInvestedChart(firstDateStr.toString(), cashInvestedData, cashInvestedChart);
-    if (cashInvShowRangeInpt instanceof HTMLInputElement) {
-        cashInvShowRangeInpt.min = "0";
-        cashInvShowRangeInpt.max = dateDelta.toString();
-        cashInvShowRangeInpt.step = "1";
-        cashInvShowRangeInpt.value = cashInvShowRangeInpt.max;
-        cashInvShowRangeInpt.addEventListener("input", () => {
-            let endDate = getStartDateStr(new Date(), parseInt(cashInvShowRangeInpt.value));
-            mygooglechart.drawCashInvestedChart(endDate, cashInvestedData, cashInvestedChart);
-        });
-    }
+    setupCashInvShowRangeInput(todayStr, firstDayStr, cashInvestedData);
 
     // The component chart need info in stock-info table, so this need to be await.
-    // Remember that stock info need to be fetched after getBalanceQForAllSids().
-    // because getBalanceQForAllSids() will remove sids in allHoldingSids whose balanceQ == 0
-    let balanceQForAllSids = getBalanceQForAllSids();   // this function will modify allHoldingSids
-    stockInfoJson = await fetchStockSingleDay([...allHoldingSids]);
+    // Remember that stock info need to be fetched after calcBalanceQOfEachSidAndUpdateAllHoldingSids().
+    // because calcBalanceQOfEachSidAndUpdateAllHoldingSids() will remove sids in allHoldingSids whose balanceQ == 0
+    let balanceQOfEachSid = calcBalanceQOfEachSidAndUpdateAllHoldingSids();   // this function will modify allHoldingSids
+    let stockInfoJson: any = await fetchStockInfo([...allHoldingSids]);
     if (stockInfoTableBody instanceof HTMLElement) {
         stockinfotable = new StockInfoTable(stockInfoTableBody);
         stockinfotable.build(stockInfoJson["data"], allHoldingSids);
     }
 
-    let componentData = prepareComponentChartData(balanceQForAllSids, stockInfoJson["data"]);
-    mygooglechart.drawComponentChart(componentData, componentChart);
+    let mktValPieChartData = prepareMktValPieChartData(balanceQOfEachSid, stockInfoJson["data"]);
+    mygooglechart.drawMktValPieChart(mktValPieChartData, mktValPieChart);
 
-    mygooglechart.drawCompareChart(cashInvested, securityMktVal, cashExtracted, handlingFee, compareChart);
+    mygooglechart.drawCompareChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee, compareChart);
 
     if (stockWarehouseTableBody instanceof HTMLElement) {
         stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
-        stockwarehousetable.build(stockInfoJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcEachStockCashInvst);
+        stockwarehousetable.build(stockInfoJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
     }
 }
 

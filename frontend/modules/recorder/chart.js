@@ -30,7 +30,7 @@ export class MyGoogleChart {
         };
         google.charts.setOnLoadCallback(() => this.applyChart(dataIn, options, "LineChart", chartDiv));
     }
-    drawComponentChart(dataIn, chartDiv) {
+    drawMktValPieChart(dataIn, chartDiv) {
         google.charts.load('current', { 'packages': ["corechart"] });
         let options = {
             title: "各證券市值佔比",

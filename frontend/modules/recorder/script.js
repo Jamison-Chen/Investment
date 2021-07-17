@@ -16,7 +16,7 @@ const simulatorProOption = document.getElementById("simulator-pro-option");
 const viewToggler = document.getElementById("view-toggler");
 const togglerMask = document.getElementById("toggler-mask");
 const upperPart = document.getElementById("upper-part");
-const cashInvShowRangeInpt = document.getElementById("cash-invested-show-range-input");
+const cashInvShowRangeInput = document.getElementById("cash-invested-show-range-input");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
 const createTradeRecordFormContainer = document.getElementById("create-trade-record-form-container");
 const dealTimeRecordInput = document.getElementById("deal-time-record");
@@ -33,18 +33,16 @@ const tradeRecordTableBody = document.querySelector("#trade-record-table tbody")
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
 const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row");
 const cashInvestedChart = document.getElementById('cash-invested-chart');
-const componentChart = document.getElementById('component-chart');
+const mktValPieChart = document.getElementById('component-chart');
 const compareChart = document.getElementById('compare-chart');
 const individualPriceQuantityChart = document.getElementById("individual-price-quantity-chart");
 const individualCompareChart = document.getElementById("individual-compare-chart");
-let tradeRecordJson = {};
-let stockInfoJson = {};
 let allHoldingSids = new Set();
-let stockWarehouse = {}; // structure: {aSid:{aPrice:curQ, ...}, ...}
-let handlingFee = 0;
-let cashInvested = 0;
+let stockWarehouse = {}; // structure: {aSid:{aDealTime:{aPrice:curQ, ...},  ...}, ...}
+let totalCashInvested = 0;
 let cashExtracted = 0;
-let securityMktVal = 0;
+let totalMktVal = 0;
+let handlingFee = 0;
 let mygooglechart = new MyGoogleChart();
 let traderecordtable;
 let stockinfotable;
@@ -57,7 +55,7 @@ function tradeRecordCRUD(requestBody) {
         return response.json();
     });
 }
-function fetchStockSingleDay(sidList, date = "") {
+function fetchStockInfo(sidList, date = "") {
     const url = decideURL(sidList, date);
     return fetch(url)
         .then(function (response) {
@@ -100,23 +98,24 @@ function buildStockWarehouse(data) {
 function createTradeRecord(e) {
     return __awaiter(this, void 0, void 0, function* () {
         let requestBody = new CreateRequestBody();
-        let hasEmpty = false;
+        let hasUnfilledBlank = false;
         for (let each of allRecordFormInputs) {
             if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
-                if (each == dealTimeRecordInput)
+                if (each == dealTimeRecordInput) {
                     requestBody.setAttribute(each.name, each.value.split("-").join(""));
+                }
                 else if (each.value != "")
                     requestBody.setAttribute(each.name, each.value);
                 else
-                    hasEmpty = true;
+                    hasUnfilledBlank = true;
             }
         }
-        if (!hasEmpty) {
+        if (!hasUnfilledBlank) {
             yield tradeRecordCRUD(requestBody);
             location.reload();
         }
         else
-            infoNotSufficientErr();
+            showInfoNotSufficientErr();
     });
 }
 function prepareCashInvChartData(endDateStr, data) {
@@ -188,50 +187,56 @@ function prepareCashInvChartData(endDateStr, data) {
     result = [["Date", "Cash Invested"], ...result.map(i => [i[0], i[i.length - 1]])]; // only use the "total" field
     let latestCashInv = result[result.length - 1][1];
     if (typeof latestCashInv == "number")
-        cashInvested = latestCashInv;
+        totalCashInvested = latestCashInv;
     return result;
 }
-function getBalanceQForAllSids() {
-    let result = [["Sid", "Market Value"]];
+function calcBalanceQOfEachSidAndUpdateAllHoldingSids() {
+    let hashMapResult = {};
     // Count Q for each Sid and remove those whose Q == 0
-    for (let eachStock in stockWarehouse) {
-        let eachRow = [eachStock, 0];
-        for (let eachDay in stockWarehouse[eachStock]) {
-            for (let eachP in stockWarehouse[eachStock][eachDay]) {
-                eachRow[1] += stockWarehouse[eachStock][eachDay][eachP];
+    for (let eachSid in stockWarehouse) {
+        let eachRow = [eachSid, 0];
+        for (let eachDay in stockWarehouse[eachSid]) {
+            for (let eachP in stockWarehouse[eachSid][eachDay]) {
+                eachRow[1] += stockWarehouse[eachSid][eachDay][eachP];
             }
         }
         if (eachRow[1] != 0)
-            result.push(eachRow);
+            hashMapResult[eachRow[0]] = eachRow[1];
         else
-            allHoldingSids.delete(eachStock); // update allHoldingSids
+            allHoldingSids.delete(eachSid); // update allHoldingSids
     }
-    return result;
+    return hashMapResult;
 }
-function prepareComponentChartData(balanceQForAllSids, stockInfoData) {
-    let result = balanceQForAllSids;
-    // Q * market value
-    for (let eachStock of stockInfoData) {
-        for (let eachResult of result) {
-            if (eachStock["sid"] == eachResult[0] && typeof eachResult[1] == "number") {
-                eachResult[1] *= eachStock["close"];
-                securityMktVal += eachResult[1];
-            }
-        }
+function calcMktValOfEachSidAndCalcTotalMktVal(balanceQOfEachSids, stockInfoData) {
+    let hashMap = balanceQOfEachSids;
+    for (let eachStockInfo of stockInfoData) {
+        hashMap[eachStockInfo["sid"]] *= eachStockInfo["close"];
+        totalMktVal += hashMap[eachStockInfo["sid"]]; // calculate totalMktVal
     }
-    // Merge small numbers into "others"
-    let smallNum = result.filter(i => typeof i[1] == "number" && (i[1] / securityMktVal) < 0.05);
-    result = result.filter(i => i[1] == "Market Value" || (typeof i[1] == "number" && (i[1] / securityMktVal) >= 0.05));
-    let numForOthers = 0;
-    if (smallNum.length > 1) {
-        for (let each of smallNum) {
-            if (typeof each[1] == "number")
-                numForOthers += each[1];
+    return hashMap;
+}
+function prepareMktValPieChartData(balanceQOfEachSids, stockInfoData) {
+    let mktValOfEachSids = calcMktValOfEachSidAndCalcTotalMktVal(balanceQOfEachSids, stockInfoData);
+    // Merge small numbers into "Others"
+    let smallMktValStocks = [];
+    let result = [["Sid", "Market Value"]];
+    for (let eachSid in mktValOfEachSids) {
+        if (mktValOfEachSids[eachSid] / totalMktVal < 0.05) {
+            smallMktValStocks.push([eachSid, mktValOfEachSids[eachSid]]);
         }
-        result.push(["Others", numForOthers]);
+        else
+            result.push([eachSid, mktValOfEachSids[eachSid]]);
+    }
+    let mktValOfOthers = 0;
+    if (smallMktValStocks.length > 1) {
+        for (let each of smallMktValStocks) {
+            if (typeof each[1] == "number")
+                mktValOfOthers += each[1];
+        }
+        result.push(["Others", mktValOfOthers]);
     }
     else
-        result.push(...smallNum);
+        result.push(...smallMktValStocks);
     return result;
 }
 function getDatesArray(startDate, endDate) {
@@ -246,10 +251,11 @@ function expandTradeRecordForm(e) {
     createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.add("active");
 }
 function foldTradeRecordForm(e) {
-    if (e.target == createTradeRecordFormContainer)
+    if (e.target == createTradeRecordFormContainer) {
         createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.remove("active");
+    }
 }
-function infoNotSufficientErr() {
+function showInfoNotSufficientErr() {
     if (createErrorDiv != null) {
         createErrorDiv.style.display = "unset";
         setTimeout(() => {
@@ -275,7 +281,71 @@ function autoCalcHandlingFee(e) {
         e.currentTarget.value = fee >= 1 ? fee.toString() : "1";
     }
 }
-function controlToggler() {
+function getStartDateStr(endDate, rollbackLength) {
+    endDate.setDate(endDate.getDate() - rollbackLength);
+    return endDate.toISOString().slice(0, 10);
+}
+function showEachStockDetail(e, sid, individualMktVal) {
+    // control which to highlight
+    for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
+        if (allStockWarehouseTableRows[i] == e.currentTarget) {
+            allStockWarehouseTableRows[i].classList.add("active");
+        }
+        else
+            allStockWarehouseTableRows[i].classList.remove("active");
+    }
+    let cashInvstOfEachSid = calcCashInvstOfEachSid(sid);
+    // arrange price quantity data
+    let pqData = [["Date", "Price"]];
+    for (let eachDate in stockWarehouse[sid]) {
+        for (let eachP in stockWarehouse[sid][eachDate]) {
+            for (let i = 0; i < parseInt(stockWarehouse[sid][eachDate][eachP]); i++) {
+                pqData.push([eachDate, parseFloat(eachP)]);
+            }
+        }
+    }
+    mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
+    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, individualCompareChart);
+}
+function calcCashInvstOfEachSid(sid) {
+    let cashInvstOfEachSid = 0;
+    for (let eachDate in stockWarehouse[sid]) {
+        for (let eachP in stockWarehouse[sid][eachDate]) {
+            cashInvstOfEachSid += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
+        }
+    }
+    return cashInvstOfEachSid;
+}
+function decideEndPoint() {
+    if (window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost") {
+        endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
+    }
+    else
+        endPoint = "https://stock-info-scraper.herokuapp.com/";
+}
+function decideOptionAnchorHref() {
+    if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
+        recorderOption.href = "#";
+        recorderOption.classList.add("active");
+        simulatorOption.href = "../simulator/";
+        simulatorProOption.href = "../simulatorPro/";
+    }
+}
+function addAllLstnrAboutCreatingRecord() {
+    createRecordBtn === null || createRecordBtn === void 0 ? void 0 : createRecordBtn.addEventListener("click", expandTradeRecordForm);
+    handlingFeeRecordInput === null || handlingFeeRecordInput === void 0 ? void 0 : handlingFeeRecordInput.addEventListener("click", autoCalcHandlingFee);
+    submitBtn === null || submitBtn === void 0 ? void 0 : submitBtn.addEventListener("click", createTradeRecord);
+    createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.addEventListener("click", foldTradeRecordForm);
+}
+function addKeyboardEventLstnr() {
+    window.addEventListener("keydown", (e) => {
+        if (e.keyCode == 13) {
+            if (createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.contains("active"))
+                submitBtn === null || submitBtn === void 0 ? void 0 : submitBtn.click();
+        }
+    });
+}
+function makeViewTogglerControllable() {
     if (togglerMask != null && viewToggler != null) {
         togglerMask.style.left = "-1%";
         viewToggler.addEventListener("click", moveTogglerMask);
@@ -290,7 +360,7 @@ function moveTogglerMask(e) {
             upperPart.className = "overview";
     }
 }
-function controlTab() {
+function makeTabControllable() {
     for (let each of allTabs) {
         if (each instanceof HTMLElement)
             each.addEventListener("click", highlightTab);
@@ -310,80 +380,29 @@ function highlightTab(e) {
         }
     }
 }
-function getStartDateStr(endDate, rollbackLength) {
-    // if (rollbackLength == "aMonth") {
-    //     let m = endDate.getMonth();
-    //     endDate.setMonth(endDate.getMonth() - 1);
-    //     // If still in same month, set date to last day of previous month.
-    //     if (endDate.getMonth() == m) endDate.setDate(0);
-    //     endDate.setHours(0, 0, 0, 0);
-    // }
-    endDate.setDate(endDate.getDate() - rollbackLength);
-    return endDate.toISOString().slice(0, 10);
-}
-function showEachStockDetail(e, sid, individualMktVal) {
-    // control which to highlight
-    for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
-        if (allStockWarehouseTableRows[i] == e.currentTarget) {
-            allStockWarehouseTableRows[i].classList.add("active");
-        }
-        else
-            allStockWarehouseTableRows[i].classList.remove("active");
+function setupCashInvShowRangeInput(todayStr, firstDayStr, cashInvestedData) {
+    if (cashInvShowRangeInput instanceof HTMLInputElement) {
+        let dayDelta = (new Date(todayStr).getTime() - new Date(firstDayStr).getTime()) / (1000 * 60 * 60 * 24);
+        cashInvShowRangeInput.min = "0";
+        cashInvShowRangeInput.max = dayDelta.toString();
+        cashInvShowRangeInput.step = "1";
+        cashInvShowRangeInput.value = cashInvShowRangeInput.max;
+        cashInvShowRangeInput.addEventListener("input", () => {
+            let endDate = getStartDateStr(new Date(), parseInt(cashInvShowRangeInput.value));
+            mygooglechart.drawCashInvestedChart(endDate, cashInvestedData, cashInvestedChart);
+        });
     }
-    let eachStockCashInvst = calcEachStockCashInvst(sid);
-    // arrange price quantity data
-    let pqData = [["Date", "Price"]];
-    for (let eachDate in stockWarehouse[sid]) {
-        for (let eachP in stockWarehouse[sid][eachDate]) {
-            for (let i = 0; i < parseInt(stockWarehouse[sid][eachDate][eachP]); i++)
-                pqData.push([eachDate, parseFloat(eachP)]);
-        }
-    }
-    mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
-    mygooglechart.drawEachStockCompareChart(eachStockCashInvst, individualMktVal, individualCompareChart);
-}
-function calcEachStockCashInvst(sid) {
-    let eachStockCashInvst = 0;
-    for (let eachDate in stockWarehouse[sid]) {
-        for (let eachP in stockWarehouse[sid][eachDate]) {
-            eachStockCashInvst += parseFloat(eachP) * parseInt(stockWarehouse[sid][eachDate][eachP]);
-        }
-    }
-    return eachStockCashInvst;
-}
-function addKeyboardEventLstnr() {
-    window.addEventListener("keydown", (e) => {
-        if (e.keyCode == 13) {
-            if (createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.contains("active"))
-                submitBtn === null || submitBtn === void 0 ? void 0 : submitBtn.click();
-        }
-    });
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost") {
-            endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
-        }
-        else
-            endPoint = "https://stock-info-scraper.herokuapp.com/";
-        if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
-            recorderOption.href = "#";
-            recorderOption.classList.add("active");
-            simulatorOption.href = "../simulator/";
-            simulatorProOption.href = "../simulatorPro/";
-        }
-        if (createRecordBtn != null)
-            createRecordBtn.addEventListener("click", expandTradeRecordForm);
-        handlingFeeRecordInput === null || handlingFeeRecordInput === void 0 ? void 0 : handlingFeeRecordInput.addEventListener("click", autoCalcHandlingFee);
-        if (submitBtn != null)
-            submitBtn.addEventListener("click", createTradeRecord);
-        if (createTradeRecordFormContainer != null)
-            createTradeRecordFormContainer.addEventListener("click", foldTradeRecordForm);
+        decideEndPoint();
+        decideOptionAnchorHref();
+        addAllLstnrAboutCreatingRecord();
         addKeyboardEventLstnr();
-        controlToggler();
-        controlTab();
+        makeViewTogglerControllable();
+        makeTabControllable();
         // The cash-invested chart need info in trade-record table, so this need to be await
-        tradeRecordJson = yield tradeRecordCRUD(new ReadRequestBody());
+        let tradeRecordJson = yield tradeRecordCRUD(new ReadRequestBody());
         initAllHoldingSid(tradeRecordJson["data"]);
         buildStockWarehouse(tradeRecordJson["data"]);
         if (tradeRecordTableBody instanceof HTMLElement) {
@@ -393,39 +412,28 @@ function main() {
         let todayStr = getStartDateStr(new Date(), 0);
         // stockWarehouse will be modified by the function below
         let cashInvestedData = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
-        let firstDateStr = cashInvestedData[1][0];
-        if (typeof firstDateStr == "string") {
-            firstDateStr = `${firstDateStr.slice(0, 4)}-${firstDateStr.slice(4, 6)}-${firstDateStr.slice(6)}`;
-        }
-        let dateDelta = (new Date(todayStr).getTime() - new Date(firstDateStr).getTime()) / (1000 * 60 * 60 * 24);
+        let firstDayStr = cashInvestedData[1][0].toString();
+        firstDayStr = `${firstDayStr.slice(0, 4)}-${firstDayStr.slice(4, 6)}-${firstDayStr.slice(6)}`;
+        mygooglechart.drawCashInvestedChart(firstDayStr, cashInvestedData, cashInvestedChart);
+        // set default value for the deal-time field of the create-record form
         if (dealTimeRecordInput instanceof HTMLInputElement)
             dealTimeRecordInput.value = todayStr;
-        mygooglechart.drawCashInvestedChart(firstDateStr.toString(), cashInvestedData, cashInvestedChart);
-        if (cashInvShowRangeInpt instanceof HTMLInputElement) {
-            cashInvShowRangeInpt.min = "0";
-            cashInvShowRangeInpt.max = dateDelta.toString();
-            cashInvShowRangeInpt.step = "1";
-            cashInvShowRangeInpt.value = cashInvShowRangeInpt.max;
-            cashInvShowRangeInpt.addEventListener("input", () => {
-                let endDate = getStartDateStr(new Date(), parseInt(cashInvShowRangeInpt.value));
-                mygooglechart.drawCashInvestedChart(endDate, cashInvestedData, cashInvestedChart);
-            });
-        }
+        setupCashInvShowRangeInput(todayStr, firstDayStr, cashInvestedData);
         // The component chart need info in stock-info table, so this need to be await.
-        // Remember that stock info need to be fetched after getBalanceQForAllSids().
-        // because getBalanceQForAllSids() will remove sids in allHoldingSids whose balanceQ == 0
-        let balanceQForAllSids = getBalanceQForAllSids(); // this function will modify allHoldingSids
-        stockInfoJson = yield fetchStockSingleDay([...allHoldingSids]);
+        // Remember that stock info need to be fetched after calcBalanceQOfEachSidAndUpdateAllHoldingSids().
+        // because calcBalanceQOfEachSidAndUpdateAllHoldingSids() will remove sids in allHoldingSids whose balanceQ == 0
+        let balanceQOfEachSid = calcBalanceQOfEachSidAndUpdateAllHoldingSids(); // this function will modify allHoldingSids
+        let stockInfoJson = yield fetchStockInfo([...allHoldingSids]);
         if (stockInfoTableBody instanceof HTMLElement) {
             stockinfotable = new StockInfoTable(stockInfoTableBody);
             stockinfotable.build(stockInfoJson["data"], allHoldingSids);
         }
-        let componentData = prepareComponentChartData(balanceQForAllSids, stockInfoJson["data"]);
-        mygooglechart.drawComponentChart(componentData, componentChart);
-        mygooglechart.drawCompareChart(cashInvested, securityMktVal, cashExtracted, handlingFee, compareChart);
+        let mktValPieChartData = prepareMktValPieChartData(balanceQOfEachSid, stockInfoJson["data"]);
+        mygooglechart.drawMktValPieChart(mktValPieChartData, mktValPieChart);
+        mygooglechart.drawCompareChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee, compareChart);
         if (stockWarehouseTableBody instanceof HTMLElement) {
             stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
-            stockwarehousetable.build(stockInfoJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcEachStockCashInvst);
+            stockwarehousetable.build(stockInfoJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
         }
     });
 }
