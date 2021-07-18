@@ -1,4 +1,4 @@
-import { Strategy, BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "./strategy.js";
+import { BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "./strategy.js";
 import { Order } from "./order.js";
 export class Individual {
     constructor(aDiv, name, strayegySetting, initCash, stockHolding) {
@@ -108,37 +108,22 @@ export class Individual {
     makeOrder() {
         // The prices inthe orders that _strategy made is min-sellable and max-payable (i.e. just for reference)
         // The individuals need to bid themselves
-        let orderSetForRef;
         if (this._today != undefined && this._mktPriceAcquired != undefined && this._valueAssessed != undefined) {
-            if (this._strategy instanceof ValueFollower) {
-                orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._valueAssessed, this._mktPriceAcquired);
-            }
-            else if (this._strategy instanceof PriceChaser) {
-                orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired);
-            }
-            else if (this._strategy instanceof Strategy) {
-                orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._mktPriceAcquired, this._strategySetting.params);
-            }
-            else
-                throw "Strategy not Found when Making Order";
-            if (orderSetForRef != undefined) {
-                const qd = orderSetForRef.buyOrder.quantity;
-                const qs = orderSetForRef.sellOrder.quantity;
-                this._maxPayable = orderSetForRef.buyOrder.price;
-                this._minSellable = orderSetForRef.sellOrder.price;
-                this.bid();
-                this.ask();
-                if (this._bidPrice != undefined && this._askPrice != undefined && this._today != undefined) {
-                    this._orderToday = {
-                        "buyOrder": new Order(this, "buy", this._today, this._bidPrice, qd),
-                        "sellOrder": new Order(this, "sell", this._today, this._askPrice, qs)
-                    };
-                }
-                else
-                    throw "_bidPrice/_askPrice/_today is undefined yet, you probably need to do updateMktInfo() first.";
+            let orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._valueAssessed, this._mktPriceAcquired, this._strategySetting.params);
+            const qd = orderSetForRef.buyOrder.quantity;
+            const qs = orderSetForRef.sellOrder.quantity;
+            this._maxPayable = orderSetForRef.buyOrder.price;
+            this._minSellable = orderSetForRef.sellOrder.price;
+            this.bid();
+            this.ask();
+            if (this._bidPrice != undefined && this._askPrice != undefined && this._today != undefined) {
+                this._orderToday = {
+                    "buyOrder": new Order(this, "buy", this._today, this._bidPrice, qd),
+                    "sellOrder": new Order(this, "sell", this._today, this._askPrice, qs)
+                };
             }
             else
-                throw "Somthing wrong when following strategy";
+                throw "_bidPrice/_askPrice/_today is undefined yet, you probably need to do updateMktInfo() first.";
         }
         else
             throw "market info not sufficient when making order";

@@ -1,55 +1,11 @@
 import { Order } from "./order.js";
-export class Strategy {
+import { MyMath } from "./myMath.js";
+export class ValueFollower {
     constructor(strategyName, owner) {
         this.name = strategyName;
         this.owner = owner;
     }
-    // protected recordQuantity(q: number): void {
-    //     this.dailyQList.push(q);
-    //     this.cumulQList.push(this.cumulQList[this.cumulQList.length - 1] + q);
-    // }
-    // protected recordCashFlow(q: number, p: number): void {
-    //     let cashDeltaToday = q * p;
-    //     if (q >= 0) {  // buying
-    //         this.cumulInvestCashList.push(this.cumulInvestCashList[this.cumulInvestCashList.length - 1] + cashDeltaToday);
-    //     } else {  // when selling, count average
-    //         let cahngeRateInQ = this.cumulQList[this.cumulQList.length - 1] / this.cumulQList[this.cumulQList.length - 2];
-    //         this.cumulInvestCashList.push(this.cumulInvestCashList[this.cumulInvestCashList.length - 1] * cahngeRateInQ);
-    //     }
-    //     this.cashList.push(this.cashList[this.cashList.length - 1] - cashDeltaToday);
-    // }
-    // protected calcRateOfReturn(i: number): void {
-    //     if (this.cumulInvestCashList[i] > 0) {
-    //         this.rateOfReturnList.push((this.securMktValList[i] - this.cumulInvestCashList[i]) / this.cumulInvestCashList[i]);
-    //     } else this.rateOfReturnList.push(0);
-    // }
-    // protected recordBuyHistory(q: number, p: number): void {
-    //     if (q > 0) {
-    //         // round to the 3rd decimal
-    //         let key = Math.round((p + Number.EPSILON) * 1000) / 1000;
-    //         if (this.buyHistory[`${key}`] == undefined) this.buyHistory[`${key}`] = q;
-    //         else this.buyHistory[`${key}`] += q;
-    //     }
-    // }
-    normalSample(mu, std) {
-        let u = 0, v = 0;
-        while (u === 0)
-            u = Math.random(); //Converting [0,1) to (0,1)
-        while (v === 0)
-            v = Math.random();
-        return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
-    }
-    avg(arr) {
-        if (arr.length == 0)
-            return 0;
-        return arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
-    }
-    mySigmoid(x) {
-        return 1 / (1 + 150 * Math.pow(Math.E, -10 * x));
-    }
-}
-export class ValueFollower extends Strategy {
-    followStrategy(today, cashOwning, stockHolding, valAssessed, pToday) {
+    followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
         let pd = valAssessed;
         let ps = pd;
         // let qd: number = Math.max(0, Math.floor((cashOwning / pd) * this.mySigmoid((pd - pToday) / pd)));
@@ -66,9 +22,13 @@ export class ValueFollower extends Strategy {
         };
     }
 }
-export class PriceChaser extends Strategy {
-    followStrategy(today, cashOwning, stockHolding, pToday) {
-        let pd = pToday * this.normalSample(1, 0.033);
+export class PriceChaser {
+    constructor(strategyName, owner) {
+        this.name = strategyName;
+        this.owner = owner;
+    }
+    followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
+        let pd = pToday * MyMath.normalSample(1, 0.033);
         let ps = pd;
         // if pd and ps > pToday, it means you expect the price to rise
         // else it means you expect it to fall
@@ -82,13 +42,14 @@ export class PriceChaser extends Strategy {
         };
     }
 }
-export class BHmixGrid extends Strategy {
+export class BHmixGrid {
     constructor(strategyName, owner) {
-        super(strategyName, owner);
+        this.name = strategyName;
+        this.owner = owner;
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    followStrategy(today, cashOwning, stockHolding, pToday, otherParams) {
+    followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
         let r = otherParams.r;
         // this.latestMaxP = -1 * Infinity;
         // this.latestMinP = Infinity;
@@ -180,7 +141,7 @@ export class BHmixGrid extends Strategy {
 //         }
 //     }
 // }
-// export class GridConstQ extends Strategy {
+// export class GridConstQ implements Strategy {
 //     public followStrategy(maxPrice: number, minPrice: number, nTable: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
 //         // Draw divide lines
 //         // numbers in divideLines are in descending order
@@ -200,13 +161,14 @@ export class BHmixGrid extends Strategy {
 //         return result;
 //     }
 // }
-export class GridConstRatio extends Strategy {
+export class GridConstRatio {
     constructor(strategyName, owner) {
-        super(strategyName, owner);
+        this.name = strategyName;
+        this.owner = owner;
         this.standAt = 0;
         this.divideLines = [];
     }
-    followStrategy(today, cashOwning, stockHolding, pToday, otherParams) {
+    followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
         let maxPrice = otherParams["max-price"];
         let minPrice = otherParams["min-price"];
         let nTable = otherParams["n-table"];
@@ -257,24 +219,24 @@ export class GridConstRatio extends Strategy {
     calcStandAt(price, aList) {
         let result = 0;
         for (let each of aList) {
-            if (price >= each) {
+            if (price >= each)
                 return result;
-            }
             result++;
         }
         return result;
     }
 }
-export class Chicken extends Strategy {
+export class Chicken {
     constructor(strategyName, owner) {
-        super(strategyName, owner);
+        this.name = strategyName;
+        this.owner = owner;
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    followStrategy(today, cashOwning, stockHolding, pToday, otherParams) {
+    followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
         let r = otherParams["r"];
         let runawayRate = otherParams["runaway-rate"];
-        let ps = pToday * this.normalSample(1, 0.033);
+        let ps = pToday * MyMath.normalSample(1, 0.033);
         let pd = ps;
         let qd = 0;
         let qs = 0;

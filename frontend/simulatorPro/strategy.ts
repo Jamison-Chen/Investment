@@ -1,70 +1,20 @@
 import { Stock } from "./stock.js";
 import { Order, OrderSet } from "./order.js";
 import { Individual } from "./individual.js";
+import { MyMath } from "./myMath.js";
 export interface Strategy {
     name: string;
     owner: Individual;
-    // dailyQList: number[];
-    // cumulQList: number[];
-    // pList: number[];
-    // cumulInvestCashList: number[];
-    // cashList: number[];
-    // cashOwning: number;
-    // rateOfReturnList: number[];
-    // securMktValList: number[];
-    // stockHolding: Stock[];
-    // totalAssetsList: number[];
-    // buyHistory: any;
-    followStrategy(...args: any[]): OrderSet;
+    followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet;
 }
-export class Strategy implements Strategy {
+export class ValueFollower implements Strategy {
+    public name: string;
+    public owner: Individual;
     constructor(strategyName: string, owner: Individual) {
         this.name = strategyName;
         this.owner = owner;
     }
-    // protected recordQuantity(q: number): void {
-    //     this.dailyQList.push(q);
-    //     this.cumulQList.push(this.cumulQList[this.cumulQList.length - 1] + q);
-    // }
-    // protected recordCashFlow(q: number, p: number): void {
-    //     let cashDeltaToday = q * p;
-    //     if (q >= 0) {  // buying
-    //         this.cumulInvestCashList.push(this.cumulInvestCashList[this.cumulInvestCashList.length - 1] + cashDeltaToday);
-    //     } else {  // when selling, count average
-    //         let cahngeRateInQ = this.cumulQList[this.cumulQList.length - 1] / this.cumulQList[this.cumulQList.length - 2];
-    //         this.cumulInvestCashList.push(this.cumulInvestCashList[this.cumulInvestCashList.length - 1] * cahngeRateInQ);
-    //     }
-    //     this.cashList.push(this.cashList[this.cashList.length - 1] - cashDeltaToday);
-    // }
-    // protected calcRateOfReturn(i: number): void {
-    //     if (this.cumulInvestCashList[i] > 0) {
-    //         this.rateOfReturnList.push((this.securMktValList[i] - this.cumulInvestCashList[i]) / this.cumulInvestCashList[i]);
-    //     } else this.rateOfReturnList.push(0);
-    // }
-    // protected recordBuyHistory(q: number, p: number): void {
-    //     if (q > 0) {
-    //         // round to the 3rd decimal
-    //         let key = Math.round((p + Number.EPSILON) * 1000) / 1000;
-    //         if (this.buyHistory[`${key}`] == undefined) this.buyHistory[`${key}`] = q;
-    //         else this.buyHistory[`${key}`] += q;
-    //     }
-    // }
-    protected normalSample(mu: number, std: number): number {
-        let u = 0, v = 0;
-        while (u === 0) u = Math.random(); //Converting [0,1) to (0,1)
-        while (v === 0) v = Math.random();
-        return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
-    }
-    protected avg(arr: number[]): number {
-        if (arr.length == 0) return 0;
-        return arr.reduce((prev: number, curr: number) => prev + curr, 0) / arr.length;
-    }
-    protected mySigmoid(x: number): number {
-        return 1 / (1 + 150 * Math.pow(Math.E, -10 * x));
-    }
-}
-export class ValueFollower extends Strategy {
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
         let pd: number = valAssessed;
         let ps: number = pd;
         // let qd: number = Math.max(0, Math.floor((cashOwning / pd) * this.mySigmoid((pd - pToday) / pd)));
@@ -81,9 +31,15 @@ export class ValueFollower extends Strategy {
         }
     }
 }
-export class PriceChaser extends Strategy {
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
-        let pd: number = pToday * this.normalSample(1, 0.033);
+export class PriceChaser implements Strategy {
+    public name: string;
+    public owner: Individual;
+    constructor(strategyName: string, owner: Individual) {
+        this.name = strategyName;
+        this.owner = owner;
+    }
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
+        let pd: number = pToday * MyMath.normalSample(1, 0.033);
         let ps: number = pd;
         // if pd and ps > pToday, it means you expect the price to rise
         // else it means you expect it to fall
@@ -97,15 +53,18 @@ export class PriceChaser extends Strategy {
         }
     }
 }
-export class BHmixGrid extends Strategy {
+export class BHmixGrid implements Strategy {
     protected latestMaxP: number;
     protected latestMinP: number;
+    public name: string;
+    public owner: Individual;
     constructor(strategyName: string, owner: Individual) {
-        super(strategyName, owner);
+        this.name = strategyName;
+        this.owner = owner;
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], pToday: number, otherParams: any): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
         let r = otherParams.r;
         // this.latestMaxP = -1 * Infinity;
         // this.latestMinP = Infinity;
@@ -194,7 +153,7 @@ export class BHmixGrid extends Strategy {
 //     }
 // }
 
-// export class GridConstQ extends Strategy {
+// export class GridConstQ implements Strategy {
 //     public followStrategy(maxPrice: number, minPrice: number, nTable: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
 //         // Draw divide lines
 //         // numbers in divideLines are in descending order
@@ -214,15 +173,18 @@ export class BHmixGrid extends Strategy {
 //         return result;
 //     }
 // }
-export class GridConstRatio extends Strategy {
+export class GridConstRatio implements Strategy {
     private standAt: number;
     private divideLines: number[]
+    public name: string;
+    public owner: Individual;
     constructor(strategyName: string, owner: Individual) {
-        super(strategyName, owner);
+        this.name = strategyName;
+        this.owner = owner;
         this.standAt = 0
         this.divideLines = [];
     }
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], pToday: number, otherParams: any): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
         let maxPrice = otherParams["max-price"];
         let minPrice = otherParams["min-price"];
         let nTable = otherParams["n-table"];
@@ -268,27 +230,28 @@ export class GridConstRatio extends Strategy {
     private calcStandAt(price: number, aList: number[]): number {
         let result = 0;
         for (let each of aList) {
-            if (price >= each) {
-                return result;
-            }
+            if (price >= each) return result;
             result++;
         }
         return result;
     }
 }
-export class Chicken extends Strategy {
+export class Chicken implements Strategy {
     private latestMaxP: number;
     private latestMinP: number;
+    public name: string;
+    public owner: Individual;
     constructor(strategyName: string, owner: Individual) {
-        super(strategyName, owner);
+        this.name = strategyName;
+        this.owner = owner;
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], pToday: number, otherParams: any): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
         let r = otherParams["r"];
         let runawayRate = otherParams["runaway-rate"];
 
-        let ps: number = pToday * this.normalSample(1, 0.033);
+        let ps: number = pToday * MyMath.normalSample(1, 0.033);
         let pd: number = ps;
         let qd: number = 0;
         let qs: number = 0;
