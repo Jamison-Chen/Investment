@@ -2,6 +2,7 @@ import { Individual } from './individual.js';
 import { PriceMachine } from './priceMachine.js';
 import { Stock } from "./stock.js";
 import { MyMath } from "./myMath.js";
+import { MyGoogleChart } from "./chart.js";
 class Main {
     constructor() {
         this.STRATEGIES = {
@@ -168,13 +169,13 @@ class Main {
             });
             // prepare demand/supply curve data
             let curveData = this.prepareCurveData(buySideOrderQueue, sellSideOrderQueue);
-            this.applyCurveChart(curveData);
+            MyGoogleChart.drawCurveChart(curveData, this.curveChart);
             // matching buy-side order and sell-side order
             this.matching(today, buySideOrderQueue, sellSideOrderQueue);
             if (today <= this.dayToSimulate) {
-                this.applyMarketEqChart(this.marketEqData);
-                this.applyDealAmountChart(this.dealAmountData);
-                this.applyAssetsCharts(this.myAssetData);
+                MyGoogleChart.drawMarketEqChart(this.marketEqData, this.marketEqChart);
+                MyGoogleChart.drawDealAmountChart(this.dealAmountData, this.dealAmountChart);
+                MyGoogleChart.drawAssetsCharts(this.myAssetData, this.myAssetChart);
                 setTimeout(() => { this.simulate(); }, this.pauseTime);
             }
             else {
@@ -295,86 +296,6 @@ class Main {
         }
         else
             throw "initialEq undefined while preparing curve data";
-    }
-    applyMarketEqChart(dataIn) {
-        if (this.marketEqChart != null) {
-            google.charts.load('current', { 'packages': ["corechart"] });
-            let options = {
-                // title: 'Given Price vs. Market Equilibrium',
-                // titleTextStyle: {
-                //     fontSize: 14,
-                //     bold: false,
-                //     color: "#777"
-                // },
-                curveType: 'none',
-                width: this.marketEqChart.offsetWidth,
-                height: this.marketEqChart.offsetHeight,
-                chartArea: { left: "10%", top: "5%", width: '75%', height: '90%' }
-            };
-            google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "LineChart", this.marketEqChart));
-        }
-    }
-    applyDealAmountChart(dataIn) {
-        if (this.dealAmountChart != null) {
-            google.charts.load('current', { 'packages': ["corechart"] });
-            let options = {
-                // title: 'Deal Amount',
-                // titleTextStyle: {
-                //     fontSize: 14,
-                //     bold: false,
-                //     color: "#777"
-                // },
-                width: this.dealAmountChart.offsetWidth,
-                height: this.dealAmountChart.offsetHeight,
-                legend: { position: "none" },
-                series: { 0: { color: "#888" } },
-                chartArea: { left: "10%", top: "5%", width: '75%', height: '90%' }
-            };
-            google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "ColumnChart", this.dealAmountChart));
-        }
-    }
-    applyCurveChart(dataIn) {
-        if (this.curveChart != null) {
-            google.charts.load('current', { 'packages': ["corechart"] });
-            let options = {
-                // title: 'Demand / Supply Curve',
-                // titleTextStyle: {
-                //     fontSize: 14,
-                //     bold: false,
-                //     color: "#777"
-                // },
-                curveType: 'none',
-                width: this.curveChart.offsetWidth,
-                height: this.curveChart.offsetHeight,
-                vAxis: { title: 'Q' },
-                hAxis: { title: 'P' },
-                chartArea: { left: "10%", top: "5%", width: '75%', height: '90%' }
-            };
-            google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "LineChart", this.curveChart));
-        }
-    }
-    applyAssetsCharts(dataIn) {
-        if (this.myAssetChart != null) {
-            google.charts.load('current', { 'packages': ["corechart"] });
-            let options = {
-                title: "My Asset",
-                titleTextStyle: {
-                    fontSize: 16,
-                    bold: false,
-                    color: "#777"
-                },
-                curveType: 'none',
-                width: this.myAssetChart.offsetWidth * 0.98,
-                height: this.myAssetChart.offsetHeight * 0.98,
-                chartArea: { left: "15%", top: "10%", width: '65%', height: '80%' }
-            };
-            google.charts.setOnLoadCallback(() => this.drawSimulatedChart(dataIn, options, "LineChart", this.myAssetChart));
-        }
-    }
-    drawSimulatedChart(dataIn, options, chartType, targetDiv) {
-        let data = google.visualization.arrayToDataTable(dataIn);
-        let chart = new google.visualization[chartType](targetDiv);
-        chart.draw(data, options);
     }
     buildCompositionSettingView() {
         var _a;
