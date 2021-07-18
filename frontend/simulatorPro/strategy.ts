@@ -34,12 +34,16 @@ export class ValueFollower implements Strategy {
 export class PriceChaser implements Strategy {
     public name: string;
     public owner: Individual;
+    public attitude: number;
     constructor(strategyName: string, owner: Individual) {
         this.name = strategyName;
         this.owner = owner;
+        this.attitude = 1;
     }
     public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
-        let pd: number = pToday * MyMath.normalSample(1, 0.033);
+        this.attitude *= MyMath.normalSample(1, 0.033);
+
+        let pd: number = pToday * Math.max(0.9, Math.min(1.1, this.attitude));
         let ps: number = pd;
         // if pd and ps > pToday, it means you expect the price to rise
         // else it means you expect it to fall

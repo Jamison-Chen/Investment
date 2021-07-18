@@ -26,9 +26,11 @@ export class PriceChaser {
     constructor(strategyName, owner) {
         this.name = strategyName;
         this.owner = owner;
+        this.attitude = 1;
     }
     followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
-        let pd = pToday * MyMath.normalSample(1, 0.033);
+        this.attitude *= MyMath.normalSample(1, 0.033);
+        let pd = pToday * Math.max(0.9, Math.min(1.1, this.attitude));
         let ps = pd;
         // if pd and ps > pToday, it means you expect the price to rise
         // else it means you expect it to fall
