@@ -1,5 +1,6 @@
 import { BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "./strategy.js";
 import { Order } from "./order.js";
+import { MyMath } from "./myMath.js";
 export class Individual {
     constructor(aDiv, name, strayegySetting, initCash, stockHolding) {
         this.divControlled = aDiv;
@@ -39,26 +40,8 @@ export class Individual {
     get tradeAmount() {
         return this._tradeAmount;
     }
-    get valueAssessed() {
-        return this._valueAssessed;
-    }
-    get mktPriceAcquired() {
-        return this._mktPriceAcquired;
-    }
     get orderToday() {
         return this._orderToday;
-    }
-    get maxPayable() {
-        return this._maxPayable;
-    }
-    get bidPrice() {
-        return this._bidPrice;
-    }
-    get minSellable() {
-        return this._minSellable;
-    }
-    get askPrice() {
-        return this._askPrice;
     }
     calcReturn(stockPrice) {
         return Math.round((this.calcTotalAsset(stockPrice) / this._initialTotalAsset - 1) * 1000) / 1000;
@@ -129,9 +112,10 @@ export class Individual {
             throw "market info not sufficient when making order";
     }
     initBidPrice() {
-        this._aggressiveness = this.oneTailNormalSample(this._aggressiveness, 0.25, "right");
-        if (this._maxPayable != undefined)
+        this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
+        if (this._maxPayable != undefined) {
             this._bidPrice = this._maxPayable * Math.max(0, (1 - this._aggressiveness));
+        }
         else
             throw "The _maxPayable is still undefined.";
     }
@@ -139,7 +123,7 @@ export class Individual {
         if (this._maxPayable != undefined && this._bidPrice != undefined) {
             let delta = this._maxPayable - this._bidPrice;
             if (delta > 0) {
-                this._bidPrice += Math.min(delta, delta * this.oneTailNormalSample(0, 0.5, "right"));
+                this._bidPrice += Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
                 this._aggressiveness = 1 - this._bidPrice / this._maxPayable;
             }
             else if (delta < 0)
@@ -149,7 +133,7 @@ export class Individual {
             this.initBidPrice();
     }
     initAskPrice() {
-        this._aggressiveness = this.oneTailNormalSample(this._aggressiveness, 0.25, "right");
+        this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
         if (this._minSellable != undefined)
             this._askPrice = this._minSellable * (1 + this._aggressiveness);
         else
@@ -159,7 +143,7 @@ export class Individual {
         if (this._minSellable != undefined && this._askPrice != undefined) {
             let delta = this._askPrice - this._minSellable;
             if (delta > 0) {
-                this._askPrice -= Math.min(delta, delta * this.oneTailNormalSample(0, 0.5, "right"));
+                this._askPrice -= Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
                 this._aggressiveness = this._askPrice / this._minSellable - 1;
             }
             else if (delta < 0)
@@ -190,17 +174,5 @@ export class Individual {
         this._cashOwning += qOut * dealPrice;
         this._tradeAmount += qOut;
         return stockOut;
-    }
-    // Other helper methods
-    oneTailNormalSample(mu, std, side) {
-        let u = 0, v = 0;
-        while (u === 0)
-            u = Math.random(); //Converting [0,1) to (0,1)
-        while (v === 0)
-            v = Math.random();
-        if (side == "left") {
-            return Math.abs(std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) * -1 + mu;
-        }
-        return Math.abs(std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) + mu;
     }
 }

@@ -1,6 +1,7 @@
 import { Individual } from './individual.js';
 import { PriceMachine } from './priceMachine.js';
 import { Stock } from "./stock.js";
+import { MyMath } from "./myMath.js";
 class Main {
     constructor() {
         this.STRATEGIES = {
@@ -56,26 +57,6 @@ class Main {
         this.marketEqChart = document.getElementById("market-eq-chart");
         this.dealAmountChart = document.getElementById("deal-amount-chart");
         this.curveChart = document.getElementById("curve-chart");
-    }
-    suffleArray(anArray) {
-        for (let i = anArray.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            const temp = anArray[i];
-            anArray[i] = anArray[j];
-            anArray[j] = temp;
-        }
-        return anArray;
-    }
-    avg(arr) {
-        return arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
-    }
-    normalSample(mu, std) {
-        let u = 0, v = 0;
-        while (u === 0)
-            u = Math.random(); //Converting [0,1) to (0,1)
-        while (v === 0)
-            v = Math.random();
-        return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
     }
     createNodeDiv(pauseTime) {
         let nodeDiv = document.createElement("div");
@@ -142,8 +123,8 @@ class Main {
                         stockGot = stockLeft;
                     }
                     else {
-                        cashOwning = Math.min(cashLeft, Math.floor(this.initTotalCash / this.numOfIndividual * Math.max(0, this.normalSample(1, 0.1))));
-                        stockGot = Math.min(stockLeft, Math.floor(this.totalStock / this.numOfIndividual * Math.max(0, this.normalSample(1, 1))));
+                        cashOwning = Math.min(cashLeft, Math.floor(this.initTotalCash / this.numOfIndividual * Math.max(0, MyMath.normalSample(1, 0.1))));
+                        stockGot = Math.min(stockLeft, Math.floor(this.totalStock / this.numOfIndividual * Math.max(0, MyMath.normalSample(1, 1))));
                     }
                     cashLeft -= cashOwning;
                     stockLeft -= stockGot;
@@ -165,7 +146,7 @@ class Main {
             // everyone update market info and make order
             this.everyoneUpdInfoAndOrder(today);
             // suffle individual list before matching
-            this.individualList = this.suffleArray(this.individualList);
+            this.individualList = MyMath.suffleArray(this.individualList);
             // buy-side queue & sell-side queue
             let buySideOrderQueue = [];
             let sellSideOrderQueue = [];
@@ -233,7 +214,7 @@ class Main {
                 dealPair.push({ "buySide": buySideOrderQueue[i].owner, "sellSide": sellSideOrderQueue[j].owner, "q": dealQ });
             }
             if (buySideOrderQueue[i].quantity == 0 && sellSideOrderQueue[j].quantity == 0) {
-                finalDealPrice = this.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
+                finalDealPrice = MyMath.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
             }
             else if (buySideOrderQueue[i].quantity == 0)
                 finalDealPrice = sellSideOrderQueue[j].price;
@@ -831,9 +812,3 @@ class Main {
 }
 let main = new Main();
 main.start();
-// var oReq = new XMLHttpRequest();
-// oReq.addEventListener("load", () => {
-//     console.log(oReq.responseText);
-// });
-// oReq.open("GET", "./README.md");
-// oReq.send();

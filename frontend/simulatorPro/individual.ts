@@ -1,6 +1,7 @@
 import { Strategy, BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "./strategy.js";
 import { Stock } from "./stock.js";
 import { Order, OrderSet } from "./order.js";
+import { MyMath } from "./myMath.js";
 export class Individual {
     // attributes about the appearance
     public divControlled: HTMLElement;
@@ -62,26 +63,8 @@ export class Individual {
     public get tradeAmount(): number {
         return this._tradeAmount;
     }
-    public get valueAssessed(): undefined | number {
-        return this._valueAssessed;
-    }
-    public get mktPriceAcquired(): undefined | number {
-        return this._mktPriceAcquired;
-    }
     public get orderToday(): OrderSet | undefined {
         return this._orderToday;
-    }
-    public get maxPayable(): undefined | number {
-        return this._maxPayable;
-    }
-    public get bidPrice(): undefined | number {
-        return this._bidPrice;
-    }
-    public get minSellable(): undefined | number {
-        return this._minSellable;
-    }
-    public get askPrice(): undefined | number {
-        return this._askPrice;
     }
     public calcReturn(stockPrice: number): number {
         return Math.round((this.calcTotalAsset(stockPrice) / this._initialTotalAsset - 1) * 1000) / 1000;
@@ -148,21 +131,22 @@ export class Individual {
         } else throw "market info not sufficient when making order";
     }
     public initBidPrice(): void {
-        this._aggressiveness = this.oneTailNormalSample(this._aggressiveness, 0.25, "right");
-        if (this._maxPayable != undefined) this._bidPrice = this._maxPayable * Math.max(0, (1 - this._aggressiveness));
-        else throw "The _maxPayable is still undefined.";
+        this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
+        if (this._maxPayable != undefined) {
+            this._bidPrice = this._maxPayable * Math.max(0, (1 - this._aggressiveness));
+        } else throw "The _maxPayable is still undefined.";
     }
     public bid(): void {
         if (this._maxPayable != undefined && this._bidPrice != undefined) {
             let delta = this._maxPayable - this._bidPrice;
             if (delta > 0) {
-                this._bidPrice += Math.min(delta, delta * this.oneTailNormalSample(0, 0.5, "right"));
+                this._bidPrice += Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
                 this._aggressiveness = 1 - this._bidPrice / this._maxPayable;
             } else if (delta < 0) this.initBidPrice();
         } else this.initBidPrice();
     }
     public initAskPrice(): void {
-        this._aggressiveness = this.oneTailNormalSample(this._aggressiveness, 0.25, "right");
+        this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
         if (this._minSellable != undefined) this._askPrice = this._minSellable * (1 + this._aggressiveness);
         else throw "The _minSellable is still undefined.";
     }
@@ -170,7 +154,7 @@ export class Individual {
         if (this._minSellable != undefined && this._askPrice != undefined) {
             let delta = this._askPrice - this._minSellable;
             if (delta > 0) {
-                this._askPrice -= Math.min(delta, delta * this.oneTailNormalSample(0, 0.5, "right"));
+                this._askPrice -= Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
                 this._aggressiveness = this._askPrice / this._minSellable - 1;
             } else if (delta < 0) this.initAskPrice();
         } else this.initAskPrice();
@@ -195,15 +179,5 @@ export class Individual {
         this._cashOwning += qOut * dealPrice;
         this._tradeAmount += qOut;
         return stockOut;
-    }
-    // Other helper methods
-    public oneTailNormalSample(mu: number, std: number, side: string): number {
-        let u = 0, v = 0;
-        while (u === 0) u = Math.random(); //Converting [0,1) to (0,1)
-        while (v === 0) v = Math.random();
-        if (side == "left") {
-            return Math.abs(std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) * -1 + mu;
-        }
-        return Math.abs(std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) + mu;
     }
 }
