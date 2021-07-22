@@ -9,7 +9,7 @@ export class MyMath {
         return anArray;
     }
     static avg(arr) {
-        if (arr.length == 0)
+        if (arr.length === 0)
             return 0;
         return arr.reduce((prev, curr) => prev + curr, 0) / arr.length;
     }
@@ -30,7 +30,7 @@ export class MyMath {
             u = Math.random(); //Converting [0,1) to (0,1)
         while (v === 0)
             v = Math.random();
-        if (side == "left") {
+        if (side === "left") {
             return Math.abs(std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) * -1 + mu;
         }
         return Math.abs(std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) + mu;

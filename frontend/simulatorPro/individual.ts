@@ -81,19 +81,19 @@ export class Individual {
         return totalStockVal;
     }
     protected chooseStrayegy(setting: any): Strategy {
-        if (setting.name == "ValueFollower") {
+        if (setting.name === "ValueFollower") {
             this.divControlled.style.backgroundColor = "#D00";
             return new ValueFollower(setting.name, this);
-        } else if (setting.name == "PriceChaser") {
+        } else if (setting.name === "PriceChaser") {
             this.divControlled.style.backgroundColor = "#000";
             return new PriceChaser(setting.name, this);
-        } else if (setting.name == "BHmixGrid") {
+        } else if (setting.name === "BHmixGrid") {
             this.divControlled.style.backgroundColor = "#0A0";
             return new BHmixGrid(setting.name, this);
-        } else if (setting.name == "GridConstRatio") {
+        } else if (setting.name === "GridConstRatio") {
             this.divControlled.style.backgroundColor = "#00A";
             return new GridConstRatio(setting.name, this);
-        } else if (setting.name == "Chicken") {
+        } else if (setting.name === "Chicken") {
             this.divControlled.style.backgroundColor = "#A0A";
             return new Chicken(setting.name, this);
         }

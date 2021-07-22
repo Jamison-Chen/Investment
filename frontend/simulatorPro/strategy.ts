@@ -42,8 +42,8 @@ export class PriceChaser implements Strategy {
     }
     public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
         this.attitude *= MyMath.normalSample(1, 0.033);
-
-        let pd: number = pToday * Math.max(0.9, Math.min(1.1, this.attitude));
+        let pd: number = pToday * MyMath.normalSample(1, 0.033);
+        // let pd: number = pToday * Math.max(0.9, Math.min(1.1, this.attitude));
         let ps: number = pd;
         // if pd and ps > pToday, it means you expect the price to rise
         // else it means you expect it to fall
@@ -74,7 +74,7 @@ export class BHmixGrid implements Strategy {
         // this.latestMinP = Infinity;
         // let latestMaxP: number = -1 * Infinity;
         // let latestMinP: number = Infinity;
-        if (stockHolding.length == 0 || today == 1) {
+        if (stockHolding.length === 0 || today === 1) {
             // this.latestMaxP = pToday* this.normalSample(1, 0.033)
             this.latestMaxP = pToday;
             this.latestMinP = this.latestMaxP;
@@ -88,7 +88,7 @@ export class BHmixGrid implements Strategy {
         let pd: number = this.latestMinP;
         let qd: number = 0;
         let qs: number = 0;
-        if (stockHolding.length == 0) qd = this.calcQToday(cashOwning, pToday, r);
+        if (stockHolding.length === 0) qd = this.calcQToday(cashOwning, pToday, r);
         else {
             // If price record low, buy in
             if (pToday < this.latestMaxP && pToday < this.latestMinP) qd = this.calcQToday(cashOwning, pToday, r);
@@ -123,7 +123,7 @@ export class BHmixGrid implements Strategy {
 }
 // export class PlannedBHmixGrid extends BHmixGrid {
 //     public followStrategy(r: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
-//         if (stockHolding.length == 0 || today == 1) {
+//         if (stockHolding.length === 0 || today === 1) {
 //             this.latestMaxP = pToday;
 //             this.latestMinP = this.latestMaxP;
 //         } else {
@@ -136,7 +136,7 @@ export class BHmixGrid implements Strategy {
 //         let pd: number = this.latestMinP;
 //         let qd: number = 0;
 //         let qs: number = 0;
-//         if (stockHolding.length == 0) qd = this.calcQToday(cashOwning, pToday, r);
+//         if (stockHolding.length === 0) qd = this.calcQToday(cashOwning, pToday, r);
 //         else {
 //             // If price record low, buy in
 //             if (pToday < this.latestMaxP && pToday < this.latestMinP) qd = this.calcQToday(cashOwning, pToday, r);
@@ -198,7 +198,7 @@ export class GridConstRatio implements Strategy {
         let pd: number = pToday * 1.05;    // bid a little bit higher for getting dealt more easily
         let qd: number = 0;
         let qs: number = 0;
-        if (today == 1) {
+        if (today === 1) {
             // Draw divide lines
             // numbers in divideLines are in descending order
             for (let i = 0; i < nTable + 1; i++) {
@@ -259,7 +259,7 @@ export class Chicken implements Strategy {
         let pd: number = ps;
         let qd: number = 0;
         let qs: number = 0;
-        if (stockHolding.length == 0) {
+        if (stockHolding.length === 0) {
             if (pd > pToday) {
                 this.latestMinP = pd;
                 this.latestMaxP = pd;

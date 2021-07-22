@@ -23,7 +23,7 @@ export class PriceMachine {
         return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
     }
     public genAssessedVal(needCount: boolean): number {
-        if (this._numOfPairOut > 0 && this._numOfPairOut % this._priceChangeSpeed == 0) {
+        if (this._numOfPairOut > 0 && this._numOfPairOut % this._priceChangeSpeed === 0) {
             // random walking equilibrium
             this._equilibrium *= this.normalSample(1, 0.001);
             this._numOfPairOut++;

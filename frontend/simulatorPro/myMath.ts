@@ -9,7 +9,7 @@ export class MyMath {
         return anArray;
     }
     public static avg(arr: number[]): number {
-        if (arr.length == 0) return 0;
+        if (arr.length === 0) return 0;
         return arr.reduce((prev: number, curr: number) => prev + curr, 0) / arr.length;
     }
     public static mySigmoid(x: number): number {
@@ -25,7 +25,7 @@ export class MyMath {
         let u = 0, v = 0;
         while (u === 0) u = Math.random(); //Converting [0,1) to (0,1)
         while (v === 0) v = Math.random();
-        if (side == "left") {
+        if (side === "left") {
             return Math.abs(std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) * -1 + mu;
         }
         return Math.abs(std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v)) + mu;

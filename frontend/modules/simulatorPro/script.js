@@ -119,7 +119,7 @@ class Main {
                     let newName = this.genName(20);
                     let cashOwning;
                     let stockGot;
-                    if (j == this.numOfIndividual - 1) {
+                    if (j === this.numOfIndividual - 1) {
                         cashOwning = cashLeft;
                         stockGot = stockLeft;
                     }
@@ -190,7 +190,7 @@ class Main {
             for (let eachOne of this.individualList) {
                 let valAssessed = this.pm.genAssessedVal(true);
                 let latestPrice = this.marketEqData.slice(-1)[0].slice(-1)[0];
-                if (typeof latestPrice == "string")
+                if (typeof latestPrice === "string")
                     latestPrice = parseFloat(latestPrice);
                 eachOne.updateMktInfo(today, valAssessed, latestPrice);
                 eachOne.makeOrder();
@@ -214,18 +214,18 @@ class Main {
                 totalDealQ += dealQ;
                 dealPair.push({ "buySide": buySideOrderQueue[i].owner, "sellSide": sellSideOrderQueue[j].owner, "q": dealQ });
             }
-            if (buySideOrderQueue[i].quantity == 0 && sellSideOrderQueue[j].quantity == 0) {
+            if (buySideOrderQueue[i].quantity === 0 && sellSideOrderQueue[j].quantity === 0) {
                 finalDealPrice = MyMath.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
             }
-            else if (buySideOrderQueue[i].quantity == 0)
+            else if (buySideOrderQueue[i].quantity === 0)
                 finalDealPrice = sellSideOrderQueue[j].price;
-            else if (sellSideOrderQueue[j].quantity == 0)
+            else if (sellSideOrderQueue[j].quantity === 0)
                 finalDealPrice = buySideOrderQueue[i].price;
             else
                 throw "wierd!";
-            if (buySideOrderQueue[i].quantity == 0)
+            if (buySideOrderQueue[i].quantity === 0)
                 i++;
-            if (sellSideOrderQueue[j].quantity == 0)
+            if (sellSideOrderQueue[j].quantity === 0)
                 j++;
             valid =
                 buySideOrderQueue.length > i &&
@@ -233,9 +233,9 @@ class Main {
                     buySideOrderQueue[i].price >= sellSideOrderQueue[j].price;
         }
         if (this.marketEqData != undefined && this.dealAmountData != undefined && this.myAssetData != undefined && this.pm != undefined && this.me != undefined) {
-            if (finalDealPrice == undefined) {
+            if (finalDealPrice === undefined) {
                 let oldPrice = this.marketEqData[this.marketEqData.length - 1][2];
-                if (typeof oldPrice == "number")
+                if (typeof oldPrice === "number")
                     finalDealPrice = oldPrice;
                 else
                     finalDealPrice = parseFloat(oldPrice);
@@ -257,7 +257,7 @@ class Main {
         if (this.marketEqData != undefined && this.individualList != undefined) {
             for (let each of this.individualList) {
                 let finalPrice = this.marketEqData[this.marketEqData.length - 1][2];
-                if (typeof finalPrice == "string")
+                if (typeof finalPrice === "string")
                     finalPrice = parseFloat(finalPrice);
                 let info = document.createElement("div");
                 let i1 = document.createElement("div");
@@ -328,7 +328,7 @@ class Main {
                 }
                 let allDetailBtns = document.getElementsByClassName("strategy-detail-btn");
                 for (let eachBtn of allDetailBtns) {
-                    if (eachBtn == e.currentTarget)
+                    if (eachBtn === e.currentTarget)
                         eachBtn.classList.add("active");
                     else
                         eachBtn.classList.remove("active");
@@ -343,7 +343,7 @@ class Main {
             let detailField = document.createElement("div");
             detailField.id = `${eachStrategy}-detail-field`;
             detailField.classList.add("detail-field");
-            if (this.STRATEGIES[eachStrategy].otherDetails.length == 0) {
+            if (this.STRATEGIES[eachStrategy].otherDetails.length === 0) {
                 let paramRow = document.createElement("div");
                 paramRow.classList.add("parameter-row");
                 let paramLabel = document.createElement("div");
@@ -403,7 +403,7 @@ class Main {
             let detailField = document.createElement("div");
             detailField.id = `my-${eachStrategy}-detail-field`;
             detailField.classList.add("detail-field");
-            if (this.STRATEGIES[eachStrategy].otherDetails.length == 0) {
+            if (this.STRATEGIES[eachStrategy].otherDetails.length === 0) {
                 let paramRow = document.createElement("div");
                 paramRow.classList.add("parameter-row");
                 let paramLabel = document.createElement("div");
@@ -451,7 +451,7 @@ class Main {
             }
             let allDetailBtns = document.getElementsByClassName("strategy-detail-btn");
             for (let eachBtn of allDetailBtns) {
-                if (eachBtn == e.currentTarget)
+                if (eachBtn === e.currentTarget)
                     eachBtn.classList.add("active");
                 else
                     eachBtn.classList.remove("active");
@@ -609,7 +609,7 @@ class Main {
         let menuOption = document.getElementsByClassName("parameter-menu-option");
         for (let eachOption of menuOption) {
             if (eachOption instanceof HTMLOptionElement) {
-                if (eachOption.value == this.myselfSetting.strategyLabel)
+                if (eachOption.value === this.myselfSetting.strategyLabel)
                     eachOption.selected = true;
                 else
                     eachOption.selected = false;
@@ -686,7 +686,7 @@ class Main {
                     (_a = document.getElementById(`${e.currentTarget.htmlFor}`)) === null || _a === void 0 ? void 0 : _a.classList.add("active");
                 }
                 for (let eachTab of this.allSettingHeaderTabs) {
-                    if (eachTab == e.currentTarget)
+                    if (eachTab === e.currentTarget)
                         eachTab.classList.add("active");
                     else
                         eachTab.classList.remove("active");
