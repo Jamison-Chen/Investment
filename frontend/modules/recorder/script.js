@@ -66,7 +66,7 @@ function decideURL(sidList, date) {
     if (date != "" && sidList.length != 0) {
         return `${endPoint}fetch-stock-info?date=${date}&sid-list=${sidList.join(",")}`;
     }
-    else if (date == "" && sidList.length != 0) {
+    else if (date === "" && sidList.length != 0) {
         return `${endPoint}fetch-stock-info?sid-list=${sidList.join(",")}`;
     }
     else
@@ -101,7 +101,7 @@ function createTradeRecord(e) {
         let hasUnfilledBlank = false;
         for (let each of allRecordFormInputs) {
             if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
-                if (each == dealTimeRecordInput) {
+                if (each === dealTimeRecordInput) {
                     requestBody.setAttribute(each.name, each.value.split("-").join(""));
                 }
                 else if (each.value != "")
@@ -134,7 +134,7 @@ function prepareCashInvChartData(endDateStr, data) {
             dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
         for (let eachRecord of data) {
             let t = eachRecord["deal-time"];
-            if (t == parseInt(eachDateStr)) {
+            if (t === parseInt(eachDateStr)) {
                 let s = eachRecord["sid"];
                 let p = eachRecord["deal-price"];
                 let q = eachRecord["deal-quantity"];
@@ -149,7 +149,7 @@ function prepareCashInvChartData(endDateStr, data) {
                 }
                 else { // When selling
                     for (let eachT in stockWarehouse[s]) {
-                        if (q == 0)
+                        if (q === 0)
                             break;
                         if (parseInt(eachT) < t) {
                             for (let eachP in stockWarehouse[s][eachT]) {
@@ -186,13 +186,13 @@ function prepareCashInvChartData(endDateStr, data) {
     // result = [["Date", ...allHoldingSids, "Total"], ...result];
     result = [["Date", "Cash Invested"], ...result.map(i => [i[0], i[i.length - 1]])]; // only use the "total" field
     let latestCashInv = result[result.length - 1][1];
-    if (typeof latestCashInv == "number")
+    if (typeof latestCashInv === "number")
         totalCashInvested = latestCashInv;
     return result;
 }
 function calcBalanceQOfEachSidAndUpdateAllHoldingSids() {
     let hashMapResult = {};
-    // Count Q for each Sid and remove those whose Q == 0
+    // Count Q for each Sid and remove those whose Q === 0
     for (let eachSid in stockWarehouse) {
         let eachRow = [eachSid, 0];
         for (let eachDay in stockWarehouse[eachSid]) {
@@ -230,7 +230,7 @@ function prepareMktValPieChartData(balanceQOfEachSids, stockInfoData) {
     let mktValOfOthers = 0;
     if (smallMktValStocks.length > 1) {
         for (let each of smallMktValStocks) {
-            if (typeof each[1] == "number")
+            if (typeof each[1] === "number")
                 mktValOfOthers += each[1];
         }
         result.push(["Others", mktValOfOthers]);
@@ -251,7 +251,7 @@ function expandTradeRecordForm(e) {
     createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.add("active");
 }
 function foldTradeRecordForm(e) {
-    if (e.target == createTradeRecordFormContainer) {
+    if (e.target === createTradeRecordFormContainer) {
         createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.remove("active");
     }
 }
@@ -288,7 +288,7 @@ function getStartDateStr(endDate, rollbackLength) {
 function showEachStockDetail(e, sid, individualMktVal) {
     // control which to highlight
     for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
-        if (allStockWarehouseTableRows[i] == e.currentTarget) {
+        if (allStockWarehouseTableRows[i] === e.currentTarget) {
             allStockWarehouseTableRows[i].classList.add("active");
         }
         else
@@ -317,7 +317,7 @@ function calcCashInvstOfEachSid(sid) {
     return cashInvstOfEachSid;
 }
 function decideEndPoint() {
-    if (window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost") {
+    if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
         endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
     }
     else
@@ -339,7 +339,7 @@ function addAllLstnrAboutCreatingRecord() {
 }
 function addKeyboardEventLstnr() {
     window.addEventListener("keydown", (e) => {
-        if (e.keyCode == 13) {
+        if (e.keyCode === 13) {
             if (createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.contains("active"))
                 submitBtn === null || submitBtn === void 0 ? void 0 : submitBtn.click();
         }
@@ -354,7 +354,7 @@ function makeViewTogglerControllable() {
 function moveTogglerMask(e) {
     if (togglerMask instanceof HTMLElement && upperPart instanceof HTMLElement) {
         togglerMask.style.left = (-1 * parseFloat(togglerMask.style.left) + 50) + "%";
-        if (upperPart.className == "overview")
+        if (upperPart.className === "overview")
             upperPart.className = "individual";
         else
             upperPart.className = "overview";
@@ -368,7 +368,7 @@ function makeTabControllable() {
 }
 function highlightTab(e) {
     for (let i = 0; i < allTabs.length; i++) {
-        if (allTabs[i] == e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
+        if (allTabs[i] === e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
             allTabs[i].classList.add("active");
             allLowerTableContainers[i].classList.add("active");
             allLowerTableContainers[i].classList.remove("close");
@@ -421,7 +421,7 @@ function main() {
         setupCashInvShowRangeInput(todayStr, firstDayStr, cashInvestedData);
         // The component chart need info in stock-info table, so this need to be await.
         // Remember that stock info need to be fetched after calcBalanceQOfEachSidAndUpdateAllHoldingSids().
-        // because calcBalanceQOfEachSidAndUpdateAllHoldingSids() will remove sids in allHoldingSids whose balanceQ == 0
+        // because calcBalanceQOfEachSidAndUpdateAllHoldingSids() will remove sids in allHoldingSids whose balanceQ === 0
         let balanceQOfEachSid = calcBalanceQOfEachSidAndUpdateAllHoldingSids(); // this function will modify allHoldingSids
         let stockInfoJson = yield fetchStockInfo([...allHoldingSids]);
         if (stockInfoTableBody instanceof HTMLElement) {

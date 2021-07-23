@@ -13,7 +13,7 @@ export class MyGoogleChart {
     public drawCashInvestedChart(startDate: string, dataIn: (string | number)[][], chartDiv: HTMLElement | null): void {
         google.charts.load('current', { 'packages': ["corechart"] });
         startDate = startDate.split("-").join("");
-        dataIn = dataIn.filter(i => i[0] == "Date" || (typeof i[0] == "string" && parseInt(i[0]) >= parseInt(startDate)));
+        dataIn = dataIn.filter(i => i[0] === "Date" || (typeof i[0] === "string" && parseInt(i[0]) >= parseInt(startDate)));
         let options = {
             title: '累計投入現金',
             titleTextStyle: {

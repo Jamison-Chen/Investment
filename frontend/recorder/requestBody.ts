@@ -25,11 +25,11 @@ export class CreateRequestBody extends RequestBody {
         super("create");
     }
     public setAttribute(attrName: string, value: string): void {
-        if (attrName == "deal-price") this.dealPrice = value;
-        else if (attrName == "deal-quantity") this.dealQuantity = value;
-        else if (attrName == "deal-time") this.dealTime = value;
-        else if (attrName == "handling-fee") this.handlingFee = value;
-        else if (attrName == "sid") this.sid = value;
+        if (attrName === "deal-price") this.dealPrice = value;
+        else if (attrName === "deal-quantity") this.dealQuantity = value;
+        else if (attrName === "deal-time") this.dealTime = value;
+        else if (attrName === "handling-fee") this.handlingFee = value;
+        else if (attrName === "sid") this.sid = value;
     }
     public toURLSearchParams(): URLSearchParams {
         let result = super.toURLSearchParams();
@@ -61,12 +61,12 @@ export class UpdateRequestBody extends RequestBody {
         super("update");
     }
     public setAttribute(attrName: string, value: string): void {
-        if (attrName == "id") this.id = value;
-        else if (attrName == "deal-price") this.dealPrice = value;
-        else if (attrName == "deal-quantity") this.dealQuantity = value;
-        else if (attrName == "deal-time") this.dealTime = value;
-        else if (attrName == "handling-fee") this.handlingFee = value;
-        else if (attrName == "sid") this.sid = value;
+        if (attrName === "id") this.id = value;
+        else if (attrName === "deal-price") this.dealPrice = value;
+        else if (attrName === "deal-quantity") this.dealQuantity = value;
+        else if (attrName === "deal-time") this.dealTime = value;
+        else if (attrName === "handling-fee") this.handlingFee = value;
+        else if (attrName === "sid") this.sid = value;
     }
     public toURLSearchParams(): URLSearchParams {
         let result = super.toURLSearchParams();

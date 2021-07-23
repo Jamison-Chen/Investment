@@ -89,7 +89,7 @@ function selectStrategy(e: Event, s: Strategy, args: (string | number)[]): void 
 }
 
 function execStrategy(s: Strategy, args: (string | number)[]): void {
-    if (s.dailyQList.length == 0) {
+    if (s.dailyQList.length === 0) {
         s.followStrategy(...args);
     }
     let comprehensiveData: (string | number)[][] = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
@@ -114,7 +114,7 @@ function compareStrategies(e: Event, strategies: [Strategy, (string | number)[]]
     let comparedData: (string | number)[][] = [["Day"]];
     for (let eachStrategy of strategies) {
         comparedData[0].push(eachStrategy[0].name)
-        if (eachStrategy[0].dailyQList.length == 0) {
+        if (eachStrategy[0].dailyQList.length === 0) {
             eachStrategy[0].followStrategy(...eachStrategy[1])
         }
         for (let i = 0; i < eachStrategy[0].totalAssetsList.length; i++) {

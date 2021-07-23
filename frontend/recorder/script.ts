@@ -61,7 +61,7 @@ function fetchStockInfo(sidList: string[], date: string = ""): Promise<void> {
 function decideURL(sidList: string[], date: string): string {
     if (date != "" && sidList.length != 0) {
         return `${endPoint}fetch-stock-info?date=${date}&sid-list=${sidList.join(",")}`;
-    } else if (date == "" && sidList.length != 0) {
+    } else if (date === "" && sidList.length != 0) {
         return `${endPoint}fetch-stock-info?sid-list=${sidList.join(",")}`;
     } else throw "decideURL: Info Not Sufficient";
 }
@@ -92,7 +92,7 @@ async function createTradeRecord(e: Event): Promise<void> {
     let hasUnfilledBlank = false;
     for (let each of allRecordFormInputs) {
         if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
-            if (each == dealTimeRecordInput) {
+            if (each === dealTimeRecordInput) {
                 requestBody.setAttribute(each.name, each.value.split("-").join(""));
             } else if (each.value != "") requestBody.setAttribute(each.name, each.value);
             else hasUnfilledBlank = true;
@@ -119,7 +119,7 @@ function prepareCashInvChartData(endDateStr: string, data: any[]): (string | num
 
         for (let eachRecord of data) {
             let t = eachRecord["deal-time"];
-            if (t == parseInt(eachDateStr)) {
+            if (t === parseInt(eachDateStr)) {
                 let s = eachRecord["sid"];
                 let p = eachRecord["deal-price"];
                 let q = eachRecord["deal-quantity"];
@@ -133,7 +133,7 @@ function prepareCashInvChartData(endDateStr: string, data: any[]): (string | num
                     dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (p * q);
                 } else {    // When selling
                     for (let eachT in stockWarehouse[s]) {
-                        if (q == 0) break;
+                        if (q === 0) break;
                         if (parseInt(eachT) < t) {
                             for (let eachP in stockWarehouse[s][eachT]) {
                                 let eachQ = stockWarehouse[s][eachT][eachP];
@@ -168,13 +168,13 @@ function prepareCashInvChartData(endDateStr: string, data: any[]): (string | num
     // result = [["Date", ...allHoldingSids, "Total"], ...result];
     result = [["Date", "Cash Invested"], ...result.map(i => [i[0], i[i.length - 1]])];  // only use the "total" field
     let latestCashInv = result[result.length - 1][1];
-    if (typeof latestCashInv == "number") totalCashInvested = latestCashInv;
+    if (typeof latestCashInv === "number") totalCashInvested = latestCashInv;
     return result;
 }
 
 function calcBalanceQOfEachSidAndUpdateAllHoldingSids(): any {
     let hashMapResult: any = {};
-    // Count Q for each Sid and remove those whose Q == 0
+    // Count Q for each Sid and remove those whose Q === 0
     for (let eachSid in stockWarehouse) {
         let eachRow = [eachSid, 0];
         for (let eachDay in stockWarehouse[eachSid]) {
@@ -210,7 +210,7 @@ function prepareMktValPieChartData(balanceQOfEachSids: any, stockInfoData: any[]
     let mktValOfOthers = 0;
     if (smallMktValStocks.length > 1) {
         for (let each of smallMktValStocks) {
-            if (typeof each[1] == "number") mktValOfOthers += each[1];
+            if (typeof each[1] === "number") mktValOfOthers += each[1];
         }
         result.push(["Others", mktValOfOthers]);
     } else result.push(...smallMktValStocks);
@@ -230,7 +230,7 @@ function expandTradeRecordForm(e: Event): void {
 }
 
 function foldTradeRecordForm(e: Event): void {
-    if (e.target == createTradeRecordFormContainer) {
+    if (e.target === createTradeRecordFormContainer) {
         createTradeRecordFormContainer?.classList.remove("active");
     }
 }
@@ -269,7 +269,7 @@ function getStartDateStr(endDate: Date, rollbackLength: number): string {
 function showEachStockDetail(e: Event, sid: string, individualMktVal: number): void {
     // control which to highlight
     for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
-        if (allStockWarehouseTableRows[i] == e.currentTarget) {
+        if (allStockWarehouseTableRows[i] === e.currentTarget) {
             allStockWarehouseTableRows[i].classList.add("active");
         } else allStockWarehouseTableRows[i].classList.remove("active");
     }
@@ -299,7 +299,7 @@ function calcCashInvstOfEachSid(sid: string): number {
 }
 
 function decideEndPoint(): void {
-    if (window.location.hostname == "127.0.0.1" || window.location.hostname == "localhost") {
+    if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
         endPoint = "http://127.0.0.1:8000/stockInfoScraper/";
     } else endPoint = "https://stock-info-scraper.herokuapp.com/";
 }
@@ -322,7 +322,7 @@ function addAllLstnrAboutCreatingRecord(): void {
 
 function addKeyboardEventLstnr(): void {
     window.addEventListener("keydown", (e) => {
-        if (e.keyCode == 13) {
+        if (e.keyCode === 13) {
             if (createTradeRecordFormContainer?.classList.contains("active")) submitBtn?.click();
         }
     });
@@ -338,7 +338,7 @@ function makeViewTogglerControllable(): void {
 function moveTogglerMask(e: Event): void {
     if (togglerMask instanceof HTMLElement && upperPart instanceof HTMLElement) {
         togglerMask.style.left = (-1 * parseFloat(togglerMask.style.left) + 50) + "%";
-        if (upperPart.className == "overview") upperPart.className = "individual";
+        if (upperPart.className === "overview") upperPart.className = "individual";
         else upperPart.className = "overview";
     }
 }
@@ -351,7 +351,7 @@ function makeTabControllable(): void {
 
 function highlightTab(e: Event): void {
     for (let i = 0; i < allTabs.length; i++) {
-        if (allTabs[i] == e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
+        if (allTabs[i] === e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
             allTabs[i].classList.add("active");
             allLowerTableContainers[i].classList.add("active");
             allLowerTableContainers[i].classList.remove("close");
@@ -408,7 +408,7 @@ async function main(): Promise<void> {
 
     // The component chart need info in stock-info table, so this need to be await.
     // Remember that stock info need to be fetched after calcBalanceQOfEachSidAndUpdateAllHoldingSids().
-    // because calcBalanceQOfEachSidAndUpdateAllHoldingSids() will remove sids in allHoldingSids whose balanceQ == 0
+    // because calcBalanceQOfEachSidAndUpdateAllHoldingSids() will remove sids in allHoldingSids whose balanceQ === 0
     let balanceQOfEachSid = calcBalanceQOfEachSidAndUpdateAllHoldingSids();   // this function will modify allHoldingSids
     let stockInfoJson: any = await fetchStockInfo([...allHoldingSids]);
     if (stockInfoTableBody instanceof HTMLElement) {

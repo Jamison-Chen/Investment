@@ -13,15 +13,15 @@ export class CreateRequestBody extends RequestBody {
         super("create");
     }
     setAttribute(attrName, value) {
-        if (attrName == "deal-price")
+        if (attrName === "deal-price")
             this.dealPrice = value;
-        else if (attrName == "deal-quantity")
+        else if (attrName === "deal-quantity")
             this.dealQuantity = value;
-        else if (attrName == "deal-time")
+        else if (attrName === "deal-time")
             this.dealTime = value;
-        else if (attrName == "handling-fee")
+        else if (attrName === "handling-fee")
             this.handlingFee = value;
-        else if (attrName == "sid")
+        else if (attrName === "sid")
             this.sid = value;
     }
     toURLSearchParams() {
@@ -48,17 +48,17 @@ export class UpdateRequestBody extends RequestBody {
         super("update");
     }
     setAttribute(attrName, value) {
-        if (attrName == "id")
+        if (attrName === "id")
             this.id = value;
-        else if (attrName == "deal-price")
+        else if (attrName === "deal-price")
             this.dealPrice = value;
-        else if (attrName == "deal-quantity")
+        else if (attrName === "deal-quantity")
             this.dealQuantity = value;
-        else if (attrName == "deal-time")
+        else if (attrName === "deal-time")
             this.dealTime = value;
-        else if (attrName == "handling-fee")
+        else if (attrName === "handling-fee")
             this.handlingFee = value;
-        else if (attrName == "sid")
+        else if (attrName === "sid")
             this.sid = value;
     }
     toURLSearchParams() {

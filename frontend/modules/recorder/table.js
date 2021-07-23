@@ -62,7 +62,7 @@ export class TradeRecordTable extends MyTable {
             let targetRowDOM = srcObject.findEditedRow(e);
             if (targetRowDOM instanceof HTMLElement) {
                 for (let each of targetRowDOM.childNodes) {
-                    if (each instanceof HTMLElement && each.className == srcObject.CLASSNAME_ID) {
+                    if (each instanceof HTMLElement && each.className === srcObject.CLASSNAME_ID) {
                         srcObject.crudFunction(new DeleteRequestBody(each.innerText));
                         break;
                     }
@@ -132,7 +132,7 @@ export class TradeRecordTable extends MyTable {
     changeTradeRecordRowEndDiv(type, targetRowDOM, args) {
         let crud = targetRowDOM.querySelector(`.${this.CLASSNAME_CRUD}`);
         let btnConfigList = [];
-        if (type == "clickUpdate") {
+        if (type === "clickUpdate") {
             btnConfigList = [
                 {
                     "btnClassName": "save-change-btn",
@@ -176,13 +176,13 @@ export class TradeRecordTable extends MyTable {
             if (each != targetRowDOM) {
                 let crudOfOtherRow = each.querySelector(`.${this.CLASSNAME_CRUD}`);
                 if (crudOfOtherRow instanceof HTMLElement) {
-                    crudOfOtherRow.style.display = type == "clickUpdate" ? "none" : "";
+                    crudOfOtherRow.style.display = type === "clickUpdate" ? "none" : "";
                 }
             }
         }
     }
     noSpaceAndNewLine(e) {
-        if (e instanceof KeyboardEvent && (e.keyCode == 13 || e.keyCode == 32))
+        if (e instanceof KeyboardEvent && (e.keyCode === 13 || e.keyCode === 32))
             e.preventDefault();
     }
     genUpdDelDiv(btnConfigList) {
@@ -220,7 +220,7 @@ export class TradeRecordTable extends MyTable {
                     innerInput.innerHTML = eachRecord[eachField];
                     td.appendChild(innerInput);
                     // Do not show the id in the table.
-                    if (eachField.toLowerCase() == this.CLASSNAME_ID)
+                    if (eachField.toLowerCase() === this.CLASSNAME_ID)
                         td.style.display = "none";
                     tr.appendChild(td);
                 }
@@ -259,12 +259,12 @@ export class StockInfoTable extends MyTable {
                     tr.className = "stock-info-table-row";
                     for (let eachField in eachStock) {
                         if (eachField) {
-                            if (eachField.indexOf("date") == -1 && eachField.indexOf("trade-type") == -1 && eachField.indexOf("open") == -1 && eachField.indexOf("highest") == -1 && eachField.indexOf("lowest") == -1) {
+                            if (eachField.indexOf("date") === -1 && eachField.indexOf("trade-type") === -1 && eachField.indexOf("open") === -1 && eachField.indexOf("highest") === -1 && eachField.indexOf("lowest") === -1) {
                                 let td = document.createElement("td");
                                 td.className = eachField;
                                 td.innerHTML = eachStock[eachField];
                                 tr.appendChild(td);
-                                if (eachField == "fluct-price") {
+                                if (eachField === "fluct-price") {
                                     if (parseFloat(eachStock[eachField]) > 0) {
                                         td.innerHTML = "▲" + Math.abs(parseFloat(eachStock[eachField]));
                                         tr.style.color = "#DE5246";
@@ -276,10 +276,10 @@ export class StockInfoTable extends MyTable {
                                     else
                                         tr.style.color = "#888";
                                 }
-                                else if (eachField == "quantity" || eachField == "close") {
+                                else if (eachField === "quantity" || eachField === "close") {
                                     td.innerHTML = parseFloat(eachStock[eachField]).toLocaleString();
                                 }
-                                else if (eachField == "fluct-rate") {
+                                else if (eachField === "fluct-rate") {
                                     let rate = Math.abs(Math.round((parseFloat(eachStock[eachField]) * 100 + Number.EPSILON) * 100) / 100);
                                     if (parseFloat(eachStock[eachField]) > 0)
                                         td.innerHTML = "▲" + rate + "%";
@@ -321,7 +321,7 @@ export class StockWarehouseTable extends MyTable {
                 sidTd.innerHTML = eachSid;
                 // find name and price from data(stockInfo)
                 for (let eachStockInfo of data) {
-                    if (eachSid == eachStockInfo["sid"]) {
+                    if (eachSid === eachStockInfo["sid"]) {
                         nameTd.innerHTML = eachStockInfo["name"];
                         priceTd.innerHTML = eachStockInfo["close"];
                         price = parseFloat(eachStockInfo["close"]);

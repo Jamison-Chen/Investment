@@ -77,7 +77,7 @@ function selectStrategy(e, s, args) {
     execStrategy(s, args);
 }
 function execStrategy(s, args) {
-    if (s.dailyQList.length == 0) {
+    if (s.dailyQList.length === 0) {
         s.followStrategy(...args);
     }
     let comprehensiveData = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
@@ -101,7 +101,7 @@ function compareStrategies(e, strategies) {
     let comparedData = [["Day"]];
     for (let eachStrategy of strategies) {
         comparedData[0].push(eachStrategy[0].name);
-        if (eachStrategy[0].dailyQList.length == 0) {
+        if (eachStrategy[0].dailyQList.length === 0) {
             eachStrategy[0].followStrategy(...eachStrategy[1]);
         }
         for (let i = 0; i < eachStrategy[0].totalAssetsList.length; i++) {

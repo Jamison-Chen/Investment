@@ -37,14 +37,14 @@ export class Strategy {
         if (qToday > 0) {
             // round to the 3rd decimal
             let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
-            if (this.buyHistory[`${key}`] == undefined)
+            if (this.buyHistory[`${key}`] === undefined)
                 this.buyHistory[`${key}`] = qToday;
             else
                 this.buyHistory[`${key}`] += qToday;
         }
     }
     recordAllInfo(qToday, i) {
-        if (i == 0) {
+        if (i === 0) {
             this.cumulInvestCashList = [qToday * this.pList[i]];
             this.cashList = [this.totalAssetsList[i] - qToday * this.pList[i]];
             this.securMktValList = [qToday * this.pList[i]];
@@ -68,12 +68,12 @@ export class BHmixGrid extends Strategy {
         let latestMinP = this.pList[startDay];
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i == 0) {
+            if (i === 0) {
                 qToday = this.calcQToday(this.totalAssetsList[i], this.pList[i], this.pList[i], (1 + r) * this.pList[i]);
             }
             else {
                 if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
-                    if (this.cumulQList[i - 1] == 0)
+                    if (this.cumulQList[i - 1] === 0)
                         latestMaxP = this.pList[i];
                     qToday = this.calcQToday(this.cashList[i - 1], this.pList[i], latestMaxP, latestMinP);
                     if (qToday > 0)
@@ -111,12 +111,12 @@ export class PlannedBHmixGrid extends BHmixGrid {
         let latestMinP = this.pList[startDay];
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i == 0) {
+            if (i === 0) {
                 qToday = this.calcQToday(this.totalAssetsList[i], this.pList[i], this.pList[i], (1 + r) * this.pList[i]);
             }
             else {
                 if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
-                    if (this.cumulQList[i - 1] == 0)
+                    if (this.cumulQList[i - 1] === 0)
                         latestMaxP = this.pList[i];
                     qToday = this.calcQToday(this.cashList[i - 1], this.pList[i], latestMaxP, latestMinP);
                     latestMinP = this.pList[i];
@@ -151,7 +151,7 @@ export class GridConstQ extends Strategy {
         let qStack = [];
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i == 0) {
+            if (i === 0) {
                 qToday = Math.floor(Math.floor(this.totalAssetsList[i] / this.pList[i]) / (nTable - standAt));
                 // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?(還有剩下多少目前價格以下的網格?)
                 qStack.push(qToday);
@@ -211,7 +211,7 @@ export class GridConstRatio extends Strategy {
         let standAt = this.calcStandAt(this.pList[startDay], divideLines);
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i == 0) {
+            if (i === 0) {
                 qToday = Math.floor(this.totalAssetsList[i] * securityRatio / this.pList[i]);
             }
             else {
@@ -262,7 +262,7 @@ export class Chicken extends Strategy {
         let latestMinP = this.pList[startDay];
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i == 0)
+            if (i === 0)
                 qToday = this.calcQToday(r, this.totalAssetsList[i], this.pList[i], this.pList[i]);
             else {
                 let maxCostHolding = Object.keys(this.buyHistory).length > 0 ? Math.max(...Object.keys(this.buyHistory).map(e => parseFloat(e))) : 0;
