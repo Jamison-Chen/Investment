@@ -25,6 +25,9 @@ function applyPriceChart(dataIn) {
             width: priceGraph.offsetWidth - 1,
             height: priceGraph.offsetHeight - 1,
             legend: { position: 'none' },
+            // hAxis: {
+            //     title: "Day"
+            // }
         };
         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", priceGraph));
     }
@@ -42,6 +45,10 @@ function applyAssetsCharts(title, dataIn) {
             curveType: 'none',
             width: assetsGraph.offsetWidth - 1,
             height: assetsGraph.offsetHeight - 1,
+            // legend: { position: 'none' },
+            // hAxis: {
+            //     title: "Day"
+            // }
         };
         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", assetsGraph));
     }
