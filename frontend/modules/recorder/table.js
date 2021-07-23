@@ -40,7 +40,7 @@ export class TradeRecordTable extends MyTable {
             let allInputSpans = targetRowDOM.querySelectorAll(`.${srcObject.CLASSNAME_INPUT}.${srcObject.CLASSNAME_NOT_EDITING}`);
             for (let each of allInputSpans) {
                 // find each table td of the row being edited
-                if (each.parentNode instanceof HTMLElement && each.parentNode.className != srcObject.CLASSNAME_ID && each.parentNode.className != srcObject.CLASSNAME_COMPANY_NAME) {
+                if (each.parentNode instanceof HTMLElement && each.parentNode.className !== srcObject.CLASSNAME_ID && each.parentNode.className !== srcObject.CLASSNAME_COMPANY_NAME) {
                     each.classList.replace(srcObject.CLASSNAME_NOT_EDITING, srcObject.CLASSNAME_EDITING);
                     each.setAttribute("contenteditable", "true");
                     // copy original data
@@ -84,7 +84,7 @@ export class TradeRecordTable extends MyTable {
                 for (let each of allInputSpans) {
                     // find each table td of the row being edited
                     if (each.parentNode instanceof HTMLElement) {
-                        if (each.parentNode.className != srcObject.CLASSNAME_ID && each.parentNode.className != srcObject.CLASSNAME_COMPANY_NAME) {
+                        if (each.parentNode.className !== srcObject.CLASSNAME_ID && each.parentNode.className !== srcObject.CLASSNAME_COMPANY_NAME) {
                             each.classList.replace(srcObject.CLASSNAME_EDITING, srcObject.CLASSNAME_NOT_EDITING);
                             each.setAttribute("contenteditable", "false");
                         }
@@ -109,7 +109,7 @@ export class TradeRecordTable extends MyTable {
             let allInputSpans = targetRowDOM.querySelectorAll(`.${srcObject.CLASSNAME_INPUT}`);
             for (let each of allInputSpans) {
                 // find each table td of the row being edited
-                if (each.parentNode instanceof HTMLElement && each.parentNode.className != srcObject.CLASSNAME_ID && each.parentNode.className != srcObject.CLASSNAME_COMPANY_NAME) {
+                if (each.parentNode instanceof HTMLElement && each.parentNode.className !== srcObject.CLASSNAME_ID && each.parentNode.className !== srcObject.CLASSNAME_COMPANY_NAME) {
                     each.classList.replace(srcObject.CLASSNAME_EDITING, srcObject.CLASSNAME_NOT_EDITING);
                     each.setAttribute("contenteditable", "false");
                     // set original data back
@@ -124,7 +124,7 @@ export class TradeRecordTable extends MyTable {
     findEditedRow(e) {
         let temp = e.target;
         // find the row being edited
-        while (temp instanceof HTMLElement && temp.parentNode != null && temp.className != this.CLASSNAME_TRADE_RECORD_TABLE_ROW) {
+        while (temp instanceof HTMLElement && temp.parentNode !== null && temp.className !== this.CLASSNAME_TRADE_RECORD_TABLE_ROW) {
             temp = temp.parentNode;
         }
         return temp instanceof HTMLElement ? temp : null;
@@ -173,7 +173,7 @@ export class TradeRecordTable extends MyTable {
         }
         let rows = document.getElementsByClassName(this.CLASSNAME_TRADE_RECORD_TABLE_ROW);
         for (let each of rows) {
-            if (each != targetRowDOM) {
+            if (each !== targetRowDOM) {
                 let crudOfOtherRow = each.querySelector(`.${this.CLASSNAME_CRUD}`);
                 if (crudOfOtherRow instanceof HTMLElement) {
                     crudOfOtherRow.style.display = type === "clickUpdate" ? "none" : "";
@@ -205,7 +205,7 @@ export class TradeRecordTable extends MyTable {
     }
     build(data) {
         super.build();
-        if (this.tableBodyDiv != null) {
+        if (this.tableBodyDiv !== null) {
             for (let eachRecord of data) {
                 let tr = document.createElement("tr");
                 tr.className = this.CLASSNAME_TRADE_RECORD_TABLE_ROW;
@@ -252,7 +252,7 @@ export class TradeRecordTable extends MyTable {
 export class StockInfoTable extends MyTable {
     build(data, allHoldingSids) {
         super.build();
-        if (this.tableBodyDiv != null) {
+        if (this.tableBodyDiv !== null) {
             for (let eachStock of data) {
                 if (allHoldingSids.has(eachStock["sid"])) {
                     let tr = document.createElement("tr");
@@ -298,7 +298,7 @@ export class StockInfoTable extends MyTable {
 export class StockWarehouseTable extends MyTable {
     build(data, allHoldingSids, stockWarehouse, showEachStockDetail, calcEachStockCashInvst) {
         super.build();
-        if (this.tableBodyDiv != null) {
+        if (this.tableBodyDiv !== null) {
             for (let eachSid of allHoldingSids) {
                 let tr = document.createElement("tr");
                 tr.className = "stock-warehouse-table-row";

@@ -92,7 +92,7 @@ export class BHmixGrid {
     }
     calcQToday(cashOwned, pToday, r) {
         let qIfAllIn = cashOwned / pToday;
-        // if (latestMaxP != undefined && latestMinP != undefined) {
+        // if (latestMaxP !== undefined && latestMinP !== undefined) {
         //     // 2 strtegies are given:
         //     let baseQ = ((latestMinP - pToday) / latestMinP) * qIfAllIn;
         //     // let baseQ = r * qIfAllIn;

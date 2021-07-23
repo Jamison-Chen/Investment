@@ -33,7 +33,7 @@ export class CreateRequestBody extends RequestBody {
     }
     public toURLSearchParams(): URLSearchParams {
         let result = super.toURLSearchParams();
-        if (this.dealPrice != undefined && this.dealQuantity != undefined && this.dealTime != undefined && this.handlingFee != undefined && this.sid != undefined) {
+        if (this.dealPrice !== undefined && this.dealQuantity !== undefined && this.dealTime !== undefined && this.handlingFee !== undefined && this.sid !== undefined) {
             result.append("deal-price", this.dealPrice);
             result.append("deal-quantity", this.dealQuantity);
             result.append("deal-time", this.dealTime);
@@ -70,7 +70,7 @@ export class UpdateRequestBody extends RequestBody {
     }
     public toURLSearchParams(): URLSearchParams {
         let result = super.toURLSearchParams();
-        if (this.id != undefined && this.dealPrice != undefined && this.dealQuantity != undefined && this.dealTime != undefined && this.handlingFee != undefined && this.sid != undefined) {
+        if (this.id !== undefined && this.dealPrice !== undefined && this.dealQuantity !== undefined && this.dealTime !== undefined && this.handlingFee !== undefined && this.sid !== undefined) {
             result.append("id", this.id);
             result.append("deal-price", this.dealPrice);
             result.append("deal-quantity", this.dealQuantity);

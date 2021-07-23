@@ -1,7 +1,7 @@
 const body = document.getElementById("body");
 const header = document.getElementById("header");
 
-if (header != null) {
+if (header !== null) {
     let modeBtn = document.createElement("div");
     modeBtn.classList.add("header-btn");
     modeBtn.id = "mode-btn";
@@ -56,19 +56,19 @@ const modeList = document.getElementById("mode-list");
 
 function controlModeList(e: Event): void {
     console.log("hi");
-    if (modeBtn != null && modeList != null && body != null) {
-        if (modeList.style.display == "flex") modeList.style.display = "none";
+    if (modeBtn !== null && modeList !== null && body !== null) {
+        if (modeList.style.display === "flex") modeList.style.display = "none";
         else modeList.style.display = "flex";
     }
 }
 
 function foldModeList(e: Event): void {
     if (!e.path.includes(modeBtn)) {
-        if (modeList != null) modeList.style.display = "none";
+        if (modeList !== null) modeList.style.display = "none";
     }
 }
 
-if (modeBtn != null && body != null) {
+if (modeBtn !== null && body !== null) {
     modeBtn.addEventListener("click", controlModeList);
     body.addEventListener("click", foldModeList);
 }

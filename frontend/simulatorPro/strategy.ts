@@ -102,7 +102,7 @@ export class BHmixGrid implements Strategy {
     }
     protected calcQToday(cashOwned: number, pToday: number, r: number): number {
         let qIfAllIn = cashOwned / pToday;
-        // if (latestMaxP != undefined && latestMinP != undefined) {
+        // if (latestMaxP !== undefined && latestMinP !== undefined) {
         //     // 2 strtegies are given:
         //     let baseQ = ((latestMinP - pToday) / latestMinP) * qIfAllIn;
         //     // let baseQ = r * qIfAllIn;

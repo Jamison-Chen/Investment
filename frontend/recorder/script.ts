@@ -59,9 +59,9 @@ function fetchStockInfo(sidList: string[], date: string = ""): Promise<void> {
 }
 
 function decideURL(sidList: string[], date: string): string {
-    if (date != "" && sidList.length != 0) {
+    if (date !== "" && sidList.length !== 0) {
         return `${endPoint}fetch-stock-info?date=${date}&sid-list=${sidList.join(",")}`;
-    } else if (date === "" && sidList.length != 0) {
+    } else if (date === "" && sidList.length !== 0) {
         return `${endPoint}fetch-stock-info?sid-list=${sidList.join(",")}`;
     } else throw "decideURL: Info Not Sufficient";
 }
@@ -91,10 +91,10 @@ async function createTradeRecord(e: Event): Promise<void> {
     let requestBody: CreateRequestBody = new CreateRequestBody();
     let hasUnfilledBlank = false;
     for (let each of allRecordFormInputs) {
-        if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
+        if (each instanceof HTMLInputElement && each.value !== null && each.value !== undefined) {
             if (each === dealTimeRecordInput) {
                 requestBody.setAttribute(each.name, each.value.split("-").join(""));
-            } else if (each.value != "") requestBody.setAttribute(each.name, each.value);
+            } else if (each.value !== "") requestBody.setAttribute(each.name, each.value);
             else hasUnfilledBlank = true;
         }
     }
@@ -113,7 +113,7 @@ function prepareCashInvChartData(endDateStr: string, data: any[]): (string | num
         const eachDateStr = eachDate.split("-").join("");
         let dataRow: (string | number)[];
         // Create a new row whose values is the copy of the values of the previous(last) row.
-        if (result[result.length - 1] != undefined) {
+        if (result[result.length - 1] !== undefined) {
             dataRow = [eachDateStr, ...result[result.length - 1].slice(1, -1)];
         } else dataRow = [eachDateStr, ...[...allHoldingSids].map(x => 0)];
 
@@ -182,7 +182,7 @@ function calcBalanceQOfEachSidAndUpdateAllHoldingSids(): any {
                 eachRow[1] += stockWarehouse[eachSid][eachDay][eachP]
             }
         }
-        if (eachRow[1] != 0) hashMapResult[eachRow[0]] = eachRow[1];
+        if (eachRow[1] !== 0) hashMapResult[eachRow[0]] = eachRow[1];
         else allHoldingSids.delete(eachSid);   // update allHoldingSids
     }
     return hashMapResult;
@@ -236,7 +236,7 @@ function foldTradeRecordForm(e: Event): void {
 }
 
 function showInfoNotSufficientErr(): void {
-    if (createErrorDiv != null) {
+    if (createErrorDiv !== null) {
         createErrorDiv.style.display = "unset";
         setTimeout(() => {
             createErrorDiv.style.opacity = "100%";
@@ -329,7 +329,7 @@ function addKeyboardEventLstnr(): void {
 }
 
 function makeViewTogglerControllable(): void {
-    if (togglerMask != null && viewToggler != null) {
+    if (togglerMask !== null && viewToggler !== null) {
         togglerMask.style.left = "-1%";
         viewToggler.addEventListener("click", moveTogglerMask);
     }

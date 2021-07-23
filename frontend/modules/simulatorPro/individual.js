@@ -52,7 +52,7 @@ export class Individual {
     calcStockMktVal(stockPrice = undefined) {
         let totalStockVal = 0;
         for (let each of this._stockHolding) {
-            if (stockPrice != undefined)
+            if (stockPrice !== undefined)
                 totalStockVal += stockPrice;
             else
                 totalStockVal += each.buyInCost;
@@ -91,7 +91,7 @@ export class Individual {
     makeOrder() {
         // The prices inthe orders that _strategy made is min-sellable and max-payable (i.e. just for reference)
         // The individuals need to bid themselves
-        if (this._today != undefined && this._mktPriceAcquired != undefined && this._valueAssessed != undefined) {
+        if (this._today !== undefined && this._mktPriceAcquired !== undefined && this._valueAssessed !== undefined) {
             let orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._valueAssessed, this._mktPriceAcquired, this._strategySetting.params);
             const qd = orderSetForRef.buyOrder.quantity;
             const qs = orderSetForRef.sellOrder.quantity;
@@ -99,7 +99,7 @@ export class Individual {
             this._minSellable = orderSetForRef.sellOrder.price;
             this.bid();
             this.ask();
-            if (this._bidPrice != undefined && this._askPrice != undefined && this._today != undefined) {
+            if (this._bidPrice !== undefined && this._askPrice !== undefined && this._today !== undefined) {
                 this._orderToday = {
                     "buyOrder": new Order(this, "buy", this._today, this._bidPrice, qd),
                     "sellOrder": new Order(this, "sell", this._today, this._askPrice, qs)
@@ -113,14 +113,14 @@ export class Individual {
     }
     initBidPrice() {
         this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
-        if (this._maxPayable != undefined) {
+        if (this._maxPayable !== undefined) {
             this._bidPrice = this._maxPayable * Math.max(0, (1 - this._aggressiveness));
         }
         else
             throw "The _maxPayable is still undefined.";
     }
     bid() {
-        if (this._maxPayable != undefined && this._bidPrice != undefined) {
+        if (this._maxPayable !== undefined && this._bidPrice !== undefined) {
             let delta = this._maxPayable - this._bidPrice;
             if (delta > 0) {
                 this._bidPrice += Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
@@ -134,13 +134,13 @@ export class Individual {
     }
     initAskPrice() {
         this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
-        if (this._minSellable != undefined)
+        if (this._minSellable !== undefined)
             this._askPrice = this._minSellable * (1 + this._aggressiveness);
         else
             throw "The _minSellable is still undefined.";
     }
     ask() {
-        if (this._minSellable != undefined && this._askPrice != undefined) {
+        if (this._minSellable !== undefined && this._askPrice !== undefined) {
             let delta = this._askPrice - this._minSellable;
             if (delta > 0) {
                 this._askPrice -= Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
@@ -165,7 +165,7 @@ export class Individual {
     sellOut(qOut, dealPrice) {
         // Use FIFO
         this._stockHolding.sort(function (a, b) {
-            if (a.buyInDay != undefined && b.buyInDay != undefined)
+            if (a.buyInDay !== undefined && b.buyInDay !== undefined)
                 return a.buyInDay - b.buyInDay;
             else
                 throw "buyInDay info not sufficient.";

@@ -12,7 +12,7 @@ const option4 = document.getElementById("option4");
 const comparisonOption = document.getElementById("comparison");
 const startBtn = document.getElementById("start-btn");
 function applyPriceChart(dataIn) {
-    if (priceGraph != null) {
+    if (priceGraph !== null) {
         google.charts.load('current', { 'packages': ["corechart"] });
         let options = {
             title: '價格走勢',
@@ -30,7 +30,7 @@ function applyPriceChart(dataIn) {
     }
 }
 function applyAssetsCharts(title, dataIn) {
-    if (assetsGraph != null) {
+    if (assetsGraph !== null) {
         google.charts.load('current', { 'packages': ["corechart"] });
         let options = {
             title: title,
@@ -146,7 +146,7 @@ function simulatorMain() {
     let runawayRate = 0.85;
     let argsC = [rc, 0, runawayRate];
     let c = new Chicken("Chicken", initTotalAssets, nDays, pList);
-    if (option1 != null && option2 != null && option3 != null && startBtn != null && option4 != null && comparisonOption != null) {
+    if (option1 !== null && option2 !== null && option3 !== null && startBtn !== null && option4 !== null && comparisonOption !== null) {
         option1.innerHTML = b.name;
         option1.addEventListener("click", (e) => { selectStrategy(e, b, argsB); });
         option2.innerHTML = pb.name;

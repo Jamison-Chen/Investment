@@ -85,7 +85,7 @@ class Main {
         nodeDiv.style.width = `${this.nodeDivSize}px`;
         nodeDiv.style.height = `${this.nodeDivSize}px`;
         nodeDiv.style.transitionDuration = `${pauseTime / 2}ms`;
-        if (this.animationField != null) this.animationField.appendChild(nodeDiv);
+        if (this.animationField !== null) this.animationField.appendChild(nodeDiv);
         return nodeDiv;
     }
 
@@ -99,7 +99,7 @@ class Main {
     }
 
     public applyAllSetting(): void {
-        if (this.marketEqData != undefined && this.dealAmountData != undefined && this.individualList != undefined && this.initTotalCash != undefined && this.totalStock != undefined && this.initialEq != undefined && this.pauseTime != undefined) {
+        if (this.marketEqData !== undefined && this.dealAmountData !== undefined && this.individualList !== undefined && this.initTotalCash !== undefined && this.totalStock !== undefined && this.initialEq !== undefined && this.pauseTime !== undefined) {
             // count numOfIndividual
             this.numOfIndividual = 1;   // one for myself(me)
             for (let eachStrategy in this.indiviComposition) {
@@ -160,7 +160,7 @@ class Main {
     }
 
     public simulate(): void { // This is a recursive funtion
-        if (this.animationField != null && this.marketEqData != undefined && this.dealAmountData != undefined && this.myAssetData != undefined && this.individualList != undefined && this.dayToSimulate != undefined) {
+        if (this.animationField !== null && this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.individualList !== undefined && this.dayToSimulate !== undefined) {
             let today = this.marketEqData.length - 1;
             // everyone update market info and make order
             this.everyoneUpdInfoAndOrder(today);
@@ -170,7 +170,7 @@ class Main {
             let buySideOrderQueue: Order[] = [];
             let sellSideOrderQueue: Order[] = [];
             for (let eachOne of this.individualList) {
-                if (eachOne.orderToday != undefined) {
+                if (eachOne.orderToday !== undefined) {
                     if (eachOne.orderToday.buyOrder.quantity > 0) buySideOrderQueue.push(eachOne.orderToday.buyOrder);
                     if (eachOne.orderToday.sellOrder.quantity > 0) sellSideOrderQueue.push(eachOne.orderToday.sellOrder);
                 }
@@ -202,7 +202,7 @@ class Main {
     }
 
     public everyoneUpdInfoAndOrder(today: number): void {
-        if (this.marketEqData != undefined && this.individualList != undefined && this.pm != undefined) {
+        if (this.marketEqData !== undefined && this.individualList !== undefined && this.pm !== undefined) {
             for (let eachOne of this.individualList) {
                 let valAssessed = this.pm.genAssessedVal(true);
                 let latestPrice = this.marketEqData.slice(-1)[0].slice(-1)[0];
@@ -227,7 +227,7 @@ class Main {
             let dealQ = Math.min(buySideOrderQueue[i].quantity, sellSideOrderQueue[j].quantity);
             buySideOrderQueue[i].quantity -= dealQ;
             sellSideOrderQueue[j].quantity -= dealQ;
-            if (buySideOrderQueue[i].owner != sellSideOrderQueue[j].owner) {
+            if (buySideOrderQueue[i].owner !== sellSideOrderQueue[j].owner) {
                 totalDealQ += dealQ;
                 dealPair.push({ "buySide": buySideOrderQueue[i].owner, "sellSide": sellSideOrderQueue[j].owner, "q": dealQ });
             }
@@ -243,7 +243,7 @@ class Main {
                 sellSideOrderQueue.length > j &&
                 buySideOrderQueue[i].price >= sellSideOrderQueue[j].price;
         }
-        if (this.marketEqData != undefined && this.dealAmountData != undefined && this.myAssetData != undefined && this.pm != undefined && this.me != undefined) {
+        if (this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.pm !== undefined && this.me !== undefined) {
             if (finalDealPrice === undefined) {
                 let oldPrice = this.marketEqData[this.marketEqData.length - 1][2];
                 if (typeof oldPrice === "number") finalDealPrice = oldPrice;
@@ -267,7 +267,7 @@ class Main {
     }
 
     public showIndividualInfo(): void {
-        if (this.marketEqData != undefined && this.individualList != undefined) {
+        if (this.marketEqData !== undefined && this.individualList !== undefined) {
             for (let each of this.individualList) {
                 let finalPrice = this.marketEqData[this.marketEqData.length - 1][2];
                 if (typeof finalPrice === "string") finalPrice = parseFloat(finalPrice);
@@ -284,7 +284,7 @@ class Main {
     }
 
     public prepareCurveData(buySideOrderQueue: Order[], sellSideOrderQueue: Order[]): (number[] | string[])[] {
-        if (this.initialEq != undefined) {
+        if (this.initialEq !== undefined) {
             let maxNumInChart = this.initialEq * 2;
             let minNumInChart = 0;
             let delta = maxNumInChart - minNumInChart
@@ -381,7 +381,7 @@ class Main {
                     detailField.appendChild(paramRow);
                 }
             }
-            if (this.detailCntnr != null) this.detailCntnr.appendChild(detailField);
+            if (this.detailCntnr !== null) this.detailCntnr.appendChild(detailField);
         }
     }
 
@@ -453,7 +453,7 @@ class Main {
                     detailField.appendChild(paramRow);
                 }
             }
-            if (this.detailCntnr != null) this.detailCntnr.appendChild(detailField);
+            if (this.detailCntnr !== null) this.detailCntnr.appendChild(detailField);
         }
 
         paramRow = document.createElement("div");
@@ -679,7 +679,7 @@ class Main {
     }
 
     public refresh(): void {
-        if (this.animationField != null) this.animationField.innerHTML = "";
+        if (this.animationField !== null) this.animationField.innerHTML = "";
         this.marketEqData = [["Day", "Given Price", "Mkt. Eq."]];
         this.dealAmountData = [["Day", "Deal Amount"]];
         this.myAssetData = [["Day", "Total Asset", "Stock Mkt Val", "Cash Holding"]]
@@ -724,7 +724,7 @@ class Main {
             });
         }
         //  Setting Footer
-        if (this.settingFooter != null) {
+        if (this.settingFooter !== null) {
             this.settingFooter.addEventListener("click", () => { this.refresh() });
         }
         // the start(RUN) button
@@ -735,7 +735,7 @@ class Main {
                 this.simulate();
             });
         }
-        if (this.myAssetChartCntnr != null && this.myAssetChartHeader != null && this.settingBtn != null && this.settingBg != null && this.settingCntnr != null && this.settingFooter != null) {
+        if (this.myAssetChartCntnr !== null && this.myAssetChartHeader !== null && this.settingBtn !== null && this.settingBg !== null && this.settingCntnr !== null && this.settingFooter !== null) {
             this.myAssetChartHeader.addEventListener("click", () => {
                 this.myAssetChartCntnr?.classList.remove("active");
             });
@@ -750,7 +750,7 @@ class Main {
                 this.detailCntnr?.classList.remove("is-setting");
             })
         }
-        if (this.resetBtn != null) this.resetBtn.addEventListener("click", () => { location.reload() });
+        if (this.resetBtn !== null) this.resetBtn.addEventListener("click", () => { location.reload() });
     }
 }
 let main = new Main();

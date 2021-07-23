@@ -63,10 +63,10 @@ function fetchStockInfo(sidList, date = "") {
     });
 }
 function decideURL(sidList, date) {
-    if (date != "" && sidList.length != 0) {
+    if (date !== "" && sidList.length !== 0) {
         return `${endPoint}fetch-stock-info?date=${date}&sid-list=${sidList.join(",")}`;
     }
-    else if (date === "" && sidList.length != 0) {
+    else if (date === "" && sidList.length !== 0) {
         return `${endPoint}fetch-stock-info?sid-list=${sidList.join(",")}`;
     }
     else
@@ -100,11 +100,11 @@ function createTradeRecord(e) {
         let requestBody = new CreateRequestBody();
         let hasUnfilledBlank = false;
         for (let each of allRecordFormInputs) {
-            if (each instanceof HTMLInputElement && each.value != null && each.value != undefined) {
+            if (each instanceof HTMLInputElement && each.value !== null && each.value !== undefined) {
                 if (each === dealTimeRecordInput) {
                     requestBody.setAttribute(each.name, each.value.split("-").join(""));
                 }
-                else if (each.value != "")
+                else if (each.value !== "")
                     requestBody.setAttribute(each.name, each.value);
                 else
                     hasUnfilledBlank = true;
@@ -127,7 +127,7 @@ function prepareCashInvChartData(endDateStr, data) {
         const eachDateStr = eachDate.split("-").join("");
         let dataRow;
         // Create a new row whose values is the copy of the values of the previous(last) row.
-        if (result[result.length - 1] != undefined) {
+        if (result[result.length - 1] !== undefined) {
             dataRow = [eachDateStr, ...result[result.length - 1].slice(1, -1)];
         }
         else
@@ -200,7 +200,7 @@ function calcBalanceQOfEachSidAndUpdateAllHoldingSids() {
                 eachRow[1] += stockWarehouse[eachSid][eachDay][eachP];
             }
         }
-        if (eachRow[1] != 0)
+        if (eachRow[1] !== 0)
             hashMapResult[eachRow[0]] = eachRow[1];
         else
             allHoldingSids.delete(eachSid); // update allHoldingSids
@@ -256,7 +256,7 @@ function foldTradeRecordForm(e) {
     }
 }
 function showInfoNotSufficientErr() {
-    if (createErrorDiv != null) {
+    if (createErrorDiv !== null) {
         createErrorDiv.style.display = "unset";
         setTimeout(() => {
             createErrorDiv.style.opacity = "100%";
@@ -346,7 +346,7 @@ function addKeyboardEventLstnr() {
     });
 }
 function makeViewTogglerControllable() {
-    if (togglerMask != null && viewToggler != null) {
+    if (togglerMask !== null && viewToggler !== null) {
         togglerMask.style.left = "-1%";
         viewToggler.addEventListener("click", moveTogglerMask);
     }
