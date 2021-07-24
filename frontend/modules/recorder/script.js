@@ -141,12 +141,8 @@ function prepareCashInvChartData(endDateStr, data) {
                 let f = eachRecord["handling-fee"];
                 handlingFee += f; // this will be used in compare chart
                 let idx = [...allHoldingSids].indexOf(s) + 1;
-                if (q >= 0) { // When buying
-                    // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
-                    // dataRow[idx] += p*q;
-                    // if in Pure JavaScript.
+                if (q >= 0)
                     dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (p * q);
-                }
                 else { // When selling
                     for (let eachT in stockWarehouse[s]) {
                         if (q === 0)

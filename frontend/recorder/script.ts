@@ -15,7 +15,7 @@ const dealTimeRecordInput = document.getElementById("deal-time-record");
 const dealPriceRecordInput = document.getElementById("deal-price-record");
 const dealQuantityRecordInput = document.getElementById("deal-quantity-record");
 const handlingFeeRecordInput = document.getElementById("handling-fee-record");
-const allRecordFormInputs = document.getElementsByClassName("record-form-input")
+const allRecordFormInputs = document.getElementsByClassName("record-form-input");
 const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
 const allTabs = document.getElementsByClassName("tab");
@@ -23,7 +23,7 @@ const allLowerTableContainers = document.getElementsByClassName("lower-table-con
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
-const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row")
+const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row");
 const cashInvestedChart = document.getElementById('cash-invested-chart');
 const mktValPieChart = document.getElementById('component-chart');
 const compareChart = document.getElementById('compare-chart');
@@ -33,7 +33,7 @@ const individualCompareChart = document.getElementById("individual-compare-chart
 let allHoldingSids: Set<string> = new Set();
 let stockWarehouse: any = {};  // structure: {aSid:{aDealTime:{aPrice:curQ, ...},  ...}, ...}
 let totalCashInvested = 0;
-let cashExtracted = 0
+let cashExtracted = 0;
 let totalMktVal = 0;
 let handlingFee = 0;
 let mygooglechart: MyGoogleChart = new MyGoogleChart();
@@ -126,12 +126,8 @@ function prepareCashInvChartData(endDateStr: string, data: any[]): (string | num
                 let f = eachRecord["handling-fee"];
                 handlingFee += f;   // this will be used in compare chart
                 let idx = [...allHoldingSids].indexOf(s) + 1;
-                if (q >= 0) {   // When buying
-                    // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
-                    // dataRow[idx] += p*q;
-                    // if in Pure JavaScript.
-                    dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (p * q);
-                } else {    // When selling
+                if (q >= 0) dataRow[idx] = parseFloat(`${dataRow[idx]}`) + (p * q);
+                else {    // When selling
                     for (let eachT in stockWarehouse[s]) {
                         if (q === 0) break;
                         if (parseInt(eachT) < t) {
@@ -179,7 +175,7 @@ function calcBalanceQOfEachSidAndUpdateAllHoldingSids(): any {
         let eachRow = [eachSid, 0];
         for (let eachDay in stockWarehouse[eachSid]) {
             for (let eachP in stockWarehouse[eachSid][eachDay]) {
-                eachRow[1] += stockWarehouse[eachSid][eachDay][eachP]
+                eachRow[1] += stockWarehouse[eachSid][eachDay][eachP];
             }
         }
         if (eachRow[1] !== 0) hashMapResult[eachRow[0]] = eachRow[1];
@@ -284,8 +280,8 @@ function showEachStockDetail(e: Event, sid: string, individualMktVal: number): v
             }
         }
     }
-    mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart)
-    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, individualCompareChart)
+    mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
+    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, individualCompareChart);
 }
 
 function calcCashInvstOfEachSid(sid: string): number {
@@ -384,17 +380,17 @@ async function main(): Promise<void> {
     addKeyboardEventLstnr();
     makeViewTogglerControllable();
     makeTabControllable();
+
     // The cash-invested chart need info in trade-record table, so this need to be await
     let tradeRecordJson: any = await tradeRecordCRUD(new ReadRequestBody());
     initAllHoldingSid(tradeRecordJson["data"]);
     buildStockWarehouse(tradeRecordJson["data"]);
-
     if (tradeRecordTableBody instanceof HTMLElement) {
         traderecordtable = new TradeRecordTable(tradeRecordTableBody, tradeRecordCRUD);
         traderecordtable.build(tradeRecordJson["data"]);
     }
-
     let todayStr = getStartDateStr(new Date(), 0);
+
     // stockWarehouse will be modified by the function below
     let cashInvestedData: (string | number)[][] = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
     let firstDayStr = cashInvestedData[1][0].toString();
@@ -403,7 +399,6 @@ async function main(): Promise<void> {
 
     // set default value for the deal-time field of the create-record form
     if (dealTimeRecordInput instanceof HTMLInputElement) dealTimeRecordInput.value = todayStr;
-
     setupCashInvShowRangeInput(todayStr, firstDayStr, cashInvestedData);
 
     // The component chart need info in stock-info table, so this need to be await.
@@ -415,12 +410,9 @@ async function main(): Promise<void> {
         stockinfotable = new StockInfoTable(stockInfoTableBody);
         stockinfotable.build(stockInfoJson["data"], allHoldingSids);
     }
-
     let mktValPieChartData = prepareMktValPieChartData(balanceQOfEachSid, stockInfoJson["data"]);
     mygooglechart.drawMktValPieChart(mktValPieChartData, mktValPieChart);
-
     mygooglechart.drawCompareChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee, compareChart);
-
     if (stockWarehouseTableBody instanceof HTMLElement) {
         stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
         stockwarehousetable.build(stockInfoJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
