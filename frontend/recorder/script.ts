@@ -42,9 +42,9 @@ let stockinfotable: StockInfoTable;
 let stockwarehousetable: StockWarehouseTable;
 let endPoint: string;
 
-function tradeRecordCRUD(requestBody: RequestBody): Promise<void> {
+function recordCRUD(requestBody: RequestBody, type: "trade" | "dividend"): Promise<void> {
     let bodyContent = requestBody.toURLSearchParams();
-    return fetch(`${endPoint}records`, { method: 'post', body: bodyContent })
+    return fetch(`${endPoint}${type}`, { method: 'post', body: bodyContent })
         .then(function (response) {
             return response.json();
         });
@@ -99,7 +99,7 @@ async function createTradeRecord(e: Event): Promise<void> {
         }
     }
     if (!hasUnfilledBlank) {
-        await tradeRecordCRUD(requestBody);
+        await recordCRUD(requestBody, "trade");
         location.reload();
     } else showInfoNotSufficientErr();
 }
@@ -349,12 +349,10 @@ function highlightTab(e: Event): void {
     for (let i = 0; i < allTabs.length; i++) {
         if (allTabs[i] === e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
             allTabs[i].classList.add("active");
-            allLowerTableContainers[i].classList.add("active");
-            allLowerTableContainers[i].classList.remove("close");
+            allLowerTableContainers[i].classList.replace("close", "active");
         } else {
             allTabs[i].classList.remove("active");
-            allLowerTableContainers[i].classList.add("close");
-            allLowerTableContainers[i].classList.remove("active");
+            allLowerTableContainers[i].classList.replace("active", "close");
         }
     }
 }
@@ -382,11 +380,11 @@ async function main(): Promise<void> {
     makeTabControllable();
 
     // The cash-invested chart need info in trade-record table, so this need to be await
-    let tradeRecordJson: any = await tradeRecordCRUD(new ReadRequestBody());
+    let tradeRecordJson: any = await recordCRUD(new ReadRequestBody(), "trade");
     initAllHoldingSid(tradeRecordJson["data"]);
     buildStockWarehouse(tradeRecordJson["data"]);
     if (tradeRecordTableBody instanceof HTMLElement) {
-        traderecordtable = new TradeRecordTable(tradeRecordTableBody, tradeRecordCRUD);
+        traderecordtable = new TradeRecordTable(tradeRecordTableBody, recordCRUD);
         traderecordtable.build(tradeRecordJson["data"]);
     }
     let todayStr = getStartDateStr(new Date(), 0);

@@ -48,9 +48,9 @@ let traderecordtable;
 let stockinfotable;
 let stockwarehousetable;
 let endPoint;
-function tradeRecordCRUD(requestBody) {
+function recordCRUD(requestBody, type) {
     let bodyContent = requestBody.toURLSearchParams();
-    return fetch(`${endPoint}records`, { method: 'post', body: bodyContent })
+    return fetch(`${endPoint}${type}`, { method: 'post', body: bodyContent })
         .then(function (response) {
         return response.json();
     });
@@ -111,7 +111,7 @@ function createTradeRecord(e) {
             }
         }
         if (!hasUnfilledBlank) {
-            yield tradeRecordCRUD(requestBody);
+            yield recordCRUD(requestBody, "trade");
             location.reload();
         }
         else
@@ -366,13 +366,11 @@ function highlightTab(e) {
     for (let i = 0; i < allTabs.length; i++) {
         if (allTabs[i] === e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
             allTabs[i].classList.add("active");
-            allLowerTableContainers[i].classList.add("active");
-            allLowerTableContainers[i].classList.remove("close");
+            allLowerTableContainers[i].classList.replace("close", "active");
         }
         else {
             allTabs[i].classList.remove("active");
-            allLowerTableContainers[i].classList.add("close");
-            allLowerTableContainers[i].classList.remove("active");
+            allLowerTableContainers[i].classList.replace("active", "close");
         }
     }
 }
@@ -398,11 +396,11 @@ function main() {
         makeViewTogglerControllable();
         makeTabControllable();
         // The cash-invested chart need info in trade-record table, so this need to be await
-        let tradeRecordJson = yield tradeRecordCRUD(new ReadRequestBody());
+        let tradeRecordJson = yield recordCRUD(new ReadRequestBody(), "trade");
         initAllHoldingSid(tradeRecordJson["data"]);
         buildStockWarehouse(tradeRecordJson["data"]);
         if (tradeRecordTableBody instanceof HTMLElement) {
-            traderecordtable = new TradeRecordTable(tradeRecordTableBody, tradeRecordCRUD);
+            traderecordtable = new TradeRecordTable(tradeRecordTableBody, recordCRUD);
             traderecordtable.build(tradeRecordJson["data"]);
         }
         let todayStr = getStartDateStr(new Date(), 0);

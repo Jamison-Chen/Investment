@@ -6,6 +6,8 @@
 @media screen and (min-width:1024px) {
     :root {
         --tradeRecordTableWidth: 600px;
+        --cashDividendTableWidth: 400px;
+        --individualRecordTableWidth: 600px;
         --stockInfoTableWidth: 470px;
     }
 }
@@ -13,6 +15,8 @@
 @media screen and (max-width:1024px) {
     :root {
         --tradeRecordTableWidth: 100%;
+        --cashDividendTableWidth: 100%;
+        --individualRecordTableWidth: 100%;
         --stockInfoTableWidth: 100%;
     }
 }
@@ -303,12 +307,24 @@ html {
     width: var(--tradeRecordTableWidth);
 }
 
+#cash-dividend-table {
+    width: var(--cashDividendTableWidth);
+}
+
+#individual-record-table {
+    width: var(--individualRecordTableWidth);
+}
+
 #stock-info-table {
     width: var(--stockInfoTableWidth);
 }
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)),
 #trade-record-table td:nth-child(n):not(:nth-last-child(1)),
+#cash-dividend-table th:nth-child(n):not(:nth-last-child(1)),
+#cash-dividend-table td:nth-child(n):not(:nth-last-child(1)),
+#individual-record-table th:nth-child(n):not(:nth-last-child(1)),
+#individual-record-table td:nth-child(n):not(:nth-last-child(1)),
 #stock-info-table th:nth-child(n),
 #stock-info-table td:nth-child(n),
 #stock-warehouse-table th:nth-child(n),
@@ -320,11 +336,17 @@ html {
 }
 
 #trade-record-table th:nth-last-child(1),
-#trade-record-table td:nth-last-child(1) {
+#trade-record-table td:nth-last-child(1),
+#cash-dividend-table th:nth-last-child(1),
+#cash-dividend-table td:nth-last-child(1),
+#individual-record-table th:nth-last-child(1),
+#individual-record-table td:nth-last-child(1) {
     padding: 5px 10px;
 }
 
 #trade-record-table th:nth-child(n):not(:nth-last-child(1)),
+#cash-dividend-table th:nth-child(n):not(:nth-last-child(1)),
+#individual-record-table th:nth-child(n):not(:nth-last-child(1)),
 #stock-info-table th:nth-child(n),
 #stock-warehouse-table th:nth-child(n) {
     background-color: #555;
@@ -332,22 +354,22 @@ html {
 }
 
 #trade-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)),
+#cash-dividend-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)),
+#individual-record-table tr:nth-child(even)>:nth-child(n):not(:nth-last-child(1)),
+#stock-info-table tr:nth-child(even),
 #stock-warehouse-table tr:nth-child(even) {
     background-color: #f2f2f2;
 }
 
 #trade-record-table tr:not(:nth-child(1)):hover>:nth-child(n):not(:nth-last-child(1)),
+#cash-dividend-table tr:not(:nth-child(1)):hover>:nth-child(n):not(:nth-last-child(1)),
+#individual-record-table tr:not(:nth-child(1)):hover>:nth-child(n):not(:nth-last-child(1)),
 #stock-info-table tr:not(:nth-child(1)):hover,
 #stock-warehouse-table tr:not(:nth-child(1)):hover {
     background-color: #ddd;
 }
 
-
-/* .trade-record-table-row .id {
-    font-size: 0.8rem;
-    color: #888;
-} */
-
+/*  */
 .trade-record-table-row span.input {
     border: 1px solid transparent;
     padding: 2px 6px;
@@ -394,12 +416,4 @@ html {
 
 .divide-line {
     margin: 0 2px;
-}
-
-#stock-info-table-container {
-    display: none;
-}
-
-#stock-info-table-container.active {
-    display: flex;
 }

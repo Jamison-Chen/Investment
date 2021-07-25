@@ -63,7 +63,7 @@ export class TradeRecordTable extends MyTable {
             if (targetRowDOM instanceof HTMLElement) {
                 for (let each of targetRowDOM.childNodes) {
                     if (each instanceof HTMLElement && each.className === srcObject.CLASSNAME_ID) {
-                        srcObject.crudFunction(new DeleteRequestBody(each.innerText));
+                        srcObject.crudFunction(new DeleteRequestBody(each.innerText), "trade");
                         break;
                     }
                 }
@@ -91,7 +91,7 @@ export class TradeRecordTable extends MyTable {
                         requestBody.setAttribute(each.parentNode.className, each.innerHTML);
                     }
                 }
-                yield srcObject.crudFunction(requestBody);
+                yield srcObject.crudFunction(requestBody, "trade");
                 // change the words displayed in the crud div of the target row
                 srcObject.changeTradeRecordRowEndDiv("clickSave", targetRowDOM, { "copyOriginal": requestBody });
             }

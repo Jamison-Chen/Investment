@@ -33,7 +33,7 @@ def fetchStockInfo(request):
 
 
 @csrf_exempt
-def recordCRUD(request):
+def tradeCRUD(request):
     if request.method == "POST":
         s = TradeRecordView()
         mode = str(request.POST.get("mode"))

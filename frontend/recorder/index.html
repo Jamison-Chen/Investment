@@ -89,7 +89,9 @@
         </div>
         <div class=tab-container>
             <div class="tabs clearfix">
-                <div id="trade-record-tab" class="tab active">交易紀錄</div>
+                <div id="trade-record-tab" class="tab active">所有紀錄</div>
+                <div id="cash-dividend-tab" class="tab">現金股利</div>
+                <div id="individual-record-tab" class="tab">個股紀錄</div>
                 <div id="stock-info-tab" class="tab">本日資訊</div>
             </div>
         </div>
@@ -97,7 +99,37 @@
             <div class="lower-table-container active" id="trade-record-table-container">
                 <table id="trade-record-table" class="table">
                     <tbody>
-                        <tr id="trade-record-table-head">
+                        <tr>
+                            <th style="display: none;">ID</th>
+                            <th>成交日期</th>
+                            <th>證券代號</th>
+                            <th>證券名稱</th>
+                            <th>成交單價</th>
+                            <th>成交股數</th>
+                            <th>費用</th>
+                            <th></th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="lower-table-container close" id="cash-dividend-table-container">
+                <table id="cash-dividend-table" class="table">
+                    <tbody>
+                        <tr>
+                            <th style="display: none;">ID</th>
+                            <th>成交日期</th>
+                            <th>證券代號</th>
+                            <th>證券名稱</th>
+                            <th>現金股利</th>
+                            <th></th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="lower-table-container close" id="individual-record-table-container">
+                <table id="individual-record-table" class="table">
+                    <tbody>
+                        <tr>
                             <th style="display: none;">ID</th>
                             <th>成交日期</th>
                             <th>證券代號</th>
@@ -113,7 +145,7 @@
             <div class="lower-table-container close" id="stock-info-table-container">
                 <table id="stock-info-table" class="table">
                     <tbody>
-                        <tr id="stock-info-table-head">
+                        <tr>
                             <th>證券代號</th>
                             <th>商品名稱</th>
                             <th>成交張數</th>

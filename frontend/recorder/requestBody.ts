@@ -16,29 +16,36 @@ export class RequestBody implements requestbody {
 }
 
 export class CreateRequestBody extends RequestBody {
+    public dealTime: string | undefined;
+    public sid: string | undefined;
     public dealPrice: string | undefined;
     public dealQuantity: string | undefined;
-    public dealTime: string | undefined;
     public handlingFee: string | undefined;
-    public sid: string | undefined;
+    public cashDividend: string | undefined;
     constructor() {
         super("create");
     }
     public setAttribute(attrName: string, value: string): void {
-        if (attrName === "deal-price") this.dealPrice = value;
+        if (attrName === "handling-fee") this.handlingFee = value;
+        else if (attrName === "sid") this.sid = value;
+        else if (attrName === "deal-price") this.dealPrice = value;
         else if (attrName === "deal-quantity") this.dealQuantity = value;
         else if (attrName === "deal-time") this.dealTime = value;
-        else if (attrName === "handling-fee") this.handlingFee = value;
-        else if (attrName === "sid") this.sid = value;
+        else if (attrName === "cash-dividend") this.cashDividend = value;
     }
     public toURLSearchParams(): URLSearchParams {
         let result = super.toURLSearchParams();
         if (this.dealPrice !== undefined && this.dealQuantity !== undefined && this.dealTime !== undefined && this.handlingFee !== undefined && this.sid !== undefined) {
+            result.append("deal-time", this.dealTime);
+            result.append("sid", this.sid);
             result.append("deal-price", this.dealPrice);
             result.append("deal-quantity", this.dealQuantity);
-            result.append("deal-time", this.dealTime);
             result.append("handling-fee", this.handlingFee);
+            return result;
+        } else if (this.dealTime !== undefined && this.sid !== undefined && this.cashDividend !== undefined) {
+            result.append("deal-time", this.dealTime);
             result.append("sid", this.sid);
+            result.append("cash-dividend", this.cashDividend);
             return result;
         } else throw "Create Info Not Sufficient.";
     }
@@ -52,11 +59,12 @@ export class ReadRequestBody extends RequestBody {
 
 export class UpdateRequestBody extends RequestBody {
     public id: string | undefined;
+    public dealTime: string | undefined;
+    public sid: string | undefined;
     public dealPrice: string | undefined;
     public dealQuantity: string | undefined;
-    public dealTime: string | undefined;
     public handlingFee: string | undefined;
-    public sid: string | undefined;
+    public cashDividend: string | undefined;
     constructor() {
         super("update");
     }
@@ -67,6 +75,7 @@ export class UpdateRequestBody extends RequestBody {
         else if (attrName === "deal-time") this.dealTime = value;
         else if (attrName === "handling-fee") this.handlingFee = value;
         else if (attrName === "sid") this.sid = value;
+        else if (attrName === "cash-dividend") this.cashDividend = value;
     }
     public toURLSearchParams(): URLSearchParams {
         let result = super.toURLSearchParams();
@@ -77,6 +86,12 @@ export class UpdateRequestBody extends RequestBody {
             result.append("deal-time", this.dealTime);
             result.append("handling-fee", this.handlingFee);
             result.append("sid", this.sid);
+            return result;
+        } else if (this.id !== undefined && this.dealTime !== undefined && this.sid !== undefined && this.cashDividend !== undefined) {
+            result.append("id", this.id);
+            result.append("deal-time", this.dealTime);
+            result.append("sid", this.sid);
+            result.append("cash-dividend", this.cashDividend);
             return result;
         } else throw "Update Info Not Sufficient.";
     }
