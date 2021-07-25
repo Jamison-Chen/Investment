@@ -1,10 +1,14 @@
 from django.contrib import admin
-from .models import TradeRecord, StockInfo
+from .models import TradeRecord, StockInfo, CashDividendRecord
 
 
 class TradeRecordAdmin(admin.ModelAdmin):
     list_display = ("id", "dealTime", "sid", "companyName",
                     "dealPrice", "dealQuantity", "handlingFee")
+
+
+class CashDividendRecordAdmin(admin.ModelAdmin):
+    list_display = ("id", "dealTime", "sid", "companyName", "cashDividend")
 
 
 class StockInfoAdmin(admin.ModelAdmin):
@@ -15,4 +19,5 @@ class StockInfoAdmin(admin.ModelAdmin):
 
 
 admin.site.register(TradeRecord, TradeRecordAdmin)
+admin.site.register(CashDividendRecord, CashDividendRecordAdmin)
 admin.site.register(StockInfo, StockInfoAdmin)

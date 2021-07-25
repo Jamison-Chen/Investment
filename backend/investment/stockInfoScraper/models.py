@@ -10,6 +10,13 @@ class TradeRecord(models.Model):
     handlingFee = models.BigIntegerField()
 
 
+class CashDividendRecord(models.Model):
+    dealTime = models.BigIntegerField()
+    sid = models.CharField(max_length=32)
+    companyName = models.CharField(max_length=32)
+    cashDividend = models.BigIntegerField()
+
+
 class StockInfo(models.Model):
     date = models.BigIntegerField()
     sid = models.CharField(max_length=32)

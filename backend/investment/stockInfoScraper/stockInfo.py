@@ -1,10 +1,7 @@
 import time
 import datetime
-import csv
-from io import StringIO
-from requests import post, get
+from requests import get
 import json
-import shutil
 from pyquery import PyQuery as pq
 from .models import StockInfo
 

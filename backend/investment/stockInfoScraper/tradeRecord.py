@@ -1,7 +1,4 @@
-import time
-import csv
-from requests import post, get
-import random
+from requests import post
 from pyquery import PyQuery as pq
 from .models import TradeRecord
 
@@ -22,8 +19,14 @@ class TradeRecordView:
     def readTradeLog(self, dealTimeList, sidList):
         result = TradeRecord.objects.all()    # Default: all dealTimes, all sids
         if dealTimeList != [] or sidList != []:    # specific dealTimes, specific sids
-            result = TradeRecord.objects.filter(
-                dealTime=dealTimeList[0]).filter(sid=sidList[0])
+            if dealTimeList != [] and sidList != []:
+                result = TradeRecord.objects.filter(
+                    dealTime=dealTimeList[0]).filter(sid=sidList[0])
+            elif dealTimeList == []:
+                result = TradeRecord.objects.filter(sid=sidList[0])
+            else:
+                result = TradeRecord.objects.filter(
+                    dealTime=dealTimeList[0])
             for each in dealTimeList:
                 result.union(TradeRecord.objects.filter(dealTime=each))
             for each in sidList:

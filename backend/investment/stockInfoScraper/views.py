@@ -5,6 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from .stockInfo import StockInfoView
 from .tradeRecord import TradeRecordView
+from .cashDividendRecord import CashDividendRecordView
 
 
 @csrf_exempt
@@ -34,8 +35,8 @@ def fetchStockInfo(request):
 @csrf_exempt
 def recordCRUD(request):
     if request.method == "POST":
-        mode = str(request.POST.get("mode"))
         s = TradeRecordView()
+        mode = str(request.POST.get("mode"))
         ID = str(request.POST.get("id"))
         dealTime = str(request.POST.get("deal-time"))
         sid = str(request.POST.get("sid"))
@@ -65,6 +66,47 @@ def recordCRUD(request):
                 result = {"success-message": "update-success"}
         elif mode == "delete":
             s.deleteTradeLog(ID)
+            result = {"success-message": "deletion-success"}
+        else:
+            result = {"error-message": "Mode Not Exsist"}
+        result = json.dumps(result)
+    else:
+        result = {"error-message": "Only POST methods are available."}
+    response = HttpResponse(result)
+    response["Access-Control-Allow-Origin"] = "*"
+    return response
+
+
+@csrf_exempt
+def dividendCRUD(request):
+    if request.method == "POST":
+        s = CashDividendRecordView()
+        mode = str(request.POST.get("mode"))
+        ID = str(request.POST.get("id"))
+        dealTime = str(request.POST.get("deal-time"))
+        sid = str(request.POST.get("sid"))
+        cashDividend = str(request.POST.get("cash-dividend"))
+        result = None
+        if mode == "create":
+            if dealTime == "" or sid == "" or cashDividend == "":
+                result = {"error-message": "Data not sufficient."}
+            else:
+                s.createCashDividendLog(dealTime, sid, cashDividend)
+                result = {"success-message": "creation-success"}
+        elif mode == "read":
+            dealTimeList = str(request.POST.get("deal-time-list")).split(
+                ",") if request.POST.get("deal-time-list") != None else []
+            sidList = str(request.POST.get("sid-list")).split(
+                ",") if request.POST.get("sid-list") != None else []
+            result = {"data": s.readCashDividendLog(dealTimeList, sidList)}
+        elif mode == "update":
+            if ID == "" or dealTime == "" or sid == "" or cashDividend == "":
+                result = {"error-message": "Data not sufficient."}
+            else:
+                s.updateCashDividendLog(ID, dealTime, sid, cashDividend)
+                result = {"success-message": "update-success"}
+        elif mode == "delete":
+            s.deleteCashDividendLog(ID)
             result = {"success-message": "deletion-success"}
         else:
             result = {"error-message": "Mode Not Exsist"}
