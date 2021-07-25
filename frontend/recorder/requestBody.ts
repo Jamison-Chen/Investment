@@ -47,7 +47,7 @@ export class CreateRequestBody extends RequestBody {
             result.append("sid", this.sid);
             result.append("cash-dividend", this.cashDividend);
             return result;
-        } else throw "Create Info Not Sufficient.";
+        } else throw "Create Info Not Sufficient at the front end.";
     }
 }
 

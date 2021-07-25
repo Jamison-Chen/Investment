@@ -182,7 +182,7 @@ html {
     cursor: pointer;
 }
 
-#create-trade-record-form-container {
+#create-trade-record-form-background {
     position: fixed;
     top: 0%;
     left: 0%;
@@ -196,12 +196,32 @@ html {
     z-index: 100;
 }
 
-#create-trade-record-form-container.active {
+#create-trade-record-form-background.active {
     display: flex;
     flex-direction: column;
 }
 
-#create-record-form,
+#form-container-header {
+    display: flex;
+    border-radius: 8px 8px 0 0;
+    font-size: 1.2rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.record-form-option {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    color: #888;
+}
+
+.record-form-option.active {
+    color: rgb(0, 149, 255);
+}
+
+#form-container-header,
+.create-record-form.active,
 #submit-btn {
     width: 230px;
     background-color: var(--bgc);
@@ -210,13 +230,13 @@ html {
     justify-content: center;
 }
 
-#create-record-form {
+.create-record-form {
     flex-direction: column;
+    display: none;
     font-size: 1.1rem;
-    border-radius: 8px 8px 0 0;
 }
 
-#create-record-form>label {
+.create-record-form>label {
     display: flex;
     justify-content: space-between;
     margin: 10px 0;

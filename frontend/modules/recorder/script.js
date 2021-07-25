@@ -18,15 +18,17 @@ const togglerMask = document.getElementById("toggler-mask");
 const upperPart = document.getElementById("upper-part");
 const cashInvShowRangeInput = document.getElementById("cash-invested-show-range-input");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
-const createTradeRecordFormContainer = document.getElementById("create-trade-record-form-container");
-const dealTimeRecordInput = document.getElementById("deal-time-record");
+const createTradeRecordFormBackground = document.getElementById("create-trade-record-form-background");
+const allRecordFormOptions = document.getElementsByClassName("record-form-option");
+const allCreateRecordForms = document.getElementsByClassName("create-record-form");
+const tradeDealTimeRecordInput = document.getElementById("trade-deal-time-record");
+const cashDividendDealTimeRecordInput = document.getElementById("cash-dividend-deal-time-record");
 const dealPriceRecordInput = document.getElementById("deal-price-record");
 const dealQuantityRecordInput = document.getElementById("deal-quantity-record");
 const handlingFeeRecordInput = document.getElementById("handling-fee-record");
-const allRecordFormInputs = document.getElementsByClassName("record-form-input");
 const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
-const allTabs = document.getElementsByClassName("tab");
+const allLowerTableTabs = document.getElementsByClassName("tab");
 const allLowerTableContainers = document.getElementsByClassName("lower-table-container");
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
@@ -99,9 +101,10 @@ function createTradeRecord(e) {
     return __awaiter(this, void 0, void 0, function* () {
         let requestBody = new CreateRequestBody();
         let hasUnfilledBlank = false;
+        const allRecordFormInputs = document.querySelectorAll(".create-record-form.active .record-form-input");
         for (let each of allRecordFormInputs) {
             if (each instanceof HTMLInputElement && each.value !== null && each.value !== undefined) {
-                if (each === dealTimeRecordInput) {
+                if (each === tradeDealTimeRecordInput || each === cashDividendDealTimeRecordInput) {
                     requestBody.setAttribute(each.name, each.value.split("-").join(""));
                 }
                 else if (each.value !== "")
@@ -111,7 +114,11 @@ function createTradeRecord(e) {
             }
         }
         if (!hasUnfilledBlank) {
-            yield recordCRUD(requestBody, "trade");
+            const selectedForm = document.querySelector(".create-record-form.active");
+            if ((selectedForm === null || selectedForm === void 0 ? void 0 : selectedForm.id) === "trade-record-form")
+                yield recordCRUD(requestBody, "trade");
+            else if ((selectedForm === null || selectedForm === void 0 ? void 0 : selectedForm.id) === "cash-dividend-form")
+                yield recordCRUD(requestBody, "dividend");
             location.reload();
         }
         else
@@ -244,11 +251,11 @@ function getDatesArray(startDate, endDate) {
 }
 ;
 function expandTradeRecordForm(e) {
-    createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.add("active");
+    createTradeRecordFormBackground === null || createTradeRecordFormBackground === void 0 ? void 0 : createTradeRecordFormBackground.classList.add("active");
 }
 function foldTradeRecordForm(e) {
-    if (e.target === createTradeRecordFormContainer) {
-        createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.remove("active");
+    if (e.target === createTradeRecordFormBackground) {
+        createTradeRecordFormBackground === null || createTradeRecordFormBackground === void 0 ? void 0 : createTradeRecordFormBackground.classList.remove("active");
     }
 }
 function showInfoNotSufficientErr() {
@@ -331,12 +338,12 @@ function addAllLstnrAboutCreatingRecord() {
     createRecordBtn === null || createRecordBtn === void 0 ? void 0 : createRecordBtn.addEventListener("click", expandTradeRecordForm);
     handlingFeeRecordInput === null || handlingFeeRecordInput === void 0 ? void 0 : handlingFeeRecordInput.addEventListener("click", autoCalcHandlingFee);
     submitBtn === null || submitBtn === void 0 ? void 0 : submitBtn.addEventListener("click", createTradeRecord);
-    createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.addEventListener("click", foldTradeRecordForm);
+    createTradeRecordFormBackground === null || createTradeRecordFormBackground === void 0 ? void 0 : createTradeRecordFormBackground.addEventListener("click", foldTradeRecordForm);
 }
 function addKeyboardEventLstnr() {
     window.addEventListener("keydown", (e) => {
         if (e.keyCode === 13) {
-            if (createTradeRecordFormContainer === null || createTradeRecordFormContainer === void 0 ? void 0 : createTradeRecordFormContainer.classList.contains("active"))
+            if (createTradeRecordFormBackground === null || createTradeRecordFormBackground === void 0 ? void 0 : createTradeRecordFormBackground.classList.contains("active"))
                 submitBtn === null || submitBtn === void 0 ? void 0 : submitBtn.click();
         }
     });
@@ -356,21 +363,22 @@ function moveTogglerMask(e) {
             upperPart.className = "overview";
     }
 }
-function makeTabControllable() {
-    for (let each of allTabs) {
-        if (each instanceof HTMLElement)
-            each.addEventListener("click", highlightTab);
+function makeTabControllable(tabGroup, controlledSections) {
+    for (let each of tabGroup) {
+        if (each instanceof HTMLElement) {
+            each.addEventListener("click", (e) => { highlightTab(e, tabGroup, controlledSections); });
+        }
     }
 }
-function highlightTab(e) {
-    for (let i = 0; i < allTabs.length; i++) {
-        if (allTabs[i] === e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
-            allTabs[i].classList.add("active");
-            allLowerTableContainers[i].classList.replace("close", "active");
+function highlightTab(e, tabGroup, controlledSections) {
+    for (let i = 0; i < tabGroup.length; i++) {
+        if (tabGroup[i] === e.currentTarget && controlledSections[i] instanceof HTMLElement) {
+            tabGroup[i].classList.add("active");
+            controlledSections[i].classList.replace("close", "active");
         }
         else {
-            allTabs[i].classList.remove("active");
-            allLowerTableContainers[i].classList.replace("active", "close");
+            tabGroup[i].classList.remove("active");
+            controlledSections[i].classList.replace("active", "close");
         }
     }
 }
@@ -394,8 +402,10 @@ function main() {
         addAllLstnrAboutCreatingRecord();
         addKeyboardEventLstnr();
         makeViewTogglerControllable();
-        makeTabControllable();
+        makeTabControllable(allRecordFormOptions, allCreateRecordForms);
+        makeTabControllable(allLowerTableTabs, allLowerTableContainers);
         // The cash-invested chart need info in trade-record table, so this need to be await
+        let cashDividendJson = recordCRUD(new ReadRequestBody(), "dividend");
         let tradeRecordJson = yield recordCRUD(new ReadRequestBody(), "trade");
         initAllHoldingSid(tradeRecordJson["data"]);
         buildStockWarehouse(tradeRecordJson["data"]);
@@ -410,8 +420,10 @@ function main() {
         firstDayStr = `${firstDayStr.slice(0, 4)}-${firstDayStr.slice(4, 6)}-${firstDayStr.slice(6)}`;
         mygooglechart.drawCashInvestedChart(firstDayStr, cashInvestedData, cashInvestedChart);
         // set default value for the deal-time field of the create-record form
-        if (dealTimeRecordInput instanceof HTMLInputElement)
-            dealTimeRecordInput.value = todayStr;
+        if (tradeDealTimeRecordInput instanceof HTMLInputElement)
+            tradeDealTimeRecordInput.value = todayStr;
+        if (cashDividendDealTimeRecordInput instanceof HTMLInputElement)
+            cashDividendDealTimeRecordInput.value = todayStr;
         setupCashInvShowRangeInput(todayStr, firstDayStr, cashInvestedData);
         // The component chart need info in stock-info table, so this need to be await.
         // Remember that stock info need to be fetched after calcBalanceQOfEachSidAndUpdateAllHoldingSids().

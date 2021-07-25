@@ -57,35 +57,53 @@
                 <div id="individual-compare-chart"></div>
             </div>
         </div>
-
         <div id="create-trade-record-btn-container">
             <div id="create-trade-record-btn">+ New Trade</div>
         </div>
-
-        <div id="create-trade-record-form-container">
-            <form id="create-record-form">
-                <label>
-                    <div>交易日期</div>
-                    <input type="date" name="deal-time" id="deal-time-record" class="record-form-input form-input">
-                </label>
-                <label>
-                    <div>證券代號</div>
-                    <input type="text" name="sid" id="sid-record" class="record-form-input form-input">
-                </label>
-                <label>
-                    <div>成交單價</div>
-                    <input type="number" name="deal-price" id="deal-price-record" class="record-form-input form-input">
-                </label>
-                <label>
-                    <div>成交股數</div>
-                    <input type="number" name="deal-quantity" id="deal-quantity-record" class="record-form-input form-input">
-                </label>
-                <label>
-                    <div>手續費用</div>
-                    <input type="number" name="handling-fee" id="handling-fee-record" class="record-form-input form-input">
-                </label>
-            </form>
-            <div id="submit-btn">Create</div>
+        <div id="create-trade-record-form-background">
+            <div id="form-container">
+                <div id="form-container-header">
+                    <div class="record-form-option active">一般交易</div>
+                    <div class="record-form-option">現金股利</div>
+                </div>
+                <form id="trade-record-form" class="create-record-form active">
+                    <label>
+                        <div>交易日期</div>
+                        <input type="date" name="deal-time" id="trade-deal-time-record" class="record-form-input form-input">
+                    </label>
+                    <label>
+                        <div>證券代號</div>
+                        <input type="text" name="sid" id="trade-sid-record" class="record-form-input form-input">
+                    </label>
+                    <label>
+                        <div>成交單價</div>
+                        <input type="number" name="deal-price" id="deal-price-record" class="record-form-input form-input">
+                    </label>
+                    <label>
+                        <div>成交股數</div>
+                        <input type="number" name="deal-quantity" id="deal-quantity-record" class="record-form-input form-input">
+                    </label>
+                    <label>
+                        <div>手續費用</div>
+                        <input type="number" name="handling-fee" id="handling-fee-record" class="record-form-input form-input">
+                    </label>
+                </form>
+                <form id="cash-dividend-form" class="create-record-form close">
+                    <label>
+                        <div>交易日期</div>
+                        <input type="date" name="deal-time" id="cash-dividend-deal-time-record" class="record-form-input form-input">
+                    </label>
+                    <label>
+                        <div>證券代號</div>
+                        <input type="text" name="sid" id="cash-dividend-sid-record" class="record-form-input form-input">
+                    </label>
+                    <label>
+                        <div>現金股利</div>
+                        <input type="number" name="cash-dividend" id="cash-dividend-record" class="record-form-input form-input">
+                    </label>
+                </form>
+                <div id="submit-btn">Create</div>
+            </div>
         </div>
         <div class=tab-container>
             <div class="tabs clearfix">

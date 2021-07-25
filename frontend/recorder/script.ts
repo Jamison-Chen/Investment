@@ -10,15 +10,17 @@ const togglerMask = document.getElementById("toggler-mask");
 const upperPart = document.getElementById("upper-part");
 const cashInvShowRangeInput = document.getElementById("cash-invested-show-range-input");
 const createRecordBtn = document.getElementById("create-trade-record-btn");
-const createTradeRecordFormContainer = document.getElementById("create-trade-record-form-container");
-const dealTimeRecordInput = document.getElementById("deal-time-record");
+const createTradeRecordFormBackground = document.getElementById("create-trade-record-form-background");
+const allRecordFormOptions = document.getElementsByClassName("record-form-option");
+const allCreateRecordForms = document.getElementsByClassName("create-record-form");
+const tradeDealTimeRecordInput = document.getElementById("trade-deal-time-record");
+const cashDividendDealTimeRecordInput = document.getElementById("cash-dividend-deal-time-record");
 const dealPriceRecordInput = document.getElementById("deal-price-record");
 const dealQuantityRecordInput = document.getElementById("deal-quantity-record");
 const handlingFeeRecordInput = document.getElementById("handling-fee-record");
-const allRecordFormInputs = document.getElementsByClassName("record-form-input");
 const submitBtn = document.getElementById("submit-btn");
 const createErrorDiv = document.getElementById("create-error");
-const allTabs = document.getElementsByClassName("tab");
+const allLowerTableTabs = document.getElementsByClassName("tab");
 const allLowerTableContainers = document.getElementsByClassName("lower-table-container");
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
@@ -90,16 +92,19 @@ function buildStockWarehouse(data: any[]): void {
 async function createTradeRecord(e: Event): Promise<void> {
     let requestBody: CreateRequestBody = new CreateRequestBody();
     let hasUnfilledBlank = false;
+    const allRecordFormInputs = document.querySelectorAll(".create-record-form.active .record-form-input");
     for (let each of allRecordFormInputs) {
         if (each instanceof HTMLInputElement && each.value !== null && each.value !== undefined) {
-            if (each === dealTimeRecordInput) {
+            if (each === tradeDealTimeRecordInput || each === cashDividendDealTimeRecordInput) {
                 requestBody.setAttribute(each.name, each.value.split("-").join(""));
             } else if (each.value !== "") requestBody.setAttribute(each.name, each.value);
             else hasUnfilledBlank = true;
         }
     }
     if (!hasUnfilledBlank) {
-        await recordCRUD(requestBody, "trade");
+        const selectedForm = document.querySelector(".create-record-form.active");
+        if (selectedForm?.id === "trade-record-form") await recordCRUD(requestBody, "trade");
+        else if (selectedForm?.id === "cash-dividend-form") await recordCRUD(requestBody, "dividend");
         location.reload();
     } else showInfoNotSufficientErr();
 }
@@ -222,12 +227,12 @@ function getDatesArray(startDate: Date, endDate: Date) {
 };
 
 function expandTradeRecordForm(e: Event): void {
-    createTradeRecordFormContainer?.classList.add("active");
+    createTradeRecordFormBackground?.classList.add("active");
 }
 
 function foldTradeRecordForm(e: Event): void {
-    if (e.target === createTradeRecordFormContainer) {
-        createTradeRecordFormContainer?.classList.remove("active");
+    if (e.target === createTradeRecordFormBackground) {
+        createTradeRecordFormBackground?.classList.remove("active");
     }
 }
 
@@ -313,13 +318,13 @@ function addAllLstnrAboutCreatingRecord(): void {
     createRecordBtn?.addEventListener("click", expandTradeRecordForm);
     handlingFeeRecordInput?.addEventListener("click", autoCalcHandlingFee);
     submitBtn?.addEventListener("click", createTradeRecord);
-    createTradeRecordFormContainer?.addEventListener("click", foldTradeRecordForm);
+    createTradeRecordFormBackground?.addEventListener("click", foldTradeRecordForm);
 }
 
 function addKeyboardEventLstnr(): void {
     window.addEventListener("keydown", (e) => {
         if (e.keyCode === 13) {
-            if (createTradeRecordFormContainer?.classList.contains("active")) submitBtn?.click();
+            if (createTradeRecordFormBackground?.classList.contains("active")) submitBtn?.click();
         }
     });
 }
@@ -339,20 +344,22 @@ function moveTogglerMask(e: Event): void {
     }
 }
 
-function makeTabControllable(): void {
-    for (let each of allTabs) {
-        if (each instanceof HTMLElement) each.addEventListener("click", highlightTab);
+function makeTabControllable(tabGroup: HTMLCollectionOf<Element>, controlledSections: HTMLCollectionOf<Element>): void {
+    for (let each of tabGroup) {
+        if (each instanceof HTMLElement) {
+            each.addEventListener("click", (e: Event) => { highlightTab(e, tabGroup, controlledSections) });
+        }
     }
 }
 
-function highlightTab(e: Event): void {
-    for (let i = 0; i < allTabs.length; i++) {
-        if (allTabs[i] === e.currentTarget && allLowerTableContainers[i] instanceof HTMLElement) {
-            allTabs[i].classList.add("active");
-            allLowerTableContainers[i].classList.replace("close", "active");
+function highlightTab(e: Event, tabGroup: HTMLCollectionOf<Element>, controlledSections: HTMLCollectionOf<Element>): void {
+    for (let i = 0; i < tabGroup.length; i++) {
+        if (tabGroup[i] === e.currentTarget && controlledSections[i] instanceof HTMLElement) {
+            tabGroup[i].classList.add("active");
+            controlledSections[i].classList.replace("close", "active");
         } else {
-            allTabs[i].classList.remove("active");
-            allLowerTableContainers[i].classList.replace("active", "close");
+            tabGroup[i].classList.remove("active");
+            controlledSections[i].classList.replace("active", "close");
         }
     }
 }
@@ -377,9 +384,11 @@ async function main(): Promise<void> {
     addAllLstnrAboutCreatingRecord();
     addKeyboardEventLstnr();
     makeViewTogglerControllable();
-    makeTabControllable();
+    makeTabControllable(allRecordFormOptions, allCreateRecordForms);
+    makeTabControllable(allLowerTableTabs, allLowerTableContainers);
 
     // The cash-invested chart need info in trade-record table, so this need to be await
+    let cashDividendJson: any = recordCRUD(new ReadRequestBody(), "dividend");
     let tradeRecordJson: any = await recordCRUD(new ReadRequestBody(), "trade");
     initAllHoldingSid(tradeRecordJson["data"]);
     buildStockWarehouse(tradeRecordJson["data"]);
@@ -396,7 +405,8 @@ async function main(): Promise<void> {
     mygooglechart.drawCashInvestedChart(firstDayStr, cashInvestedData, cashInvestedChart);
 
     // set default value for the deal-time field of the create-record form
-    if (dealTimeRecordInput instanceof HTMLInputElement) dealTimeRecordInput.value = todayStr;
+    if (tradeDealTimeRecordInput instanceof HTMLInputElement) tradeDealTimeRecordInput.value = todayStr;
+    if (cashDividendDealTimeRecordInput instanceof HTMLInputElement) cashDividendDealTimeRecordInput.value = todayStr;
     setupCashInvShowRangeInput(todayStr, firstDayStr, cashInvestedData);
 
     // The component chart need info in stock-info table, so this need to be await.
