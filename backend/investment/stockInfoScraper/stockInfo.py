@@ -128,5 +128,6 @@ class StockInfoView:
                                     "fluct-price": q.fluctPrice,
                                     "fluct-rate": q.fluctRate})
             else:
-                raise Exception(
-                    "Error in prepareResult: failed to get info of %s" % eachSid)
+                self.fetchAndStore([eachSid])
+                # raise Exception(
+                #     "Error in prepareResult: failed to get info of %s" % eachSid)
