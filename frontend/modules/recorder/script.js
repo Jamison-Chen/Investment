@@ -9,7 +9,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { CreateRequestBody, ReadRequestBody } from "./requestBody.js";
 import { MyGoogleChart } from "./chart.js";
-import { StockInfoTable, StockWarehouseTable, TradeRecordTable } from "./table.js";
+import { StockInfoTable, StockWarehouseTable, RecordTable } from "./table.js";
 const recorderOption = document.getElementById("recorder-option");
 const simulatorOption = document.getElementById("simulator-option");
 const simulatorProOption = document.getElementById("simulator-pro-option");
@@ -32,6 +32,7 @@ const allLowerTableTabs = document.getElementsByClassName("tab");
 const allLowerTableContainers = document.getElementsByClassName("lower-table-container");
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
+const cashDividendTableBody = document.querySelector("#cash-dividend-table tbody");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
 const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row");
 const cashInvestedChart = document.getElementById('cash-invested-chart');
@@ -47,6 +48,7 @@ let totalMktVal = 0;
 let handlingFee = 0;
 let mygooglechart = new MyGoogleChart();
 let traderecordtable;
+let cashdividendrecordtable;
 let stockinfotable;
 let stockwarehousetable;
 let endPoint;
@@ -97,7 +99,7 @@ function buildStockWarehouse(data) {
             stockWarehouse[s][t][p] = q;
     }
 }
-function createTradeRecord(e) {
+function createRecord(e) {
     return __awaiter(this, void 0, void 0, function* () {
         let requestBody = new CreateRequestBody();
         let hasUnfilledBlank = false;
@@ -337,7 +339,7 @@ function decideOptionAnchorHref() {
 function addAllLstnrAboutCreatingRecord() {
     createRecordBtn === null || createRecordBtn === void 0 ? void 0 : createRecordBtn.addEventListener("click", expandTradeRecordForm);
     handlingFeeRecordInput === null || handlingFeeRecordInput === void 0 ? void 0 : handlingFeeRecordInput.addEventListener("click", autoCalcHandlingFee);
-    submitBtn === null || submitBtn === void 0 ? void 0 : submitBtn.addEventListener("click", createTradeRecord);
+    submitBtn === null || submitBtn === void 0 ? void 0 : submitBtn.addEventListener("click", createRecord);
     createTradeRecordFormBackground === null || createTradeRecordFormBackground === void 0 ? void 0 : createTradeRecordFormBackground.addEventListener("click", foldTradeRecordForm);
 }
 function addKeyboardEventLstnr() {
@@ -405,13 +407,17 @@ function main() {
         makeTabControllable(allRecordFormOptions, allCreateRecordForms);
         makeTabControllable(allLowerTableTabs, allLowerTableContainers);
         // The cash-invested chart need info in trade-record table, so this need to be await
-        let cashDividendJson = recordCRUD(new ReadRequestBody(), "dividend");
+        let cashDividendJson = yield recordCRUD(new ReadRequestBody(), "dividend");
         let tradeRecordJson = yield recordCRUD(new ReadRequestBody(), "trade");
         initAllHoldingSid(tradeRecordJson["data"]);
         buildStockWarehouse(tradeRecordJson["data"]);
         if (tradeRecordTableBody instanceof HTMLElement) {
-            traderecordtable = new TradeRecordTable(tradeRecordTableBody, recordCRUD);
+            traderecordtable = new RecordTable(tradeRecordTableBody, recordCRUD, "trade");
             traderecordtable.build(tradeRecordJson["data"]);
+        }
+        if (cashDividendTableBody instanceof HTMLElement) {
+            cashdividendrecordtable = new RecordTable(cashDividendTableBody, recordCRUD, "dividend");
+            cashdividendrecordtable.build(cashDividendJson["data"]);
         }
         let todayStr = getStartDateStr(new Date(), 0);
         // stockWarehouse will be modified by the function below

@@ -12,9 +12,10 @@ export class MyTable implements Table {
     public build(...args: any[]): void { }
 }
 
-export class TradeRecordTable extends MyTable {
+export class RecordTable extends MyTable {
     private crudFunction: Function;
-    private CLASSNAME_TRADE_RECORD_TABLE_ROW: string;
+    private tableType: "trade" | "dividend";
+    private CLASSNAME_RECORD_TABLE_ROW: string;
     private CLASSNAME_UPDATE_BTN: string;
     private CLASSNAME_DELETE_BTN: string;
     private CLASSNAME_ID: string;
@@ -23,10 +24,11 @@ export class TradeRecordTable extends MyTable {
     private CLASSNAME_NOT_EDITING: string;
     private CLASSNAME_EDITING: string;
     private CLASSNAME_CRUD: string;
-    constructor(tableBodyDiv: HTMLElement, crudFunction: Function) {
+    constructor(tableBodyDiv: HTMLElement, crudFunction: Function, tableType: "trade" | "dividend") {
         super(tableBodyDiv);
         this.crudFunction = crudFunction;
-        this.CLASSNAME_TRADE_RECORD_TABLE_ROW = "trade-record-table-row";
+        this.tableType = tableType;
+        this.CLASSNAME_RECORD_TABLE_ROW = "record-table-row";
         this.CLASSNAME_UPDATE_BTN = "update-btn";
         this.CLASSNAME_DELETE_BTN = "delete-btn";
         this.CLASSNAME_ID = "id";
@@ -36,13 +38,12 @@ export class TradeRecordTable extends MyTable {
         this.CLASSNAME_EDITING = "editing";
         this.CLASSNAME_CRUD = "crud";
     }
-    public readyToUpdate(srcObject: TradeRecordTable, e: Event): void {
+    public readyToUpdate(srcObject: RecordTable, e: Event): void {
         // Because readyToUpdate(e) is a cllBack function,
         // which is belong to the "Object" class but not "this",
         // if we want to use methods that is defined in "this" object,
         // we need a param that is exactly the source object.
         let targetRowDOM = srcObject.findEditedRow(e);
-        console.log("hi");
         let copyOriginal: any = {};
         if (targetRowDOM instanceof HTMLElement) {
             let allInputSpans = targetRowDOM.querySelectorAll(`.${srcObject.CLASSNAME_INPUT}.${srcObject.CLASSNAME_NOT_EDITING}`);
@@ -56,12 +57,11 @@ export class TradeRecordTable extends MyTable {
                 }
             }
             // change the words displayed in the crud div of the target row
-            let args = { "copyOriginal": copyOriginal };
-            srcObject.changeTradeRecordRowEndDiv("clickUpdate", targetRowDOM, args);
+            srcObject.changeRecordTableRowEndDiv("clickUpdate", targetRowDOM, { "copyOriginal": copyOriginal });
         }
         window.addEventListener("keypress", srcObject.noSpaceAndNewLine);
     }
-    public readyToDelete(srcObject: TradeRecordTable, e: Event): void {
+    public readyToDelete(srcObject: RecordTable, e: Event): void {
         // Because readyToUpdate(e) is a cllBack function,
         // which is belong to the "Object" class but not "this",
         // if we want to use methods that is defined in "this" object,
@@ -71,7 +71,7 @@ export class TradeRecordTable extends MyTable {
             if (targetRowDOM instanceof HTMLElement) {
                 for (let each of targetRowDOM.childNodes) {
                     if (each instanceof HTMLElement && each.className === srcObject.CLASSNAME_ID) {
-                        srcObject.crudFunction(new DeleteRequestBody(each.innerText), "trade");
+                        srcObject.crudFunction(new DeleteRequestBody(each.innerText), srcObject.tableType);
                         break;
                     }
                 }
@@ -79,7 +79,7 @@ export class TradeRecordTable extends MyTable {
             location.reload();
         }
     }
-    public async saveUpdate(srcObject: TradeRecordTable, e: Event): Promise<void> {
+    public async saveUpdate(srcObject: RecordTable, e: Event): Promise<void> {
         // Because readyToUpdate(e) is a cllBack function,
         // which is belong to the "Object" class but not "this",
         // if we want to use methods that is defined in "this" object,
@@ -98,14 +98,14 @@ export class TradeRecordTable extends MyTable {
                     requestBody.setAttribute(each.parentNode.className, each.innerHTML);
                 }
             }
-            await srcObject.crudFunction(requestBody, "trade");
+            await srcObject.crudFunction(requestBody, srcObject.tableType);
             // change the words displayed in the crud div of the target row
-            srcObject.changeTradeRecordRowEndDiv("clickSave", targetRowDOM, { "copyOriginal": requestBody });
+            srcObject.changeRecordTableRowEndDiv("clickSave", targetRowDOM, { "copyOriginal": requestBody });
         }
         window.removeEventListener("keypress", srcObject.noSpaceAndNewLine);
         location.reload();
     }
-    public forgetUpdate(srcObject: TradeRecordTable, e: Event, args: any): void {
+    public forgetUpdate(srcObject: RecordTable, e: Event, args: any): void {
         // Because readyToUpdate(e) is a cllBack function,
         // which is belong to the "Object" class but not "this",
         // if we want to use methods that is defined in "this" object,
@@ -123,21 +123,21 @@ export class TradeRecordTable extends MyTable {
                 }
             }
             // change the words displayed in the crud div of the target row
-            srcObject.changeTradeRecordRowEndDiv("clickCancel", targetRowDOM, {});
+            srcObject.changeRecordTableRowEndDiv("clickCancel", targetRowDOM, {});
         }
         window.removeEventListener("keypress", srcObject.noSpaceAndNewLine);
     }
     public findEditedRow(e: Event): HTMLElement | null {
         let temp = e.target;
         // find the row being edited
-        while (temp instanceof HTMLElement && temp.parentNode !== null && temp.className !== this.CLASSNAME_TRADE_RECORD_TABLE_ROW) {
+        while (temp instanceof HTMLElement && temp.parentNode !== null && temp.className !== this.CLASSNAME_RECORD_TABLE_ROW) {
             temp = temp.parentNode;
         }
         return temp instanceof HTMLElement ? temp : null;
     }
-    public changeTradeRecordRowEndDiv(type: string, targetRowDOM: HTMLElement, args: any): void {
-        let crud = targetRowDOM.querySelector(`.${this.CLASSNAME_CRUD}`);
-        let btnConfigList = []
+    public changeRecordTableRowEndDiv(type: string, targetRowDOM: HTMLElement, args: any): void {
+        let updateDeleteSection = targetRowDOM.querySelector(`.${this.CLASSNAME_CRUD}`);
+        let btnConfigList = [];
         if (type === "clickUpdate") {
             btnConfigList = [
                 {
@@ -172,11 +172,12 @@ export class TradeRecordTable extends MyTable {
             ];
         }
         let newDiv = this.genUpdDelDiv(btnConfigList);
-        if (crud instanceof HTMLElement) {
-            crud.innerHTML = "";
-            crud.appendChild(newDiv);
+        if (updateDeleteSection instanceof HTMLElement) {
+            updateDeleteSection.innerHTML = "";
+            updateDeleteSection.appendChild(newDiv);
         }
-        let rows = document.getElementsByClassName(this.CLASSNAME_TRADE_RECORD_TABLE_ROW);
+        // hide all the update/delete btns of other rows
+        let rows = document.getElementsByClassName(this.CLASSNAME_RECORD_TABLE_ROW);
         for (let each of rows) {
             if (each !== targetRowDOM) {
                 let crudOfOtherRow = each.querySelector(`.${this.CLASSNAME_CRUD}`);
@@ -216,7 +217,7 @@ export class TradeRecordTable extends MyTable {
         if (this.tableBodyDiv !== null) {
             for (let eachRecord of data) {
                 let tr = document.createElement("tr");
-                tr.className = this.CLASSNAME_TRADE_RECORD_TABLE_ROW;
+                tr.className = this.CLASSNAME_RECORD_TABLE_ROW;
                 for (let eachField in eachRecord) {
                     let td = document.createElement("td");
                     td.className = eachField;
@@ -232,8 +233,8 @@ export class TradeRecordTable extends MyTable {
                     tr.appendChild(td)
                 }
                 // show the update/delete btn at the end of each row
-                const crud = document.createElement("td");
-                crud.className = this.CLASSNAME_CRUD;
+                const updateDeleteSection = document.createElement("td");
+                updateDeleteSection.className = this.CLASSNAME_CRUD;
                 const btnConfigList = [
                     {
                         "btnClassName": this.CLASSNAME_UPDATE_BTN,
@@ -249,8 +250,8 @@ export class TradeRecordTable extends MyTable {
                     }
                 ];
                 let updateDeleteDiv = this.genUpdDelDiv(btnConfigList);
-                crud.appendChild(updateDeleteDiv);
-                tr.appendChild(crud);
+                updateDeleteSection.appendChild(updateDeleteDiv);
+                tr.appendChild(updateDeleteSection);
                 this.tableBodyDiv.appendChild(tr);
             }
         }

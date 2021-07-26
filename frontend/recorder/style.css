@@ -390,19 +390,19 @@ html {
 }
 
 /*  */
-.trade-record-table-row span.input {
+.record-table-row span.input {
     border: 1px solid transparent;
     padding: 2px 6px;
     transition-duration: 300ms;
 }
 
-.trade-record-table-row span.input:not(.not-editing) {
+.record-table-row span.input:not(.not-editing) {
     border-color: #444;
     border-radius: 3px;
     background-color: var(--bgc);
 }
 
-.trade-record-table-row span.input:not(.not-editing):hover {
+.record-table-row span.input:not(.not-editing):hover {
     cursor: text;
 }
 
