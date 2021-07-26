@@ -92,7 +92,7 @@ export class MyGoogleChart {
         };
         google.charts.setOnLoadCallback(() => this.applyChart(dataIn, options, "Histogram", chartDiv));
     }
-    drawEachStockCompareChart(cashInvested, securityMktVal, chartDiv) {
+    drawEachStockCompareChart(cashInvested, securityMktVal, cashDividend, chartDiv) {
         google.charts.load('current', { 'packages': ['corechart', 'bar'] });
         let mktColor = "#1AA260";
         if (securityMktVal > cashInvested)
@@ -101,9 +101,10 @@ export class MyGoogleChart {
             ["Assets", "", { role: "style" }],
             ["現金投入", cashInvested, "#aaa"],
             ["證券市值", securityMktVal, mktColor],
+            ["現金股利", cashDividend, "#FFCE44"]
         ];
         let options = {
-            title: `報酬率 ${Math.round((securityMktVal / cashInvested - 1) * 10000) / 100}%`,
+            title: `報酬率 ${Math.round((securityMktVal / (cashInvested - cashDividend) - 1) * 10000) / 100}%`,
             titleTextStyle: {
                 fontSize: 14,
                 bold: true,

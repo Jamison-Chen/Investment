@@ -35,6 +35,7 @@ const individualCompareChart = document.getElementById("individual-compare-chart
 
 let allHoldingSids: Set<string> = new Set();
 let stockWarehouse: any = {};  // structure: {aSid:{aDealTime:{aPrice:curQ, ...},  ...}, ...}
+let cashDividendJson: any;
 let totalCashInvested = 0;
 let cashExtracted = 0;
 let totalMktVal = 0;
@@ -175,6 +176,10 @@ function prepareCashInvChartData(endDateStr: string, data: any[]): (string | num
     return result;
 }
 
+function addCashDividendOnCashExtracted(data: any[]): void {
+    for (let eachRecord of data) cashExtracted += eachRecord["cash-dividend"];
+}
+
 function calcBalanceQOfEachSidAndUpdateAllHoldingSids(): any {
     let hashMapResult: any = {};
     // Count Q for each Sid and remove those whose Q === 0
@@ -278,6 +283,7 @@ function showEachStockDetail(e: Event, sid: string, individualMktVal: number): v
     }
 
     let cashInvstOfEachSid = calcCashInvstOfEachSid(sid);
+    let cashDividendOfEachSid = calcCashDividendOfEachSid(sid);
     // arrange price quantity data
     let pqData: (number | string)[][] = [["Date", "Price"]];
     for (let eachDate in stockWarehouse[sid]) {
@@ -288,7 +294,7 @@ function showEachStockDetail(e: Event, sid: string, individualMktVal: number): v
         }
     }
     mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
-    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, individualCompareChart);
+    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, cashDividendOfEachSid, individualCompareChart);
 }
 
 function calcCashInvstOfEachSid(sid: string): number {
@@ -299,6 +305,17 @@ function calcCashInvstOfEachSid(sid: string): number {
         }
     }
     return cashInvstOfEachSid;
+}
+
+function calcCashDividendOfEachSid(sid: string): number {
+    let c = cashDividendJson["data"];
+    let d: number = 0;
+    for (let each of c) {
+        if (each["sid"] === sid) {
+            d += each["cash-dividend"];
+        }
+    }
+    return d;
 }
 
 function decideEndPoint(): void {
@@ -390,7 +407,7 @@ async function main(): Promise<void> {
     makeTabControllable(allLowerTableTabs, allLowerTableContainers);
 
     // The cash-invested chart need info in trade-record table, so this need to be await
-    let cashDividendJson: any = await recordCRUD(new ReadRequestBody(), "dividend");
+    cashDividendJson = await recordCRUD(new ReadRequestBody(), "dividend");
     let tradeRecordJson: any = await recordCRUD(new ReadRequestBody(), "trade");
     initAllHoldingSid(tradeRecordJson["data"]);
     buildStockWarehouse(tradeRecordJson["data"]);
@@ -404,11 +421,15 @@ async function main(): Promise<void> {
     }
     let todayStr = getStartDateStr(new Date(), 0);
 
-    // stockWarehouse will be modified by the function below
+    // stockWarehouse will be modified by the prepareCashInvChartData function
+    // cashExtracted will be counted in the prepareCashInvChartData function,
+    // but cashExtracted is not complete yet, because dividend hasn't been added
     let cashInvestedData: (string | number)[][] = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
     let firstDayStr = cashInvestedData[1][0].toString();
     firstDayStr = `${firstDayStr.slice(0, 4)}-${firstDayStr.slice(4, 6)}-${firstDayStr.slice(6)}`;
     mygooglechart.drawCashInvestedChart(firstDayStr, cashInvestedData, cashInvestedChart);
+
+    addCashDividendOnCashExtracted(cashDividendJson["data"]);
 
     // set default value for the deal-time field of the create-record form
     if (tradeDealTimeRecordInput instanceof HTMLInputElement) tradeDealTimeRecordInput.value = todayStr;

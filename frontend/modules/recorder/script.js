@@ -42,6 +42,7 @@ const individualPriceQuantityChart = document.getElementById("individual-price-q
 const individualCompareChart = document.getElementById("individual-compare-chart");
 let allHoldingSids = new Set();
 let stockWarehouse = {}; // structure: {aSid:{aDealTime:{aPrice:curQ, ...},  ...}, ...}
+let cashDividendJson;
 let totalCashInvested = 0;
 let cashExtracted = 0;
 let totalMktVal = 0;
@@ -195,6 +196,10 @@ function prepareCashInvChartData(endDateStr, data) {
         totalCashInvested = latestCashInv;
     return result;
 }
+function addCashDividendOnCashExtracted(data) {
+    for (let eachRecord of data)
+        cashExtracted += eachRecord["cash-dividend"];
+}
 function calcBalanceQOfEachSidAndUpdateAllHoldingSids() {
     let hashMapResult = {};
     // Count Q for each Sid and remove those whose Q === 0
@@ -300,6 +305,7 @@ function showEachStockDetail(e, sid, individualMktVal) {
             allStockWarehouseTableRows[i].classList.remove("active");
     }
     let cashInvstOfEachSid = calcCashInvstOfEachSid(sid);
+    let cashDividendOfEachSid = calcCashDividendOfEachSid(sid);
     // arrange price quantity data
     let pqData = [["Date", "Price"]];
     for (let eachDate in stockWarehouse[sid]) {
@@ -310,7 +316,7 @@ function showEachStockDetail(e, sid, individualMktVal) {
         }
     }
     mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
-    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, individualCompareChart);
+    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, cashDividendOfEachSid, individualCompareChart);
 }
 function calcCashInvstOfEachSid(sid) {
     let cashInvstOfEachSid = 0;
@@ -320,6 +326,16 @@ function calcCashInvstOfEachSid(sid) {
         }
     }
     return cashInvstOfEachSid;
+}
+function calcCashDividendOfEachSid(sid) {
+    let c = cashDividendJson["data"];
+    let d = 0;
+    for (let each of c) {
+        if (each["sid"] === sid) {
+            d += each["cash-dividend"];
+        }
+    }
+    return d;
 }
 function decideEndPoint() {
     if (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost") {
@@ -407,7 +423,7 @@ function main() {
         makeTabControllable(allRecordFormOptions, allCreateRecordForms);
         makeTabControllable(allLowerTableTabs, allLowerTableContainers);
         // The cash-invested chart need info in trade-record table, so this need to be await
-        let cashDividendJson = yield recordCRUD(new ReadRequestBody(), "dividend");
+        cashDividendJson = yield recordCRUD(new ReadRequestBody(), "dividend");
         let tradeRecordJson = yield recordCRUD(new ReadRequestBody(), "trade");
         initAllHoldingSid(tradeRecordJson["data"]);
         buildStockWarehouse(tradeRecordJson["data"]);
@@ -420,11 +436,14 @@ function main() {
             cashdividendrecordtable.build(cashDividendJson["data"]);
         }
         let todayStr = getStartDateStr(new Date(), 0);
-        // stockWarehouse will be modified by the function below
+        // stockWarehouse will be modified by the prepareCashInvChartData function
+        // cashExtracted will be counted in the prepareCashInvChartData function,
+        // but cashExtracted is not complete yet, because dividend hasn't been added
         let cashInvestedData = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
         let firstDayStr = cashInvestedData[1][0].toString();
         firstDayStr = `${firstDayStr.slice(0, 4)}-${firstDayStr.slice(4, 6)}-${firstDayStr.slice(6)}`;
         mygooglechart.drawCashInvestedChart(firstDayStr, cashInvestedData, cashInvestedChart);
+        addCashDividendOnCashExtracted(cashDividendJson["data"]);
         // set default value for the deal-time field of the create-record form
         if (tradeDealTimeRecordInput instanceof HTMLInputElement)
             tradeDealTimeRecordInput.value = todayStr;
