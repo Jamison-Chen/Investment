@@ -1,4 +1,4 @@
-export interface requestbody {
+interface requestbody {
     mode: string;
     toURLSearchParams(): URLSearchParams;
 }

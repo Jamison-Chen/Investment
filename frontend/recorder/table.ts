@@ -1,5 +1,5 @@
 import { UpdateRequestBody, DeleteRequestBody } from "./requestBody.js";
-export interface Table {
+interface Table {
     tableBodyDiv: HTMLElement;
     build(...args: any[]): void;
 }
