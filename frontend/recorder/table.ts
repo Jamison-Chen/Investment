@@ -6,25 +6,25 @@ interface Table {
 
 export class MyTable implements Table {
     public tableBodyDiv;
-    constructor(tableBodyDiv: HTMLElement) {
+    public constructor(tableBodyDiv: HTMLElement) {
         this.tableBodyDiv = tableBodyDiv;
     }
     public build(...args: any[]): void { }
 }
 
 export class RecordTable extends MyTable {
-    private crudFunction: Function;
-    private tableType: "trade" | "dividend";
-    private CLASSNAME_RECORD_TABLE_ROW: string;
-    private CLASSNAME_UPDATE_BTN: string;
-    private CLASSNAME_DELETE_BTN: string;
-    private CLASSNAME_ID: string;
-    private CLASSNAME_COMPANY_NAME: string;
-    private CLASSNAME_INPUT: string;
-    private CLASSNAME_NOT_EDITING: string;
-    private CLASSNAME_EDITING: string;
-    private CLASSNAME_CRUD: string;
-    constructor(tableBodyDiv: HTMLElement, crudFunction: Function, tableType: "trade" | "dividend") {
+    protected crudFunction: Function;
+    protected tableType: "trade" | "dividend";
+    protected CLASSNAME_RECORD_TABLE_ROW: string;
+    protected CLASSNAME_UPDATE_BTN: string;
+    protected CLASSNAME_DELETE_BTN: string;
+    protected CLASSNAME_ID: string;
+    protected CLASSNAME_COMPANY_NAME: string;
+    protected CLASSNAME_INPUT: string;
+    protected CLASSNAME_NOT_EDITING: string;
+    protected CLASSNAME_EDITING: string;
+    protected CLASSNAME_CRUD: string;
+    public constructor(tableBodyDiv: HTMLElement, crudFunction: Function, tableType: "trade" | "dividend") {
         super(tableBodyDiv);
         this.crudFunction = crudFunction;
         this.tableType = tableType;
@@ -215,6 +215,9 @@ export class RecordTable extends MyTable {
     public build(data: any[]): void {
         super.build();
         if (this.tableBodyDiv !== null) {
+            const tableHead = this.tableBodyDiv.children[0];
+            this.tableBodyDiv.innerHTML = "";
+            this.tableBodyDiv.appendChild(tableHead);
             for (let eachRecord of data) {
                 let tr = document.createElement("tr");
                 tr.className = this.CLASSNAME_RECORD_TABLE_ROW;
@@ -299,22 +302,37 @@ export class StockInfoTable extends MyTable {
 }
 
 export class StockWarehouseTable extends MyTable {
-    public build(data: any[], allHoldingSids: Set<string>, stockWarehouse: any, showEachStockDetail: Function, calcEachStockCashInvst: Function): void {
+    protected CLASSNAME_STOCK_WAREHOUSE_TABLE_ROW: string;
+    protected CLASSNAME_SID: string;
+    protected CLASSNAME_NAME: string;
+    protected CLASSNAME_TOTAL: string;
+    protected CLASSNAME_PRICE: string;
+    protected CLASSNAME_AVERAGE_PRICE: string;
+    public constructor(tableBodyDiv: HTMLElement) {
+        super(tableBodyDiv);
+        this.CLASSNAME_STOCK_WAREHOUSE_TABLE_ROW = "stock-warehouse-table-row";
+        this.CLASSNAME_SID = "sid";
+        this.CLASSNAME_NAME = "name";
+        this.CLASSNAME_TOTAL = "total";
+        this.CLASSNAME_PRICE = "price";
+        this.CLASSNAME_AVERAGE_PRICE = "avg-price";
+    }
+    public build(stockWarehouseData: any[], tradeRecordData: any[], allHoldingSids: Set<string>, stockWarehouse: any, showEachStockDetail: Function, calcEachStockCashInvst: Function): void {
         super.build();
         if (this.tableBodyDiv !== null) {
             for (let eachSid of allHoldingSids) {
                 let tr = document.createElement("tr");
-                tr.className = "stock-warehouse-table-row";
+                tr.className = this.CLASSNAME_STOCK_WAREHOUSE_TABLE_ROW;
                 let sidTd = document.createElement("td");
-                sidTd.className = "sid";
+                sidTd.className = this.CLASSNAME_SID;
                 let nameTd = document.createElement("td");
-                nameTd.className = "name";
+                nameTd.className = this.CLASSNAME_NAME;
                 let quantityTd = document.createElement("td");
-                quantityTd.className = "total";
+                quantityTd.className = this.CLASSNAME_TOTAL;
                 let priceTd = document.createElement("td");
-                priceTd.className = "price";
+                priceTd.className = this.CLASSNAME_PRICE;
                 let avgPriceTd = document.createElement("td");
-                avgPriceTd.className = "avgPrice";
+                avgPriceTd.className = this.CLASSNAME_AVERAGE_PRICE;
 
                 tr.appendChild(sidTd);
                 tr.appendChild(nameTd);
@@ -325,8 +343,8 @@ export class StockWarehouseTable extends MyTable {
                 let price = 0;
                 sidTd.innerHTML = eachSid;
 
-                // find name and price from data(stockInfo)
-                for (let eachStockInfo of data) {
+                // find name and price from stockWarehouseData(stockInfo)
+                for (let eachStockInfo of stockWarehouseData) {
                     if (eachSid === eachStockInfo["sid"]) {
                         nameTd.innerHTML = eachStockInfo["name"];
                         priceTd.innerHTML = eachStockInfo["close"];
@@ -345,7 +363,7 @@ export class StockWarehouseTable extends MyTable {
                 let avgPrice = Math.round((calcEachStockCashInvst(eachSid) / individualQ + Number.EPSILON) * 100) / 100;
                 avgPriceTd.innerHTML = avgPrice.toLocaleString();
                 let mktVal = Math.round((price * individualQ + Number.EPSILON) * 100) / 100;
-                tr.addEventListener("click", (e) => { showEachStockDetail(e, eachSid, mktVal) });
+                tr.addEventListener("click", (e) => { showEachStockDetail(e, eachSid, mktVal, tradeRecordData) });
                 this.tableBodyDiv.appendChild(tr);
             }
         }

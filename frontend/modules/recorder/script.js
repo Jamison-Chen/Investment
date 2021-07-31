@@ -33,8 +33,8 @@ const allLowerTableContainers = document.getElementsByClassName("lower-table-con
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 const cashDividendTableBody = document.querySelector("#cash-dividend-table tbody");
+const individualRecordTableBody = document.querySelector("#individual-record-table tbody");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
-const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row");
 const cashInvestedChart = document.getElementById('cash-invested-chart');
 const mktValPieChart = document.getElementById('component-chart');
 const compareChart = document.getElementById('compare-chart');
@@ -50,6 +50,7 @@ let handlingFee = 0;
 let mygooglechart = new MyGoogleChart();
 let traderecordtable;
 let cashdividendrecordtable;
+let individualtraderecordtable;
 let stockinfotable;
 let stockwarehousetable;
 let endPoint;
@@ -181,7 +182,7 @@ function prepareCashInvChartData(endDateStr, data) {
                 }
             }
         }
-        const reducer = (previousValue, currentValue) => previousValue + currentValue;
+        const reducer = (a, b) => a + b;
         // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
         // [...dataRow].slice(1).reduce(reducer);
         // if in JavaScript.
@@ -295,8 +296,9 @@ function getStartDateStr(endDate, rollbackLength) {
     endDate.setDate(endDate.getDate() - rollbackLength);
     return endDate.toISOString().slice(0, 10);
 }
-function showEachStockDetail(e, sid, individualMktVal) {
+function showEachStockDetail(e, sid, individualMktVal, tradeRecordData) {
     // control which to highlight
+    const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row");
     for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
         if (allStockWarehouseTableRows[i] === e.currentTarget) {
             allStockWarehouseTableRows[i].classList.add("active");
@@ -315,8 +317,14 @@ function showEachStockDetail(e, sid, individualMktVal) {
             }
         }
     }
+    // select trade records of that sid
+    let selectedTradeRecordData = tradeRecordData.filter(each => each["sid"] === sid);
     mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
     mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, cashDividendOfEachSid, individualCompareChart);
+    if (individualRecordTableBody instanceof HTMLElement) {
+        individualtraderecordtable = new RecordTable(individualRecordTableBody, recordCRUD, "trade");
+        individualtraderecordtable.build(selectedTradeRecordData);
+    }
 }
 function calcCashInvstOfEachSid(sid) {
     let cashInvstOfEachSid = 0;
@@ -331,9 +339,8 @@ function calcCashDividendOfEachSid(sid) {
     let c = cashDividendJson["data"];
     let d = 0;
     for (let each of c) {
-        if (each["sid"] === sid) {
+        if (each["sid"] === sid)
             d += each["cash-dividend"];
-        }
     }
     return d;
 }
@@ -464,7 +471,7 @@ function main() {
         mygooglechart.drawCompareChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee, compareChart);
         if (stockWarehouseTableBody instanceof HTMLElement) {
             stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
-            stockwarehousetable.build(stockInfoJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
+            stockwarehousetable.build(stockInfoJson["data"], tradeRecordJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
         }
     });
 }

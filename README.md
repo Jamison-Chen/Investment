@@ -1,4 +1,4 @@
-# Investment Account Keeper & Stock Market Simulator
+# Your Investment Helper
 
 * This app helps you to record your investment history, to do some statistics, and visualize it for you.
 
@@ -6,13 +6,11 @@
 
 ---
 
->## Investment Account Keeper
+>## Investment Recorder
 
 ##### TODOS
 
-* Select only transactions relative to one specific company when turning to the individual-view mode and selecting a company.
-
-* Record dividends.(Need a corresponding table at the back end.)
+* Povide spaces to write down investment memo for each company.
 
 #### Things that has problem to implement
 
@@ -34,7 +32,7 @@
 
 There are two versions of simulator: the normal one and the Pro version.
 
-> ### Normal
+> ### Normal Simulator
 
 In this version, the price fluctuation is simulated via *Random Walk*.
 
@@ -44,7 +42,7 @@ There're a few strategy buttons for you to click. After clicking each of them, y
 
 There is one last button called **Comparison**. This shows you the comparison of the performances of all the strategies, so that you can access which strategy is better for which specific price-fluctuating situation.
 
-> ### Pro
+> ### Simulator Pro
 
 The main difference between the Pro version and the normal one is that in this version, the price is not determined by Random Walk anymore. Instead, each price is determine through the process of **matching each demand to each supply**, which just like what happen in the real world. Consequently, you can see the animation of the price generating one by one.
 

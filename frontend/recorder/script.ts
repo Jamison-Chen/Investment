@@ -25,8 +25,8 @@ const allLowerTableContainers = document.getElementsByClassName("lower-table-con
 const stockWarehouseTableBody = document.querySelector("#stock-warehouse-table tbody");
 const tradeRecordTableBody = document.querySelector("#trade-record-table tbody");
 const cashDividendTableBody = document.querySelector("#cash-dividend-table tbody");
+const individualRecordTableBody = document.querySelector("#individual-record-table tbody");
 const stockInfoTableBody = document.querySelector("#stock-info-table tbody");
-const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row");
 const cashInvestedChart = document.getElementById('cash-invested-chart');
 const mktValPieChart = document.getElementById('component-chart');
 const compareChart = document.getElementById('compare-chart');
@@ -43,6 +43,7 @@ let handlingFee = 0;
 let mygooglechart: MyGoogleChart = new MyGoogleChart();
 let traderecordtable: RecordTable;
 let cashdividendrecordtable: RecordTable;
+let individualtraderecordtable: RecordTable;
 let stockinfotable: StockInfoTable;
 let stockwarehousetable: StockWarehouseTable;
 let endPoint: string;
@@ -161,7 +162,7 @@ function prepareCashInvChartData(endDateStr: string, data: any[]): (string | num
                 }
             }
         }
-        const reducer = (previousValue: number, currentValue: number) => previousValue + currentValue;
+        const reducer = (a: number, b: number) => a + b;
         // The wierd way below is to comply TypeScript's rule. Actually, we can simply do:
         // [...dataRow].slice(1).reduce(reducer);
         // if in JavaScript.
@@ -274,16 +275,17 @@ function getStartDateStr(endDate: Date, rollbackLength: number): string {
     return endDate.toISOString().slice(0, 10);
 }
 
-function showEachStockDetail(e: Event, sid: string, individualMktVal: number): void {
+function showEachStockDetail(e: Event, sid: string, individualMktVal: number, tradeRecordData: any[]): void {
     // control which to highlight
+    const allStockWarehouseTableRows = document.getElementsByClassName("stock-warehouse-table-row");
     for (let i = 0; i < allStockWarehouseTableRows.length; i++) {
         if (allStockWarehouseTableRows[i] === e.currentTarget) {
             allStockWarehouseTableRows[i].classList.add("active");
         } else allStockWarehouseTableRows[i].classList.remove("active");
     }
-
     let cashInvstOfEachSid = calcCashInvstOfEachSid(sid);
     let cashDividendOfEachSid = calcCashDividendOfEachSid(sid);
+
     // arrange price quantity data
     let pqData: (number | string)[][] = [["Date", "Price"]];
     for (let eachDate in stockWarehouse[sid]) {
@@ -293,8 +295,15 @@ function showEachStockDetail(e: Event, sid: string, individualMktVal: number): v
             }
         }
     }
+
+    // select trade records of that sid
+    let selectedTradeRecordData = tradeRecordData.filter(each => each["sid"] === sid);
     mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
     mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, cashDividendOfEachSid, individualCompareChart);
+    if (individualRecordTableBody instanceof HTMLElement) {
+        individualtraderecordtable = new RecordTable(individualRecordTableBody, recordCRUD, "trade");
+        individualtraderecordtable.build(selectedTradeRecordData);
+    }
 }
 
 function calcCashInvstOfEachSid(sid: string): number {
@@ -311,9 +320,7 @@ function calcCashDividendOfEachSid(sid: string): number {
     let c = cashDividendJson["data"];
     let d: number = 0;
     for (let each of c) {
-        if (each["sid"] === sid) {
-            d += each["cash-dividend"];
-        }
+        if (each["sid"] === sid) d += each["cash-dividend"];
     }
     return d;
 }
@@ -450,7 +457,7 @@ async function main(): Promise<void> {
     mygooglechart.drawCompareChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee, compareChart);
     if (stockWarehouseTableBody instanceof HTMLElement) {
         stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
-        stockwarehousetable.build(stockInfoJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
+        stockwarehousetable.build(stockInfoJson["data"], tradeRecordJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
     }
 }
 

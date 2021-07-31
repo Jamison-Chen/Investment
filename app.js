@@ -9,6 +9,8 @@ const router = express.Router();
 const PORT = 5000;
 
 app.use('/', router);
+
+// makes all the static files loadable whithin html files
 app.use("/", express.static("./frontend"));
 
 router.get('/recorder', function (req, res) {
@@ -19,8 +21,8 @@ app.listen(PORT);
 
 // run the backend server
 exec("cd backend/investment & python manage.py runserver");
+
 // opens the url in the default browser
-// wait 1500ms for the backend server to be fully prepared
 setTimeout(() => {
     open(`http://localhost:${PORT}/recorder/`)
-}, 1500);
+}, 1500); // wait 1500ms for the backend server to be fully prepared
