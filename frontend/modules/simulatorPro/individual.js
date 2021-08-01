@@ -2,7 +2,15 @@ import { BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "
 import { Order } from "./order.js";
 import { MyMath } from "./myMath.js";
 export class Individual {
-    constructor(aDiv, name, strayegySetting, initCash, stockHolding) {
+    constructor(aDiv, strayegySetting, initCash, stockHolding) {
+        // others
+        this._strategyColor = {
+            "ValueFollower": "#D00",
+            "PriceChaser": "#000",
+            "BHmixGrid": "#0A0",
+            "GridConstRatio": "#00A",
+            "Chicken": "#A0A"
+        };
         this.divControlled = aDiv;
         this._strategySetting = strayegySetting;
         this._aggressiveness = 0;
@@ -12,15 +20,18 @@ export class Individual {
         this._initialHolding = stockHolding.length;
         this._initialTotalAsset = this.calcTotalAsset();
         this._tradeAmount = 0;
-        this._strategy = this.chooseStrayegy(strayegySetting);
+        this._strategy = this.chooseStrayegy(strayegySetting.name);
         this._today = undefined;
         this._valueAssessed = undefined;
         this._mktPriceAcquired = undefined;
-        this._orderToday = undefined;
         this._maxPayable = undefined;
         this._minSellable = undefined;
         this._bidPrice = undefined;
         this._askPrice = undefined;
+        this._orderSetToday = undefined;
+    }
+    get orderSetToday() {
+        return this._orderSetToday;
     }
     get initialCash() {
         return this._initialCash;
@@ -40,9 +51,6 @@ export class Individual {
     get tradeAmount() {
         return this._tradeAmount;
     }
-    get orderToday() {
-        return this._orderToday;
-    }
     calcReturn(stockPrice) {
         return Math.round((this.calcTotalAsset(stockPrice) / this._initialTotalAsset - 1) * 1000) / 1000;
     }
@@ -59,27 +67,18 @@ export class Individual {
         }
         return totalStockVal;
     }
-    chooseStrayegy(setting) {
-        if (setting.name === "ValueFollower") {
-            this.divControlled.style.backgroundColor = "#D00";
-            return new ValueFollower(setting.name);
-        }
-        else if (setting.name === "PriceChaser") {
-            this.divControlled.style.backgroundColor = "#000";
-            return new PriceChaser(setting.name);
-        }
-        else if (setting.name === "BHmixGrid") {
-            this.divControlled.style.backgroundColor = "#0A0";
-            return new BHmixGrid(setting.name);
-        }
-        else if (setting.name === "GridConstRatio") {
-            this.divControlled.style.backgroundColor = "#00A";
-            return new GridConstRatio(setting.name);
-        }
-        else if (setting.name === "Chicken") {
-            this.divControlled.style.backgroundColor = "#A0A";
-            return new Chicken(setting.name);
-        }
+    chooseStrayegy(strategyName) {
+        this.divControlled.style.backgroundColor = this._strategyColor[strategyName];
+        if (strategyName === "ValueFollower")
+            return new ValueFollower(strategyName);
+        else if (strategyName === "PriceChaser")
+            return new PriceChaser(strategyName);
+        else if (strategyName === "BHmixGrid")
+            return new BHmixGrid(strategyName);
+        else if (strategyName === "GridConstRatio")
+            return new GridConstRatio(strategyName);
+        else if (strategyName === "Chicken")
+            return new Chicken(strategyName);
         else
             throw "Strategy undefined.";
     }
@@ -100,13 +99,14 @@ export class Individual {
             this.bid();
             this.ask();
             if (this._bidPrice !== undefined && this._askPrice !== undefined && this._today !== undefined) {
-                this._orderToday = {
-                    "buyOrder": new Order(this, "buy", this._today, this._bidPrice, qd),
-                    "sellOrder": new Order(this, "sell", this._today, this._askPrice, qs)
+                this._orderSetToday = {
+                    "buyOrder": new Order("buy", this._today, this._bidPrice, qd),
+                    "sellOrder": new Order("sell", this._today, this._askPrice, qs)
                 };
+                return this._orderSetToday;
             }
             else
-                throw "_bidPrice/_askPrice/_today is undefined yet, you probably need to do updateMktInfo() first.";
+                throw "_bidPrice/_askPrice/_today is undefined, try updateMktInfo() first.";
         }
         else
             throw "market info not sufficient when making order";

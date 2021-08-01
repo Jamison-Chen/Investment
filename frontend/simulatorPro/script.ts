@@ -1,7 +1,6 @@
 import { Individual } from './individual.js';
 import { PriceMachine } from './priceMachine.js';
 import { Stock } from "./stock.js";
-import { Order } from "./order.js";
 import { MyMath } from "./myMath.js";
 import { MyGoogleChart } from "./chart.js";
 class Main {
@@ -78,7 +77,6 @@ class Main {
 
     public me: Individual | undefined;
     public myselfSetting: any;
-
     public createNodeDiv(pauseTime: number): HTMLElement {
         let nodeDiv = document.createElement("div");
         nodeDiv.className = "node";
@@ -88,16 +86,6 @@ class Main {
         if (this.animationField !== null) this.animationField.appendChild(nodeDiv);
         return nodeDiv;
     }
-
-    public genName(length: number): string {
-        let randomChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        let result = "";
-        for (let i = 0; i < length; i++) {
-            result += randomChars.charAt(Math.floor(Math.random() * randomChars.length));
-        }
-        return result;
-    }
-
     public applyAllSetting(): void {
         if (this.marketEqData !== undefined && this.dealAmountData !== undefined && this.individualList !== undefined && this.initTotalCash !== undefined && this.totalStock !== undefined && this.initialEq !== undefined && this.pauseTime !== undefined) {
             // count numOfIndividual
@@ -121,21 +109,19 @@ class Main {
             nodeDiv.addEventListener("click", () => {
                 this.myAssetChartCntnr?.classList.add("active");
             });
-            let newName = this.genName(20);
             let cashOwning = this.myselfSetting.initialCash;
             let stockGot = this.myselfSetting.initialStock;
             cashLeft -= cashOwning;
             stockLeft -= stockGot;
             let stockHolding: Stock[] = [];
             for (let i = 0; i < stockGot; i++) stockHolding.push(new Stock(this.pm.equilibrium, 0));
-            this.me = new Individual(nodeDiv, newName, this.myselfSetting.strategySetting, cashOwning, stockHolding);
+            this.me = new Individual(nodeDiv, this.myselfSetting.strategySetting, cashOwning, stockHolding);
             this.individualList.push(this.me);
             // initialize all the other individuals
             let j = 1;  // start with 1 because myself counts 1
             for (let eachStrategy in this.indiviComposition) {
                 for (let i = 0; i < this.indiviComposition[eachStrategy].number; i++) {
                     let nodeDiv = this.createNodeDiv(this.pauseTime);
-                    let newName = this.genName(20);
                     let cashOwning: number;
                     let stockGot: number;
                     if (j === this.numOfIndividual - 1) {
@@ -149,7 +135,7 @@ class Main {
                     stockLeft -= stockGot;
                     let stockHolding: Stock[] = [];
                     for (let i = 0; i < stockGot; i++) stockHolding.push(new Stock(this.pm.equilibrium, 0));
-                    this.individualList.push(new Individual(nodeDiv, newName, this.indiviComposition[eachStrategy].strategySetting, cashOwning, stockHolding));
+                    this.individualList.push(new Individual(nodeDiv, this.indiviComposition[eachStrategy].strategySetting, cashOwning, stockHolding));
                     j++;
                 }
             }
@@ -158,32 +144,44 @@ class Main {
             this.dealAmountData.push([1, 0]);
         }
     }
-
     public simulateOneDay(): void { // This is a recursive funtion
         if (this.animationField !== null && this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.individualList !== undefined && this.dayToSimulate !== undefined) {
             let today = this.marketEqData.length - 1;
+
             // everyone update market info and make order
             this.everyoneUpdInfoAndOrder(today);
+
             // suffle individual list before matching
             this.individualList = MyMath.suffleArray(this.individualList);
+
             // buy-side queue & sell-side queue
-            let buySideOrderQueue: Order[] = [];
-            let sellSideOrderQueue: Order[] = [];
+            let buySideQueue: Individual[] = [];
+            let sellSideQueue: Individual[] = [];
             for (let eachOne of this.individualList) {
-                if (eachOne.orderToday != undefined) {
-                    if (eachOne.orderToday.buyOrder.quantity > 0) buySideOrderQueue.push(eachOne.orderToday.buyOrder);
-                    if (eachOne.orderToday.sellOrder.quantity > 0) sellSideOrderQueue.push(eachOne.orderToday.sellOrder);
-                }
+                let order = eachOne.makeOrder();
+                if (order.buyOrder.quantity > 0) buySideQueue.push(eachOne);
+                if (order.sellOrder.quantity > 0) sellSideQueue.push(eachOne);
             }
             // sort the buy-side queue in the bid-price descending order
-            buySideOrderQueue.sort((a: Order, b: Order) => b.price - a.price);
+            buySideQueue.sort((a: Individual, b: Individual) => {
+                if (b.orderSetToday !== undefined && a.orderSetToday !== undefined) {
+                    return b.orderSetToday.buyOrder.price - a.orderSetToday.buyOrder.price;
+                } else throw "orderSetToday is undefined when queuing buySideQueue.";
+            });
+
             // sort the sell-side queue in the ask-price ascending order
-            sellSideOrderQueue.sort((a: Order, b: Order) => a.price - b.price);
+            sellSideQueue.sort((a: Individual, b: Individual) => {
+                if (b.orderSetToday !== undefined && a.orderSetToday !== undefined) {
+                    return a.orderSetToday.sellOrder.price - b.orderSetToday.sellOrder.price;
+                } else throw "orderSetToday is undefined when queuing sellSideQueue.";
+            });
+
             // prepare demand/supply curve data
-            let curveData = this.prepareCurveData(buySideOrderQueue, sellSideOrderQueue);
+            let curveData = this.prepareCurveData(buySideQueue, sellSideQueue);
             MyGoogleChart.drawCurveChart(curveData, this.curveChart);
+
             // matching buy-side order and sell-side order
-            this.matching(today, buySideOrderQueue, sellSideOrderQueue);
+            this.matching(today, buySideQueue, sellSideQueue);
             if (today <= this.dayToSimulate) {
                 MyGoogleChart.drawMarketEqChart(this.marketEqData, this.marketEqChart);
                 MyGoogleChart.drawDealAmountChart(this.dealAmountData, this.dealAmountChart);
@@ -196,49 +194,60 @@ class Main {
             }
         }
     }
-
     public everyoneUpdInfoAndOrder(today: number): void {
         if (this.marketEqData !== undefined && this.individualList !== undefined && this.pm !== undefined) {
             for (let eachOne of this.individualList) {
-                let valAssessed = this.pm.genAssessedVal(true);
-                let latestPrice = this.marketEqData.slice(-1)[0].slice(-1)[0];
-                if (typeof latestPrice === "string") latestPrice = parseFloat(latestPrice);
+                let valAssessed: number = this.pm.genAssessedVal(true);
+                let latestPrice: number = parseFloat(`${this.marketEqData.slice(-1)[0].slice(-1)[0]}`);
                 eachOne.updateMktInfo(today, valAssessed, latestPrice);
-                eachOne.makeOrder();
             }
         }
     }
-
-    public matching(today: number, buySideOrderQueue: Order[], sellSideOrderQueue: Order[]): void {
+    public matching(today: number, buySideQueue: Individual[], sellSideQueue: Individual[]): void {
         let i: number = 0;
         let j: number = 0;
         let totalDealQ: number = 0;
         let finalDealPrice: number | undefined = undefined;
         let dealPair: { "buySide": Individual, "sellSide": Individual, "q": number }[] = [];
-        let valid: boolean =
-            buySideOrderQueue.length > i &&
-            sellSideOrderQueue.length > j &&
-            buySideOrderQueue[i].price >= sellSideOrderQueue[j].price;
-        while (valid) {
-            let dealQ: number = Math.min(buySideOrderQueue[i].quantity, sellSideOrderQueue[j].quantity);
-            buySideOrderQueue[i].quantity -= dealQ;
-            sellSideOrderQueue[j].quantity -= dealQ;
-            if (buySideOrderQueue[i].owner !== sellSideOrderQueue[j].owner) {
-                totalDealQ += dealQ;
-                dealPair.push({ "buySide": buySideOrderQueue[i].owner, "sellSide": sellSideOrderQueue[j].owner, "q": dealQ });
-                // decide finalDealPrice
-                if (buySideOrderQueue[i].quantity === 0 && sellSideOrderQueue[j].quantity === 0) {
-                    finalDealPrice = MyMath.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
-                } else if (buySideOrderQueue[i].quantity === 0) finalDealPrice = sellSideOrderQueue[j].price;
-                else if (sellSideOrderQueue[j].quantity === 0) finalDealPrice = buySideOrderQueue[i].price;
-                else throw "wierd!";
-            }
-            if (buySideOrderQueue[i].quantity === 0) i++;
-            if (sellSideOrderQueue[j].quantity === 0) j++;
+        let valid: boolean;
+        let eachBuySideOrderSetToday = buySideQueue[i].orderSetToday;
+        let eachSellSideOrderSetToday = sellSideQueue[j].orderSetToday;
+        if (eachBuySideOrderSetToday !== undefined && eachSellSideOrderSetToday !== undefined) {
             valid =
-                buySideOrderQueue.length > i &&
-                sellSideOrderQueue.length > j &&
-                buySideOrderQueue[i].price >= sellSideOrderQueue[j].price;
+                buySideQueue.length > i &&
+                sellSideQueue.length > j &&
+                eachBuySideOrderSetToday.buyOrder.price >= eachSellSideOrderSetToday.sellOrder.price;
+        } else throw "undefined eachBuySideOrderSetToday/eachSellSideOrderSetToday";
+        while (valid && eachBuySideOrderSetToday !== undefined && eachSellSideOrderSetToday !== undefined) {
+            let dealQ: number = Math.min(eachBuySideOrderSetToday.buyOrder.quantity, eachSellSideOrderSetToday.sellOrder.quantity);
+            eachBuySideOrderSetToday.buyOrder.quantity -= dealQ;
+            eachSellSideOrderSetToday.sellOrder.quantity -= dealQ;
+            if (buySideQueue[i] !== sellSideQueue[j]) {
+                totalDealQ += dealQ;
+                dealPair.push({ "buySide": buySideQueue[i], "sellSide": sellSideQueue[j], "q": dealQ });
+                // decide finalDealPrice
+                if (eachBuySideOrderSetToday.buyOrder.quantity === 0 && eachSellSideOrderSetToday.sellOrder.quantity === 0) {
+                    finalDealPrice = MyMath.avg([eachBuySideOrderSetToday.buyOrder.price, eachSellSideOrderSetToday.sellOrder.price]);
+                } else if (eachBuySideOrderSetToday.buyOrder.quantity === 0) {
+                    finalDealPrice = eachSellSideOrderSetToday.sellOrder.price;
+                } else if (eachSellSideOrderSetToday.sellOrder.quantity === 0) {
+                    finalDealPrice = eachBuySideOrderSetToday.buyOrder.price;
+                } else throw "wierd!";
+            }
+            if (eachBuySideOrderSetToday.buyOrder.quantity === 0) {
+                i++;
+                eachBuySideOrderSetToday = buySideQueue[i].orderSetToday;
+            }
+            if (eachSellSideOrderSetToday.sellOrder.quantity === 0) {
+                j++;
+                eachSellSideOrderSetToday = sellSideQueue[j].orderSetToday;
+            }
+            if (eachBuySideOrderSetToday !== undefined && eachSellSideOrderSetToday !== undefined) {
+                valid =
+                    buySideQueue.length > i &&
+                    sellSideQueue.length > j &&
+                    eachBuySideOrderSetToday.buyOrder.price >= eachBuySideOrderSetToday.sellOrder.price;
+            } else throw "undefined eachBuySideOrderSetToday/eachSellSideOrderSetToday";
         }
         if (this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.pm !== undefined && this.me !== undefined) {
             if (finalDealPrice === undefined) {
@@ -253,13 +262,15 @@ class Main {
             // record my asset data
             this.myAssetData.push([this.marketEqData.length, this.me.calcTotalAsset(finalDealPrice), this.me.calcStockMktVal(finalDealPrice), this.me.cashOwning]);
         }
+        // prevent memory leak
+        buySideQueue.length = 0;
+        sellSideQueue.length = 0;
+        dealPair.length = 0;
     }
-
     public deal(buyer: Individual, seller: Individual, dealQ: number, dealP: number, today: number): void {
         let stockSold = seller.sellOut(dealQ, dealP);
         buyer.buyIn(stockSold, dealP, today);
     }
-
     public showIndividualInfo(): void {
         if (this.marketEqData !== undefined && this.individualList !== undefined) {
             for (let each of this.individualList) {
@@ -290,8 +301,7 @@ class Main {
             }
         }
     }
-
-    public prepareCurveData(buySideOrderQueue: Order[], sellSideOrderQueue: Order[]): (number[] | string[])[] {
+    public prepareCurveData(buySideQueue: Individual[], sellSideQueue: Individual[]): (number[] | string[])[] {
         if (this.initialEq !== undefined) {
             let maxNumInChart = this.initialEq * 2;
             let minNumInChart = 0;
@@ -302,18 +312,21 @@ class Main {
             for (let each of priceSequence) {
                 let qd = 0;
                 let qs = 0;
-                for (let eachOrder of buySideOrderQueue) {
-                    if (eachOrder.price >= each) qd += eachOrder.quantity;
+                for (let eachIndividual of buySideQueue) {
+                    if (eachIndividual.orderSetToday !== undefined && eachIndividual.orderSetToday.buyOrder.price >= each) {
+                        qd += eachIndividual.orderSetToday.buyOrder.quantity;
+                    }
                 }
-                for (let eachOrder of sellSideOrderQueue) {
-                    if (eachOrder.price <= each) qs += eachOrder.quantity;
+                for (let eachIndividual of sellSideQueue) {
+                    if (eachIndividual.orderSetToday !== undefined && eachIndividual.orderSetToday.sellOrder.price <= each) {
+                        qs += eachIndividual.orderSetToday.sellOrder.quantity;
+                    }
                 }
                 curveData.push([each, qd, qs]);
             }
             return curveData;
         } else throw "initialEq undefined while preparing curve data";
     }
-
     public buildCompositionSettingView(): void {
         for (let eachStrategy in this.STRATEGIES) {
             let paramRow = document.createElement("div");
@@ -392,7 +405,6 @@ class Main {
             if (this.detailCntnr !== null) this.detailCntnr.appendChild(detailField);
         }
     }
-
     public buildMyselfSettingView(): void {
         let paramRow = document.createElement("div");
         paramRow.classList.add("parameter-row");
@@ -500,7 +512,6 @@ class Main {
 
         this.myselfParamField?.appendChild(paramRow);
     }
-
     public enableChangeSetting(): void {
         if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.settingBtn.disabled = false;
@@ -512,7 +523,6 @@ class Main {
             this.pauseTimeInput.disabled = false;
         }
     }
-
     public disableChangeSetting(): void {
         if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.settingBtn.disabled = true;
@@ -524,7 +534,6 @@ class Main {
             this.pauseTimeInput.disabled = true;
         }
     }
-
     public initGeneralSetting(): void {
         if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.initTotalCashInput.value = "1000000";
@@ -534,7 +543,6 @@ class Main {
             this.pauseTimeInput.value = "3";
         }
     }
-
     public readGeneralSetting(): void {
         if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.initTotalCash = parseInt(this.initTotalCashInput.value);
@@ -544,7 +552,6 @@ class Main {
             this.pauseTime = parseInt(this.pauseTimeInput.value);
         }
     }
-
     public initCompositionSetting(): void {
         this.indiviComposition = {
             "value-follower": {
@@ -606,7 +613,6 @@ class Main {
             }
         }
     }
-
     public readCompositionSetting(): void {
         for (let eachStrategy in this.indiviComposition) {
             let eachInputDOM = document.getElementById(`${eachStrategy}-number`);
@@ -623,7 +629,6 @@ class Main {
             this.indiviComposition[eachStrategy].strategySetting.params = params;
         }
     }
-
     public initMyselfSetting(): void {
         this.myselfSetting = {
             "initialCash": 1000,
@@ -659,7 +664,6 @@ class Main {
             }
         }
     }
-
     public readMyselfSetting(): void {
         let myInitTotalCashInput = document.getElementById("my-init-total-cash");
         if (myInitTotalCashInput instanceof HTMLInputElement) {
@@ -685,7 +689,6 @@ class Main {
             }
         }
     }
-
     public refresh(): void {
         if (this.animationField !== null) this.animationField.innerHTML = "";
         if (this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.individualList !== undefined) {
@@ -708,7 +711,6 @@ class Main {
         this.readMyselfSetting();
         this.applyAllSetting();
     }
-
     public start(): void {
         // build market composition setting view
         this.buildCompositionSettingView();

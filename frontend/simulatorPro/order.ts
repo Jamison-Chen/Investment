@@ -1,21 +1,15 @@
-import { Individual } from './individual.js';
 export class Order {
-    private _owner: Individual;
-    private _type: string;
+    private _type: "buy" | "sell";
     private _today: number;
     private _price: number;
     private _quantity: number;
-    constructor(owner: Individual, type: string, today: number, p: number, q: number) {
-        this._owner = owner;
+    public constructor(type: "buy" | "sell", today: number, p: number, q: number) {
         this._type = type;
         this._today = today;
         this._price = p;
         this._quantity = q;
     }
-    public get owner(): Individual {
-        return this._owner;
-    }
-    public get type(): string {
+    public get type(): "buy" | "sell" {
         return this._type;
     }
     public get today(): number {
