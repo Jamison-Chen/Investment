@@ -62,23 +62,23 @@ export class Individual {
     chooseStrayegy(setting) {
         if (setting.name === "ValueFollower") {
             this.divControlled.style.backgroundColor = "#D00";
-            return new ValueFollower(setting.name, this);
+            return new ValueFollower(setting.name);
         }
         else if (setting.name === "PriceChaser") {
             this.divControlled.style.backgroundColor = "#000";
-            return new PriceChaser(setting.name, this);
+            return new PriceChaser(setting.name);
         }
         else if (setting.name === "BHmixGrid") {
             this.divControlled.style.backgroundColor = "#0A0";
-            return new BHmixGrid(setting.name, this);
+            return new BHmixGrid(setting.name);
         }
         else if (setting.name === "GridConstRatio") {
             this.divControlled.style.backgroundColor = "#00A";
-            return new GridConstRatio(setting.name, this);
+            return new GridConstRatio(setting.name);
         }
         else if (setting.name === "Chicken") {
             this.divControlled.style.backgroundColor = "#A0A";
-            return new Chicken(setting.name, this);
+            return new Chicken(setting.name);
         }
         else
             throw "Strategy undefined.";
@@ -92,11 +92,11 @@ export class Individual {
         // The prices inthe orders that _strategy made is min-sellable and max-payable (i.e. just for reference)
         // The individuals need to bid themselves
         if (this._today !== undefined && this._mktPriceAcquired !== undefined && this._valueAssessed !== undefined) {
-            let orderSetForRef = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._valueAssessed, this._mktPriceAcquired, this._strategySetting.params);
-            const qd = orderSetForRef.buyOrder.quantity;
-            const qs = orderSetForRef.sellOrder.quantity;
-            this._maxPayable = orderSetForRef.buyOrder.price;
-            this._minSellable = orderSetForRef.sellOrder.price;
+            let strategyResult = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._valueAssessed, this._mktPriceAcquired, this._strategySetting.params);
+            const qd = strategyResult["buyQ"];
+            const qs = strategyResult["sellQ"];
+            this._maxPayable = strategyResult["buyP"];
+            this._minSellable = strategyResult["sellP"];
             this.bid();
             this.ask();
             if (this._bidPrice !== undefined && this._askPrice !== undefined && this._today !== undefined) {
@@ -164,12 +164,7 @@ export class Individual {
     }
     sellOut(qOut, dealPrice) {
         // Use FIFO
-        this._stockHolding.sort(function (a, b) {
-            if (a.buyInDay !== undefined && b.buyInDay !== undefined)
-                return a.buyInDay - b.buyInDay;
-            else
-                throw "buyInDay info not sufficient.";
-        });
+        this._stockHolding.sort((a, b) => a.buyInDay - b.buyInDay);
         let stockOut = this._stockHolding.splice(0, qOut);
         this._cashOwning += qOut * dealPrice;
         this._tradeAmount += qOut;

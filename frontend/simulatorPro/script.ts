@@ -159,7 +159,7 @@ class Main {
         }
     }
 
-    public simulate(): void { // This is a recursive funtion
+    public simulateOneDay(): void { // This is a recursive funtion
         if (this.animationField !== null && this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.individualList !== undefined && this.dayToSimulate !== undefined) {
             let today = this.marketEqData.length - 1;
             // everyone update market info and make order
@@ -170,19 +170,15 @@ class Main {
             let buySideOrderQueue: Order[] = [];
             let sellSideOrderQueue: Order[] = [];
             for (let eachOne of this.individualList) {
-                if (eachOne.orderToday !== undefined) {
+                if (eachOne.orderToday != undefined) {
                     if (eachOne.orderToday.buyOrder.quantity > 0) buySideOrderQueue.push(eachOne.orderToday.buyOrder);
                     if (eachOne.orderToday.sellOrder.quantity > 0) sellSideOrderQueue.push(eachOne.orderToday.sellOrder);
                 }
             }
             // sort the buy-side queue in the bid-price descending order
-            buySideOrderQueue.sort(function (a, b) {
-                return b.price - a.price;
-            });
+            buySideOrderQueue.sort((a: Order, b: Order) => b.price - a.price);
             // sort the sell-side queue in the ask-price ascending order
-            sellSideOrderQueue.sort(function (a, b) {
-                return a.price - b.price;
-            });
+            sellSideOrderQueue.sort((a: Order, b: Order) => a.price - b.price);
             // prepare demand/supply curve data
             let curveData = this.prepareCurveData(buySideOrderQueue, sellSideOrderQueue);
             MyGoogleChart.drawCurveChart(curveData, this.curveChart);
@@ -192,9 +188,9 @@ class Main {
                 MyGoogleChart.drawMarketEqChart(this.marketEqData, this.marketEqChart);
                 MyGoogleChart.drawDealAmountChart(this.dealAmountData, this.dealAmountChart);
                 MyGoogleChart.drawAssetsCharts(this.myAssetData, this.myAssetChart);
-                setTimeout(() => { this.simulate() }, this.pauseTime);
-            } else {
                 this.showIndividualInfo();
+                setTimeout(() => { this.simulateOneDay() }, this.pauseTime);
+            } else {
                 this.enableChangeSetting();
                 return;
             }
@@ -216,7 +212,7 @@ class Main {
     public matching(today: number, buySideOrderQueue: Order[], sellSideOrderQueue: Order[]): void {
         let i: number = 0;
         let j: number = 0;
-        let totalDealQ = 0;
+        let totalDealQ: number = 0;
         let finalDealPrice: number | undefined = undefined;
         let dealPair: { "buySide": Individual, "sellSide": Individual, "q": number }[] = [];
         let valid: boolean =
@@ -224,18 +220,19 @@ class Main {
             sellSideOrderQueue.length > j &&
             buySideOrderQueue[i].price >= sellSideOrderQueue[j].price;
         while (valid) {
-            let dealQ = Math.min(buySideOrderQueue[i].quantity, sellSideOrderQueue[j].quantity);
+            let dealQ: number = Math.min(buySideOrderQueue[i].quantity, sellSideOrderQueue[j].quantity);
             buySideOrderQueue[i].quantity -= dealQ;
             sellSideOrderQueue[j].quantity -= dealQ;
             if (buySideOrderQueue[i].owner !== sellSideOrderQueue[j].owner) {
                 totalDealQ += dealQ;
                 dealPair.push({ "buySide": buySideOrderQueue[i].owner, "sellSide": sellSideOrderQueue[j].owner, "q": dealQ });
+                // decide finalDealPrice
+                if (buySideOrderQueue[i].quantity === 0 && sellSideOrderQueue[j].quantity === 0) {
+                    finalDealPrice = MyMath.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
+                } else if (buySideOrderQueue[i].quantity === 0) finalDealPrice = sellSideOrderQueue[j].price;
+                else if (sellSideOrderQueue[j].quantity === 0) finalDealPrice = buySideOrderQueue[i].price;
+                else throw "wierd!";
             }
-            if (buySideOrderQueue[i].quantity === 0 && sellSideOrderQueue[j].quantity === 0) {
-                finalDealPrice = MyMath.avg([buySideOrderQueue[i].price, sellSideOrderQueue[j].price]);
-            } else if (buySideOrderQueue[i].quantity === 0) finalDealPrice = sellSideOrderQueue[j].price;
-            else if (sellSideOrderQueue[j].quantity === 0) finalDealPrice = buySideOrderQueue[i].price;
-            else throw "wierd!";
             if (buySideOrderQueue[i].quantity === 0) i++;
             if (sellSideOrderQueue[j].quantity === 0) j++;
             valid =
@@ -245,15 +242,12 @@ class Main {
         }
         if (this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.pm !== undefined && this.me !== undefined) {
             if (finalDealPrice === undefined) {
-                let oldPrice = this.marketEqData[this.marketEqData.length - 1][2];
-                if (typeof oldPrice === "number") finalDealPrice = oldPrice;
-                else finalDealPrice = parseFloat(oldPrice);
+                finalDealPrice = parseFloat(`${this.marketEqData[this.marketEqData.length - 1][2]}`);
+            } else {
+                for (let eachDealPair of dealPair) {
+                    this.deal(eachDealPair.buySide, eachDealPair.sellSide, eachDealPair.q, finalDealPrice, today);
+                }
             }
-
-            for (let eachDealPair of dealPair) {
-                this.deal(eachDealPair.buySide, eachDealPair.sellSide, eachDealPair.q, finalDealPrice, today);
-            }
-
             this.marketEqData.push([this.marketEqData.length, this.pm.equilibrium, finalDealPrice]);
             this.dealAmountData.push([this.marketEqData.length, totalDealQ]);
             // record my asset data
@@ -262,22 +256,36 @@ class Main {
     }
 
     public deal(buyer: Individual, seller: Individual, dealQ: number, dealP: number, today: number): void {
-        let s = seller.sellOut(dealQ, dealP);
-        buyer.buyIn(s, dealP, today);
+        let stockSold = seller.sellOut(dealQ, dealP);
+        buyer.buyIn(stockSold, dealP, today);
     }
 
     public showIndividualInfo(): void {
         if (this.marketEqData !== undefined && this.individualList !== undefined) {
             for (let each of this.individualList) {
-                let finalPrice = this.marketEqData[this.marketEqData.length - 1][2];
-                if (typeof finalPrice === "string") finalPrice = parseFloat(finalPrice);
                 let info = document.createElement("div");
                 let i1 = document.createElement("div");
-                i1.innerHTML = `${each.initialHolding}, ${each.tradeAmount}, ${each.stockHolding.length}`;
+                i1.innerHTML = `${each.initialHolding}`;
                 info.appendChild(i1);
+
+                let i4 = document.createElement("div");
+                i4.innerHTML = `$${each.initialTotalAsset}`;
+                info.appendChild(i4);
+
                 let i2 = document.createElement("div");
-                i2.innerHTML = `${each.initialTotalAsset}, ${each.calcReturn(finalPrice)}`;
+                i2.innerHTML = `${each.tradeAmount}`;
                 info.appendChild(i2);
+
+                let i3 = document.createElement("div");
+                i3.innerHTML = `${each.stockHolding.length}`;
+                info.appendChild(i3);
+
+                let i5 = document.createElement("div");
+                let finalPrice: number = parseFloat(`${this.marketEqData[this.marketEqData.length - 1][2]}`);
+                i5.innerHTML = `${Math.round(each.calcReturn(finalPrice) * 10000) / 100}%`;
+                info.appendChild(i5);
+
+                each.divControlled.innerHTML = "";
                 each.divControlled.appendChild(info);
             }
         }
@@ -680,10 +688,21 @@ class Main {
 
     public refresh(): void {
         if (this.animationField !== null) this.animationField.innerHTML = "";
-        this.marketEqData = [["Day", "Given Price", "Mkt. Eq."]];
-        this.dealAmountData = [["Day", "Deal Amount"]];
-        this.myAssetData = [["Day", "Total Asset", "Stock Mkt Val", "Cash Holding"]]
-        this.individualList = [];
+        if (this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.individualList !== undefined) {
+            // prevent memory leaks
+            this.marketEqData.length = 0;
+            this.marketEqData.push(["Day", "Given Price", "Mkt. Eq."]);
+            this.dealAmountData.length = 0;
+            this.dealAmountData.push(["Day", "Deal Amount"]);
+            this.myAssetData.length = 0;
+            this.myAssetData.push(["Day", "Total Asset", "Stock Mkt Val", "Cash Holding"]);
+            this.individualList.length = 0;
+        } else {
+            this.marketEqData = [["Day", "Given Price", "Mkt. Eq."]];
+            this.dealAmountData = [["Day", "Deal Amount"]];
+            this.myAssetData = [["Day", "Total Asset", "Stock Mkt Val", "Cash Holding"]];
+            this.individualList = [];
+        }
         this.readGeneralSetting();
         this.readCompositionSetting();
         this.readMyselfSetting();
@@ -732,7 +751,7 @@ class Main {
             this.startBtn.addEventListener("click", () => {
                 this.refresh();
                 this.disableChangeSetting();
-                this.simulate();
+                this.simulateOneDay();
             });
         }
         if (this.myAssetChartCntnr !== null && this.myAssetChartHeader !== null && this.settingBtn !== null && this.settingBg !== null && this.settingCntnr !== null && this.settingFooter !== null) {

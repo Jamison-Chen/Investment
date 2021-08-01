@@ -1,9 +1,7 @@
-import { Order } from "./order.js";
 import { MyMath } from "./myMath.js";
 export class ValueFollower {
-    constructor(strategyName, owner) {
+    constructor(strategyName) {
         this.name = strategyName;
-        this.owner = owner;
     }
     followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
         let pd = valAssessed;
@@ -17,15 +15,17 @@ export class ValueFollower {
         // let qd: number = Math.floor(Math.random() * (Math.floor(cashOwning / pd) + 1));
         // let qs: number = Math.floor(Math.random() * (stockHolding.length + 1));
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         };
     }
 }
 export class PriceChaser {
-    constructor(strategyName, owner) {
+    constructor(strategyName) {
         this.name = strategyName;
-        this.owner = owner;
         this.attitude = 1;
     }
     followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
@@ -40,15 +40,17 @@ export class PriceChaser {
         let qd = Math.max(0, Math.round((cashOwning / pd) * (1 - pToday / pd)));
         let qs = Math.max(0, Math.round(stockHolding.length * (1 - ps / pToday)));
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         };
     }
 }
 export class BHmixGrid {
-    constructor(strategyName, owner) {
+    constructor(strategyName) {
         this.name = strategyName;
-        this.owner = owner;
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
@@ -86,8 +88,11 @@ export class BHmixGrid {
                 qs = stockHolding.length;
         }
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         };
     }
     calcQToday(cashOwned, pToday, r) {
@@ -110,7 +115,7 @@ export class BHmixGrid {
     }
 }
 // export class PlannedBHmixGrid extends BHmixGrid {
-//     public followStrategy(r: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
+//     public followStrategy(r: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): any {
 //         if (stockHolding.length === 0 || today === 1) {
 //             this.latestMaxP = pToday;
 //             this.latestMinP = this.latestMaxP;
@@ -139,13 +144,16 @@ export class BHmixGrid {
 //             }
 //         }
 //         return {
-//             "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-//             "sellOrder": new Order(this.owner, "sell", today, ps, qs)
-//         }
+//     "today": today,
+//     "buyP": pd,
+//     "buyQ": qd,
+//     "sellP": ps,
+//     "sellQ": qs
+// }
 //     }
 // }
 // export class GridConstQ implements Strategy {
-//     public followStrategy(maxPrice: number, minPrice: number, nTable: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
+//     public followStrategy(maxPrice: number, minPrice: number, nTable: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): any {
 //         // Draw divide lines
 //         // numbers in divideLines are in descending order
 //         let divideLines: number[] = [];
@@ -165,9 +173,8 @@ export class BHmixGrid {
 //     }
 // }
 export class GridConstRatio {
-    constructor(strategyName, owner) {
+    constructor(strategyName) {
         this.name = strategyName;
-        this.owner = owner;
         this.standAt = 0;
         this.divideLines = [];
     }
@@ -215,8 +222,11 @@ export class GridConstRatio {
             this.standAt = newStandAt;
         }
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         };
     }
     calcStandAt(price, aList) {
@@ -230,9 +240,8 @@ export class GridConstRatio {
     }
 }
 export class Chicken {
-    constructor(strategyName, owner) {
+    constructor(strategyName) {
         this.name = strategyName;
-        this.owner = owner;
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
@@ -262,8 +271,11 @@ export class Chicken {
             }
         }
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         };
     }
     calcQToday(r, cashOwned, pToday) {

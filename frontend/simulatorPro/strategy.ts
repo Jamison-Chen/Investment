@@ -1,20 +1,15 @@
 import { Stock } from "./stock.js";
-import { Order, OrderSet } from "./order.js";
-import { Individual } from "./individual.js";
 import { MyMath } from "./myMath.js";
 export interface Strategy {
     name: string;
-    owner: Individual;
-    followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet;
+    followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any;
 }
 export class ValueFollower implements Strategy {
     public name: string;
-    public owner: Individual;
-    constructor(strategyName: string, owner: Individual) {
+    public constructor(strategyName: string) {
         this.name = strategyName;
-        this.owner = owner;
     }
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
         let pd: number = valAssessed;
         let ps: number = pd;
         // let qd: number = Math.max(0, Math.floor((cashOwning / pd) * this.mySigmoid((pd - pToday) / pd)));
@@ -26,21 +21,22 @@ export class ValueFollower implements Strategy {
         // let qd: number = Math.floor(Math.random() * (Math.floor(cashOwning / pd) + 1));
         // let qs: number = Math.floor(Math.random() * (stockHolding.length + 1));
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         }
     }
 }
 export class PriceChaser implements Strategy {
     public name: string;
-    public owner: Individual;
     public attitude: number;
-    constructor(strategyName: string, owner: Individual) {
+    public constructor(strategyName: string) {
         this.name = strategyName;
-        this.owner = owner;
         this.attitude = 1;
     }
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
         this.attitude *= MyMath.normalSample(1, 0.033);
         let pd: number = pToday * MyMath.normalSample(1, 0.033);
         // let pd: number = pToday * Math.max(0.9, Math.min(1.1, this.attitude));
@@ -52,8 +48,11 @@ export class PriceChaser implements Strategy {
         let qd: number = Math.max(0, Math.round((cashOwning / pd) * (1 - pToday / pd)));
         let qs: number = Math.max(0, Math.round(stockHolding.length * (1 - ps / pToday)));
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         }
     }
 }
@@ -61,14 +60,12 @@ export class BHmixGrid implements Strategy {
     protected latestMaxP: number;
     protected latestMinP: number;
     public name: string;
-    public owner: Individual;
-    constructor(strategyName: string, owner: Individual) {
+    public constructor(strategyName: string) {
         this.name = strategyName;
-        this.owner = owner;
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
         let r = otherParams.r;
         // this.latestMaxP = -1 * Infinity;
         // this.latestMinP = Infinity;
@@ -96,8 +93,11 @@ export class BHmixGrid implements Strategy {
             else if (pToday > this.latestMaxP) qs = stockHolding.length;
         }
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         }
     }
     protected calcQToday(cashOwned: number, pToday: number, r: number): number {
@@ -122,7 +122,7 @@ export class BHmixGrid implements Strategy {
     }
 }
 // export class PlannedBHmixGrid extends BHmixGrid {
-//     public followStrategy(r: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
+//     public followStrategy(r: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): any {
 //         if (stockHolding.length === 0 || today === 1) {
 //             this.latestMaxP = pToday;
 //             this.latestMinP = this.latestMaxP;
@@ -151,14 +151,17 @@ export class BHmixGrid implements Strategy {
 //             }
 //         }
 //         return {
-//             "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-//             "sellOrder": new Order(this.owner, "sell", today, ps, qs)
-//         }
+//     "today": today,
+//     "buyP": pd,
+//     "buyQ": qd,
+//     "sellP": ps,
+//     "sellQ": qs
+// }
 //     }
 // }
 
 // export class GridConstQ implements Strategy {
-//     public followStrategy(maxPrice: number, minPrice: number, nTable: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): OrderSet {
+//     public followStrategy(maxPrice: number, minPrice: number, nTable: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): any {
 //         // Draw divide lines
 //         // numbers in divideLines are in descending order
 //         let divideLines: number[] = [];
@@ -181,14 +184,12 @@ export class GridConstRatio implements Strategy {
     private standAt: number;
     private divideLines: number[]
     public name: string;
-    public owner: Individual;
-    constructor(strategyName: string, owner: Individual) {
+    public constructor(strategyName: string) {
         this.name = strategyName;
-        this.owner = owner;
         this.standAt = 0
         this.divideLines = [];
     }
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
         let maxPrice = otherParams["max-price"];
         let minPrice = otherParams["min-price"];
         let nTable = otherParams["n-table"];
@@ -227,8 +228,11 @@ export class GridConstRatio implements Strategy {
             this.standAt = newStandAt;
         }
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         }
     }
     private calcStandAt(price: number, aList: number[]): number {
@@ -244,14 +248,12 @@ export class Chicken implements Strategy {
     private latestMaxP: number;
     private latestMinP: number;
     public name: string;
-    public owner: Individual;
-    constructor(strategyName: string, owner: Individual) {
+    public constructor(strategyName: string) {
         this.name = strategyName;
-        this.owner = owner;
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
-    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): OrderSet {
+    public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
         let r = otherParams["r"];
         let runawayRate = otherParams["runaway-rate"];
 
@@ -276,8 +278,11 @@ export class Chicken implements Strategy {
             }
         }
         return {
-            "buyOrder": new Order(this.owner, "buy", today, pd, qd),
-            "sellOrder": new Order(this.owner, "sell", today, ps, qs)
+            "today": today,
+            "buyP": pd,
+            "buyQ": qd,
+            "sellP": ps,
+            "sellQ": qs
         }
     }
     private calcQToday(r: number, cashOwned: number, pToday: number): number {

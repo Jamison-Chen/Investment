@@ -2,7 +2,7 @@ export class PriceMachine {
     private _numOfPairOut: number;
     private _equilibrium: number;
     private _priceChangeSpeed: number;
-    constructor(initialEq: number, priceChangeSpeed: number) {
+    public constructor(initialEq: number, priceChangeSpeed: number) {
         this._numOfPairOut = 0;
         this._equilibrium = initialEq;
         this._priceChangeSpeed = priceChangeSpeed;

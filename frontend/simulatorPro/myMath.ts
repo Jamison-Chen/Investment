@@ -10,7 +10,7 @@ export class MyMath {
     }
     public static avg(arr: number[]): number {
         if (arr.length === 0) return 0;
-        return arr.reduce((prev: number, curr: number) => prev + curr, 0) / arr.length;
+        return arr.reduce((a: number, b: number) => a + b, 0) / arr.length;
     }
     public static mySigmoid(x: number): number {
         return 1 / (1 + 150 * Math.pow(Math.E, -10 * x));
