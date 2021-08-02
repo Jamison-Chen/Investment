@@ -1,5 +1,6 @@
 export class MyGoogleChart {
     static applyChart(dataIn, options, chartType, targetDiv) {
+        targetDiv.innerHTML = "";
         let data = google.visualization.arrayToDataTable(dataIn);
         let chart = new google.visualization[chartType](targetDiv);
         chart.draw(data, options);
