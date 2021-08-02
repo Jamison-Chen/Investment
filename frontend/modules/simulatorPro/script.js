@@ -2,7 +2,7 @@ import { Individual } from './individual.js';
 import { PriceMachine } from './priceMachine.js';
 import { Stock } from "./stock.js";
 import { MyMath } from "./myMath.js";
-import { MyGoogleChart } from "./chart.js";
+import { AssetChart, CurveChart, DealAmountChart, MarketEqChart } from "./chart.js";
 class Main {
     constructor() {
         this.STRATEGIES = {
@@ -132,7 +132,7 @@ class Main {
         }
     }
     simulateOneDay() {
-        if (this.animationField !== null && this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.individualList !== undefined && this.dayToSimulate !== undefined) {
+        if (this.animationField !== null && this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.individualList !== undefined && this.dayToSimulate !== undefined && this.curveChartDrawer !== undefined && this.marketEqChartDrawer !== undefined && this.dealAmountChartDrawer !== undefined && this.myAssetChartDrawer !== undefined) {
             let today = this.marketEqData.length - 1;
             // everyone update market info and make order
             this.everyoneUpdInfoAndOrder(today);
@@ -166,13 +166,13 @@ class Main {
             });
             // prepare demand/supply curve data
             let curveData = this.prepareCurveData(buySideQueue, sellSideQueue);
-            MyGoogleChart.drawCurveChart(curveData, this.curveChart);
+            this.curveChartDrawer.drawChart(curveData);
             // matching buy-side order and sell-side order
             this.matching(today, buySideQueue, sellSideQueue);
             if (today <= this.dayToSimulate) {
-                MyGoogleChart.drawMarketEqChart(this.marketEqData, this.marketEqChart);
-                MyGoogleChart.drawDealAmountChart(this.dealAmountData, this.dealAmountChart);
-                MyGoogleChart.drawAssetsCharts(this.myAssetData, this.myAssetChart);
+                this.marketEqChartDrawer.drawChart(this.marketEqData);
+                this.dealAmountChartDrawer.drawChart(this.dealAmountData);
+                this.myAssetChartDrawer.drawChart(this.myAssetData);
                 this.showIndividualInfo();
                 setTimeout(() => { this.simulateOneDay(); }, this.pauseTime);
             }
@@ -766,6 +766,12 @@ class Main {
         }
         if (this.resetBtn !== null)
             this.resetBtn.addEventListener("click", () => { location.reload(); });
+        if (this.myAssetChart instanceof HTMLElement && this.marketEqChart instanceof HTMLElement && this.dealAmountChart instanceof HTMLElement && this.curveChart instanceof HTMLElement) {
+            this.myAssetChartDrawer = new AssetChart(this.myAssetChart);
+            this.marketEqChartDrawer = new MarketEqChart(this.marketEqChart);
+            this.dealAmountChartDrawer = new DealAmountChart(this.dealAmountChart);
+            this.curveChartDrawer = new CurveChart(this.curveChart);
+        }
     }
 }
 let main = new Main();
