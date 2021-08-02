@@ -1,5 +1,5 @@
 import { RequestBody, CreateRequestBody, ReadRequestBody } from "./requestBody.js";
-import { MyGoogleChart } from "./chart.js";
+import { CashInvestedChart, MktValPieChart, CompareChart, EachStockPQChart, EachStockCompareChart } from "./chart.js";
 import { StockInfoTable, StockWarehouseTable, RecordTable } from "./table.js";
 
 const recorderOption = document.getElementById("recorder-option");
@@ -40,7 +40,13 @@ let totalCashInvested = 0;
 let cashExtracted = 0;
 let totalMktVal = 0;
 let handlingFee = 0;
-let mygooglechart: MyGoogleChart = new MyGoogleChart();
+
+let cashInvestedChartDrawer: CashInvestedChart = new CashInvestedChart(cashInvestedChart);
+let mktValPieChartDrawer: MktValPieChart = new MktValPieChart(mktValPieChart);
+let compareChartDrawer: CompareChart = new CompareChart(compareChart);
+let individualPriceQuantityChartDrawer: EachStockPQChart = new EachStockPQChart(individualPriceQuantityChart);
+let individualCompareChartDrawer: EachStockCompareChart = new EachStockCompareChart(individualCompareChart);
+
 let traderecordtable: RecordTable;
 let cashdividendrecordtable: RecordTable;
 let individualtraderecordtable: RecordTable;
@@ -298,8 +304,8 @@ function showEachStockDetail(e: Event, sid: string, individualMktVal: number, tr
 
     // select trade records of that sid
     let selectedTradeRecordData = tradeRecordData.filter(each => each["sid"] === sid);
-    mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
-    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, cashDividendOfEachSid, individualCompareChart);
+    individualPriceQuantityChartDrawer.drawChart(pqData);
+    individualCompareChartDrawer.drawChart(cashInvstOfEachSid, individualMktVal, cashDividendOfEachSid);
     if (individualRecordTableBody instanceof HTMLElement) {
         individualtraderecordtable = new RecordTable(individualRecordTableBody, recordCRUD, "trade");
         individualtraderecordtable.build(selectedTradeRecordData);
@@ -399,7 +405,7 @@ function setupCashInvShowRangeInput(todayStr: string, firstDayStr: string, cashI
         cashInvShowRangeInput.value = cashInvShowRangeInput.max;
         cashInvShowRangeInput.addEventListener("input", () => {
             let endDate = getStartDateStr(new Date(), parseInt(cashInvShowRangeInput.value));
-            mygooglechart.drawCashInvestedChart(endDate, cashInvestedData, cashInvestedChart);
+            cashInvestedChartDrawer.drawChart(endDate, cashInvestedData);
         });
     }
 }
@@ -434,7 +440,7 @@ async function main(): Promise<void> {
     let cashInvestedData: (string | number)[][] = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
     let firstDayStr = cashInvestedData[1][0].toString();
     firstDayStr = `${firstDayStr.slice(0, 4)}-${firstDayStr.slice(4, 6)}-${firstDayStr.slice(6)}`;
-    mygooglechart.drawCashInvestedChart(firstDayStr, cashInvestedData, cashInvestedChart);
+    cashInvestedChartDrawer.drawChart(firstDayStr, cashInvestedData);
 
     addCashDividendOnCashExtracted(cashDividendJson["data"]);
 
@@ -453,8 +459,8 @@ async function main(): Promise<void> {
         stockinfotable.build(stockInfoJson["data"], allHoldingSids);
     }
     let mktValPieChartData = prepareMktValPieChartData(balanceQOfEachSid, stockInfoJson["data"]);
-    mygooglechart.drawMktValPieChart(mktValPieChartData, mktValPieChart);
-    mygooglechart.drawCompareChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee, compareChart);
+    mktValPieChartDrawer.drawChart(mktValPieChartData);
+    compareChartDrawer.drawChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee);
     if (stockWarehouseTableBody instanceof HTMLElement) {
         stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
         stockwarehousetable.build(stockInfoJson["data"], tradeRecordJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);

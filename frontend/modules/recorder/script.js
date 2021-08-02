@@ -8,7 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { CreateRequestBody, ReadRequestBody } from "./requestBody.js";
-import { MyGoogleChart } from "./chart.js";
+import { CashInvestedChart, MktValPieChart, CompareChart, EachStockPQChart, EachStockCompareChart } from "./chart.js";
 import { StockInfoTable, StockWarehouseTable, RecordTable } from "./table.js";
 const recorderOption = document.getElementById("recorder-option");
 const simulatorOption = document.getElementById("simulator-option");
@@ -47,7 +47,11 @@ let totalCashInvested = 0;
 let cashExtracted = 0;
 let totalMktVal = 0;
 let handlingFee = 0;
-let mygooglechart = new MyGoogleChart();
+let cashInvestedChartDrawer = new CashInvestedChart(cashInvestedChart);
+let mktValPieChartDrawer = new MktValPieChart(mktValPieChart);
+let compareChartDrawer = new CompareChart(compareChart);
+let individualPriceQuantityChartDrawer = new EachStockPQChart(individualPriceQuantityChart);
+let individualCompareChartDrawer = new EachStockCompareChart(individualCompareChart);
 let traderecordtable;
 let cashdividendrecordtable;
 let individualtraderecordtable;
@@ -319,8 +323,8 @@ function showEachStockDetail(e, sid, individualMktVal, tradeRecordData) {
     }
     // select trade records of that sid
     let selectedTradeRecordData = tradeRecordData.filter(each => each["sid"] === sid);
-    mygooglechart.drawEachStockPQChart(pqData, individualPriceQuantityChart);
-    mygooglechart.drawEachStockCompareChart(cashInvstOfEachSid, individualMktVal, cashDividendOfEachSid, individualCompareChart);
+    individualPriceQuantityChartDrawer.drawChart(pqData);
+    individualCompareChartDrawer.drawChart(cashInvstOfEachSid, individualMktVal, cashDividendOfEachSid);
     if (individualRecordTableBody instanceof HTMLElement) {
         individualtraderecordtable = new RecordTable(individualRecordTableBody, recordCRUD, "trade");
         individualtraderecordtable.build(selectedTradeRecordData);
@@ -416,7 +420,7 @@ function setupCashInvShowRangeInput(todayStr, firstDayStr, cashInvestedData) {
         cashInvShowRangeInput.value = cashInvShowRangeInput.max;
         cashInvShowRangeInput.addEventListener("input", () => {
             let endDate = getStartDateStr(new Date(), parseInt(cashInvShowRangeInput.value));
-            mygooglechart.drawCashInvestedChart(endDate, cashInvestedData, cashInvestedChart);
+            cashInvestedChartDrawer.drawChart(endDate, cashInvestedData);
         });
     }
 }
@@ -449,7 +453,7 @@ function main() {
         let cashInvestedData = prepareCashInvChartData(todayStr, tradeRecordJson["data"]);
         let firstDayStr = cashInvestedData[1][0].toString();
         firstDayStr = `${firstDayStr.slice(0, 4)}-${firstDayStr.slice(4, 6)}-${firstDayStr.slice(6)}`;
-        mygooglechart.drawCashInvestedChart(firstDayStr, cashInvestedData, cashInvestedChart);
+        cashInvestedChartDrawer.drawChart(firstDayStr, cashInvestedData);
         addCashDividendOnCashExtracted(cashDividendJson["data"]);
         // set default value for the deal-time field of the create-record form
         if (tradeDealTimeRecordInput instanceof HTMLInputElement)
@@ -467,8 +471,8 @@ function main() {
             stockinfotable.build(stockInfoJson["data"], allHoldingSids);
         }
         let mktValPieChartData = prepareMktValPieChartData(balanceQOfEachSid, stockInfoJson["data"]);
-        mygooglechart.drawMktValPieChart(mktValPieChartData, mktValPieChart);
-        mygooglechart.drawCompareChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee, compareChart);
+        mktValPieChartDrawer.drawChart(mktValPieChartData);
+        compareChartDrawer.drawChart(totalCashInvested, totalMktVal, cashExtracted, handlingFee);
         if (stockWarehouseTableBody instanceof HTMLElement) {
             stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
             stockwarehousetable.build(stockInfoJson["data"], tradeRecordJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
