@@ -13,17 +13,7 @@ class StockInfoView:
         self.endPoint12 = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch="
         # info of single stock, multiple days
         # self.endPoint2 = "https://www.twse.com.tw/exchangeReport/STOCK_DAY"
-        self.recordedDate = self.getRecordDate()
-        self.sid2NameDict = {}
-        self.infoList = []
-        self.infoDictList = []
         self.result = []
-
-    def getRecordDate(self):
-        q = StockInfo.objects.all()
-        if len(q) > 0:
-            return int(StockInfo.objects.all()[0].date)
-        return 0
 
     def fetchAndStore(self, sidList):
         try:
@@ -103,11 +93,20 @@ class StockInfoView:
             date = date.strftime("%Y%m%d")
         date = int(date)
         try:
-            if self.recordedDate != date:
-                self.fetchAndStore(sidList)
-                self.recordedDate = date
-            else:
-                self.prepareResult(sidList)
+            needToFetchSidList = []
+            noNeedToFetchSidList = []
+            for eachSid in sidList:
+                q = StockInfo.objects.filter(sid=eachSid)
+                if len(q) != 0:
+                    q = q.get()
+                    if int(q.date) != date:
+                        needToFetchSidList.append(eachSid)
+                    else:
+                        noNeedToFetchSidList.append(eachSid)
+                else:
+                    needToFetchSidList.append(eachSid)
+            self.prepareResult(noNeedToFetchSidList)
+            self.fetchAndStore(needToFetchSidList)
         except Exception as e:
             raise e
 
@@ -129,5 +128,3 @@ class StockInfoView:
                                     "fluct-rate": q.fluctRate})
             else:
                 self.fetchAndStore([eachSid])
-                # raise Exception(
-                #     "Error in prepareResult: failed to get info of %s" % eachSid)

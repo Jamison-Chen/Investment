@@ -21,3 +21,5 @@ class StockInfoAdmin(admin.ModelAdmin):
 admin.site.register(TradeRecord, TradeRecordAdmin)
 admin.site.register(CashDividendRecord, CashDividendRecordAdmin)
 admin.site.register(StockInfo, StockInfoAdmin)
+# User Name: Jamison
+# Password: jamison22512908
