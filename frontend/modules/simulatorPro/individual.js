@@ -85,10 +85,11 @@ export class Individual {
         else
             throw "Strategy undefined.";
     }
-    updateMktInfo(today, valueToday, priceToday) {
+    updateMktInfo(today, valueToday, priceToday, dailyEconGrowthRate) {
         this._today = today;
         this._valueAssessed = valueToday;
         this._mktPriceAcquired = priceToday;
+        this._cashOwning += (this._initialCash * dailyEconGrowthRate);
     }
     makeOrder() {
         // The prices inthe orders that _strategy made is min-sellable and max-payable (i.e. just for reference)

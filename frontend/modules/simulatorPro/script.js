@@ -44,6 +44,7 @@ class Main {
         this.initTotalCashInput = document.getElementById("init-total-cash");
         this.totalStockInput = document.getElementById("total-stock");
         this.initialEqInput = document.getElementById("initial-eq");
+        this.annualEconGrowthRateInput = document.getElementById("annual-econ-growth-rate");
         this.dayToSimulateInput = document.getElementById("day-to-simulate");
         this.pauseTimeInput = document.getElementById("pause-time");
         this.composeParamField = document.getElementById("compose-parameter-field");
@@ -183,11 +184,11 @@ class Main {
         }
     }
     everyoneUpdInfoAndOrder(today) {
-        if (this.marketEqData !== undefined && this.individualList !== undefined && this.pm !== undefined) {
+        if (this.marketEqData !== undefined && this.individualList !== undefined && this.pm !== undefined && this.annualEconGrowthRate !== undefined) {
             for (let eachOne of this.individualList) {
                 let valAssessed = this.pm.genAssessedVal(true);
                 let latestPrice = parseFloat(`${this.marketEqData.slice(-1)[0].slice(-1)[0]}`);
-                eachOne.updateMktInfo(today, valAssessed, latestPrice);
+                eachOne.updateMktInfo(today, valAssessed, latestPrice, this.annualEconGrowthRate / 250);
             }
         }
     }
@@ -483,38 +484,30 @@ class Main {
         if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.settingBtn.disabled = false;
             this.startBtn.disabled = false;
-            this.initTotalCashInput.disabled = false;
-            this.totalStockInput.disabled = false;
-            this.initialEqInput.disabled = false;
-            this.dayToSimulateInput.disabled = false;
-            this.pauseTimeInput.disabled = false;
         }
     }
     disableChangeSetting() {
         if (this.settingBtn instanceof HTMLButtonElement && this.startBtn instanceof HTMLButtonElement && this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
             this.settingBtn.disabled = true;
             this.startBtn.disabled = true;
-            this.initTotalCashInput.disabled = true;
-            this.totalStockInput.disabled = true;
-            this.initialEqInput.disabled = true;
-            this.dayToSimulateInput.disabled = true;
-            this.pauseTimeInput.disabled = true;
         }
     }
     initGeneralSetting() {
-        if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+        if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement && this.annualEconGrowthRateInput instanceof HTMLInputElement) {
             this.initTotalCashInput.value = "1000000";
             this.totalStockInput.value = "100000";
             this.initialEqInput.value = "10";
+            this.annualEconGrowthRateInput.value = "0.05";
             this.dayToSimulateInput.value = "250";
             this.pauseTimeInput.value = "3";
         }
     }
     readGeneralSetting() {
-        if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement) {
+        if (this.initTotalCashInput instanceof HTMLInputElement && this.totalStockInput instanceof HTMLInputElement && this.initialEqInput instanceof HTMLInputElement && this.dayToSimulateInput instanceof HTMLInputElement && this.pauseTimeInput instanceof HTMLInputElement && this.annualEconGrowthRateInput instanceof HTMLInputElement) {
             this.initTotalCash = parseInt(this.initTotalCashInput.value);
             this.totalStock = parseInt(this.totalStockInput.value);
             this.initialEq = parseInt(this.initialEqInput.value);
+            this.annualEconGrowthRate = parseFloat(this.annualEconGrowthRateInput.value);
             this.dayToSimulate = parseInt(this.dayToSimulateInput.value);
             this.pauseTime = parseInt(this.pauseTimeInput.value);
         }

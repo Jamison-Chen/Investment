@@ -99,10 +99,11 @@ export class Individual {
         else if (strategyName === "Chicken") return new Chicken(strategyName);
         else throw "Strategy undefined.";
     }
-    public updateMktInfo(today: number, valueToday: number, priceToday: number): void {
+    public updateMktInfo(today: number, valueToday: number, priceToday: number, dailyEconGrowthRate: number): void {
         this._today = today;
         this._valueAssessed = valueToday;
         this._mktPriceAcquired = priceToday;
+        this._cashOwning += (this._initialCash * dailyEconGrowthRate);
     }
     public makeOrder(): OrderSet {
         // The prices inthe orders that _strategy made is min-sellable and max-payable (i.e. just for reference)
