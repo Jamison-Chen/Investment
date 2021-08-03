@@ -19,7 +19,7 @@ export class Individual {
     private _minSellable: undefined | number;
     private _bidPrice: undefined | number;
     private _askPrice: undefined | number;
-    private _orderSetToday: undefined | OrderSet;
+    private _orderSetToday: OrderSet;
     // daily market info
     private _today: undefined | number;
     private _valueAssessed: undefined | number;
@@ -50,9 +50,12 @@ export class Individual {
         this._minSellable = undefined;
         this._bidPrice = undefined;
         this._askPrice = undefined;
-        this._orderSetToday = undefined;
+        this._orderSetToday = {
+            "buyOrder": new Order("buy", NaN, NaN, NaN),
+            "sellOrder": new Order("sell", NaN, NaN, NaN)
+        };
     }
-    public get orderSetToday(): OrderSet | undefined {
+    public get orderSetToday(): OrderSet {
         return this._orderSetToday;
     }
     public get initialCash(): number {
@@ -128,13 +131,13 @@ export class Individual {
             } else throw "_bidPrice/_askPrice/_today is undefined, try updateMktInfo() first.";
         } else throw "market info not sufficient when making order";
     }
-    public initBidPrice(): void {
+    private initBidPrice(): void {
         this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
         if (this._maxPayable !== undefined) {
             this._bidPrice = this._maxPayable * Math.max(0, (1 - this._aggressiveness));
         } else throw "The _maxPayable is still undefined.";
     }
-    public bid(): void {
+    private bid(): void {
         if (this._maxPayable !== undefined && this._bidPrice !== undefined) {
             let delta = this._maxPayable - this._bidPrice;
             if (delta > 0) {
@@ -143,12 +146,12 @@ export class Individual {
             } else if (delta < 0) this.initBidPrice();
         } else this.initBidPrice();
     }
-    public initAskPrice(): void {
+    private initAskPrice(): void {
         this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
         if (this._minSellable !== undefined) this._askPrice = this._minSellable * (1 + this._aggressiveness);
         else throw "The _minSellable is still undefined.";
     }
-    public ask(): void {
+    private ask(): void {
         if (this._minSellable !== undefined && this._askPrice !== undefined) {
             let delta = this._askPrice - this._minSellable;
             if (delta > 0) {

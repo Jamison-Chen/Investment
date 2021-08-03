@@ -216,44 +216,32 @@ class Main {
         let finalDealPrice: number | undefined = undefined;
         let dealPair: { "buySide": Individual, "sellSide": Individual, "q": number }[] = [];
         let valid: boolean;
-        let eachBuySideOrderSetToday = buySideQueue[i].orderSetToday;
-        let eachSellSideOrderSetToday = sellSideQueue[j].orderSetToday;
-        if (eachBuySideOrderSetToday !== undefined && eachSellSideOrderSetToday !== undefined) {
-            valid =
-                buySideQueue.length > i &&
-                sellSideQueue.length > j &&
-                eachBuySideOrderSetToday.buyOrder.price >= eachSellSideOrderSetToday.sellOrder.price;
-        } else throw "undefined eachBuySideOrderSetToday/eachSellSideOrderSetToday";
-        while (valid && eachBuySideOrderSetToday !== undefined && eachSellSideOrderSetToday !== undefined) {
-            let dealQ: number = Math.min(eachBuySideOrderSetToday.buyOrder.quantity, eachSellSideOrderSetToday.sellOrder.quantity);
-            eachBuySideOrderSetToday.buyOrder.quantity -= dealQ;
-            eachSellSideOrderSetToday.sellOrder.quantity -= dealQ;
+        valid =
+            buySideQueue.length > i &&
+            sellSideQueue.length > j &&
+            buySideQueue[i].orderSetToday.buyOrder.price >= sellSideQueue[j].orderSetToday.sellOrder.price;
+        while (valid) {
+            let dealQ: number = Math.min(buySideQueue[i].orderSetToday.buyOrder.quantity, sellSideQueue[j].orderSetToday.sellOrder.quantity);
+            buySideQueue[i].orderSetToday.buyOrder.quantity -= dealQ;
+            sellSideQueue[j].orderSetToday.sellOrder.quantity -= dealQ;
             if (buySideQueue[i] !== sellSideQueue[j]) {
                 totalDealQ += dealQ;
                 dealPair.push({ "buySide": buySideQueue[i], "sellSide": sellSideQueue[j], "q": dealQ });
                 // decide finalDealPrice
-                if (eachBuySideOrderSetToday.buyOrder.quantity === 0 && eachSellSideOrderSetToday.sellOrder.quantity === 0) {
-                    finalDealPrice = MyMath.avg([eachBuySideOrderSetToday.buyOrder.price, eachSellSideOrderSetToday.sellOrder.price]);
-                } else if (eachBuySideOrderSetToday.buyOrder.quantity === 0) {
-                    finalDealPrice = eachSellSideOrderSetToday.sellOrder.price;
-                } else if (eachSellSideOrderSetToday.sellOrder.quantity === 0) {
-                    finalDealPrice = eachBuySideOrderSetToday.buyOrder.price;
+                if (buySideQueue[i].orderSetToday.buyOrder.quantity === 0 && sellSideQueue[j].orderSetToday.sellOrder.quantity === 0) {
+                    finalDealPrice = MyMath.avg([buySideQueue[i].orderSetToday.buyOrder.price, sellSideQueue[j].orderSetToday.sellOrder.price]);
+                } else if (buySideQueue[i].orderSetToday.buyOrder.quantity === 0) {
+                    finalDealPrice = sellSideQueue[j].orderSetToday.sellOrder.price;
+                } else if (sellSideQueue[j].orderSetToday.sellOrder.quantity === 0) {
+                    finalDealPrice = buySideQueue[i].orderSetToday.buyOrder.price;
                 } else throw "wierd!";
             }
-            if (eachBuySideOrderSetToday.buyOrder.quantity === 0) {
-                i++;
-                eachBuySideOrderSetToday = buySideQueue[i].orderSetToday;
-            }
-            if (eachSellSideOrderSetToday.sellOrder.quantity === 0) {
-                j++;
-                eachSellSideOrderSetToday = sellSideQueue[j].orderSetToday;
-            }
-            if (eachBuySideOrderSetToday !== undefined && eachSellSideOrderSetToday !== undefined) {
-                valid =
-                    buySideQueue.length > i &&
-                    sellSideQueue.length > j &&
-                    eachBuySideOrderSetToday.buyOrder.price >= eachBuySideOrderSetToday.sellOrder.price;
-            } else throw "undefined eachBuySideOrderSetToday/eachSellSideOrderSetToday";
+            if (buySideQueue[i].orderSetToday.buyOrder.quantity === 0) i++;
+            if (sellSideQueue[j].orderSetToday.sellOrder.quantity === 0) j++;
+            valid =
+                buySideQueue.length > i &&
+                sellSideQueue.length > j &&
+                buySideQueue[i].orderSetToday.buyOrder.price >= sellSideQueue[j].orderSetToday.sellOrder.price;
         }
         if (this.marketEqData !== undefined && this.dealAmountData !== undefined && this.myAssetData !== undefined && this.pm !== undefined && this.me !== undefined) {
             if (finalDealPrice === undefined) {

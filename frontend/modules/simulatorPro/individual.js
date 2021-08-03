@@ -28,7 +28,10 @@ export class Individual {
         this._minSellable = undefined;
         this._bidPrice = undefined;
         this._askPrice = undefined;
-        this._orderSetToday = undefined;
+        this._orderSetToday = {
+            "buyOrder": new Order("buy", NaN, NaN, NaN),
+            "sellOrder": new Order("sell", NaN, NaN, NaN)
+        };
     }
     get orderSetToday() {
         return this._orderSetToday;
