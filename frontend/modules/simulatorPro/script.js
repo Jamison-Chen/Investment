@@ -101,7 +101,7 @@ class Main {
             let stockHolding = [];
             for (let i = 0; i < stockGot; i++)
                 stockHolding.push(new Stock(this.pm.equilibrium, 0));
-            this.me = new Individual(nodeDiv, this.myselfSetting.strategySetting, cashOwning, stockHolding);
+            this.me = new Individual(nodeDiv, this.myselfSetting.strategySetting, cashOwning, stockHolding, 0, false);
             this.individualList.push(this.me);
             // initialize all the other individuals
             let j = 1; // start with 1 because myself counts 1

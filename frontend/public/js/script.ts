@@ -55,7 +55,6 @@ const modeBtn = document.getElementById("mode-btn");
 const modeList = document.getElementById("mode-list");
 
 function controlModeList(e: Event): void {
-    console.log("hi");
     if (modeBtn !== null && modeList !== null && body !== null) {
         if (modeList.style.display === "flex") modeList.style.display = "none";
         else modeList.style.display = "flex";

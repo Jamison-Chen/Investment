@@ -8,12 +8,6 @@ export class PriceMachine {
         this._equilibrium = initialEq;
         this._priceChangeSpeed = priceChangeSpeed;
     }
-    public get numOfPairOut(): number {
-        return this._numOfPairOut;
-    }
-    public set numOfPairOut(num: number) {
-        this._numOfPairOut = num;
-    }
     public get equilibrium(): number {
         return this._equilibrium;
     }

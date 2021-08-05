@@ -5,12 +5,6 @@ export class PriceMachine {
         this._equilibrium = initialEq;
         this._priceChangeSpeed = priceChangeSpeed;
     }
-    get numOfPairOut() {
-        return this._numOfPairOut;
-    }
-    set numOfPairOut(num) {
-        this._numOfPairOut = num;
-    }
     get equilibrium() {
         return this._equilibrium;
     }

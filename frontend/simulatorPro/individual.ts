@@ -8,6 +8,7 @@ export class Individual {
     // attributes about the individual
     private _strategySetting: any;
     private _aggressiveness: number;
+    private _aggressivenessChangable: boolean;
     private _initialCash: number;
     private _cashOwning: number;
     private _stockHolding: Stock[];
@@ -17,8 +18,6 @@ export class Individual {
     private _strategy: Strategy;
     private _maxPayable: undefined | number;
     private _minSellable: undefined | number;
-    private _bidPrice: undefined | number;
-    private _askPrice: undefined | number;
     private _orderSetToday: OrderSet;
     // daily market info
     private _today: undefined | number;
@@ -32,10 +31,11 @@ export class Individual {
         "GridConstRatio": "#00A",
         "Chicken": "#A0A"
     };
-    public constructor(aDiv: HTMLElement, strayegySetting: any, initCash: number, stockHolding: Stock[]) {
+    public constructor(aDiv: HTMLElement, strayegySetting: any, initCash: number, stockHolding: Stock[], aggr: number = Math.random(), aggrChangeable: boolean = true) {
         this.divControlled = aDiv;
         this._strategySetting = strayegySetting;
-        this._aggressiveness = 0;
+        this._aggressiveness = aggr;
+        this._aggressivenessChangable = aggrChangeable;
         this._initialCash = initCash;
         this._cashOwning = initCash;
         this._stockHolding = stockHolding;
@@ -48,8 +48,6 @@ export class Individual {
         this._mktPriceAcquired = undefined;
         this._maxPayable = undefined;
         this._minSellable = undefined;
-        this._bidPrice = undefined;
-        this._askPrice = undefined;
         this._orderSetToday = {
             "buyOrder": new Order("buy", NaN, NaN, NaN),
             "sellOrder": new Order("sell", NaN, NaN, NaN)
@@ -117,51 +115,34 @@ export class Individual {
                 this._mktPriceAcquired,
                 this._strategySetting.params
             );
-            const qd = strategyResult["buyQ"];
-            const qs = strategyResult["sellQ"];
+            let qd = strategyResult["buyQ"];
+            let qs = strategyResult["sellQ"];
             this._maxPayable = strategyResult["buyP"];
             this._minSellable = strategyResult["sellP"];
-            this.bid();
-            this.ask();
-            if (this._bidPrice !== undefined && this._askPrice !== undefined && this._today !== undefined) {
+            let bidPrice: number = this.bid();
+            let askPrice: number = this.ask();
+            this.decreaseAggressiveness();
+            if (this._today !== undefined) {
                 this._orderSetToday = {
-                    "buyOrder": new Order("buy", this._today, this._bidPrice, qd),
-                    "sellOrder": new Order("sell", this._today, this._askPrice, qs)
+                    "buyOrder": new Order("buy", this._today, bidPrice, qd),
+                    "sellOrder": new Order("sell", this._today, askPrice, qs)
                 }
                 return this._orderSetToday;
-            } else throw "_bidPrice/_askPrice/_today is undefined, try updateMktInfo() first.";
+            } else throw "_today is undefined, try updateMktInfo() first.";
         } else throw "market info not sufficient when making order";
     }
-    private initBidPrice(): void {
-        this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
+    private bid(): number {
         if (this._maxPayable !== undefined) {
-            this._bidPrice = this._maxPayable * Math.max(0, (1 - this._aggressiveness));
-        } else throw "The _maxPayable is still undefined.";
+            return this._maxPayable * (1 - this._aggressiveness);
+        } else throw "The _maxPayable is undefined.";
     }
-    private bid(): void {
-        if (this._maxPayable !== undefined && this._bidPrice !== undefined) {
-            let delta = this._maxPayable - this._bidPrice;
-            if (delta > 0) {
-                this._bidPrice += Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
-                this._aggressiveness = 1 - this._bidPrice / this._maxPayable;
-            } else if (delta < 0) this.initBidPrice();
-        } else this.initBidPrice();
-    }
-    private initAskPrice(): void {
-        this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
-        if (this._minSellable !== undefined) this._askPrice = this._minSellable * (1 + this._aggressiveness);
-        else throw "The _minSellable is still undefined.";
-    }
-    private ask(): void {
-        if (this._minSellable !== undefined && this._askPrice !== undefined) {
-            let delta = this._askPrice - this._minSellable;
-            if (delta > 0) {
-                this._askPrice -= Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
-                this._aggressiveness = this._askPrice / this._minSellable - 1;
-            } else if (delta < 0) this.initAskPrice();
-        } else this.initAskPrice();
+    private ask(): number {
+        if (this._minSellable !== undefined) {
+            return this._minSellable * (1 / (1 - this._aggressiveness + Number.EPSILON));
+        } else throw "The _minSellable is undefined.";
     }
     public buyIn(stockIn: Stock[], dealPrice: number, today: number): void {
+        this.increaseAggressiveness();
         // revise stock info
         for (let eachStock of stockIn) {
             eachStock.buyInCost = dealPrice;
@@ -172,11 +153,24 @@ export class Individual {
         this._tradeAmount += stockIn.length;
     }
     public sellOut(qOut: number, dealPrice: number): Stock[] {
+        this.increaseAggressiveness();
         // Use FIFO
         this._stockHolding.sort((a: Stock, b: Stock) => a.buyInDay - b.buyInDay);
         let stockOut: Stock[] = this._stockHolding.splice(0, qOut);
         this._cashOwning += qOut * dealPrice;
         this._tradeAmount += qOut;
         return stockOut;
+    }
+    private decreaseAggressiveness(): void {
+        if (this._aggressivenessChangable) {
+            this._aggressiveness += Math.max(-1 * this._aggressiveness,
+                MyMath.oneTailNormalSample(0, this._aggressiveness / 3, "left"));
+        }
+    }
+    private increaseAggressiveness(): void {
+        if (this._aggressivenessChangable) {
+            this._aggressiveness += Math.min(1 - this._aggressiveness,
+                MyMath.oneTailNormalSample(0, (1 - this._aggressiveness) / 3, "right"));
+        }
     }
 }

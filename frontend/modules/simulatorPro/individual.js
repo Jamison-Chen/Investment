@@ -2,7 +2,7 @@ import { BHmixGrid, ValueFollower, PriceChaser, GridConstRatio, Chicken } from "
 import { Order } from "./order.js";
 import { MyMath } from "./myMath.js";
 export class Individual {
-    constructor(aDiv, strayegySetting, initCash, stockHolding) {
+    constructor(aDiv, strayegySetting, initCash, stockHolding, aggr = Math.random(), aggrChangeable = true) {
         // others
         this._strategyColor = {
             "ValueFollower": "#D00",
@@ -13,7 +13,8 @@ export class Individual {
         };
         this.divControlled = aDiv;
         this._strategySetting = strayegySetting;
-        this._aggressiveness = 0;
+        this._aggressiveness = aggr;
+        this._aggressivenessChangable = aggrChangeable;
         this._initialCash = initCash;
         this._cashOwning = initCash;
         this._stockHolding = stockHolding;
@@ -26,8 +27,6 @@ export class Individual {
         this._mktPriceAcquired = undefined;
         this._maxPayable = undefined;
         this._minSellable = undefined;
-        this._bidPrice = undefined;
-        this._askPrice = undefined;
         this._orderSetToday = {
             "buyOrder": new Order("buy", NaN, NaN, NaN),
             "sellOrder": new Order("sell", NaN, NaN, NaN)
@@ -96,67 +95,42 @@ export class Individual {
         // The individuals need to bid themselves
         if (this._today !== undefined && this._mktPriceAcquired !== undefined && this._valueAssessed !== undefined) {
             let strategyResult = this._strategy.followStrategy(this._today, this._cashOwning, this._stockHolding, this._valueAssessed, this._mktPriceAcquired, this._strategySetting.params);
-            const qd = strategyResult["buyQ"];
-            const qs = strategyResult["sellQ"];
+            let qd = strategyResult["buyQ"];
+            let qs = strategyResult["sellQ"];
             this._maxPayable = strategyResult["buyP"];
             this._minSellable = strategyResult["sellP"];
-            this.bid();
-            this.ask();
-            if (this._bidPrice !== undefined && this._askPrice !== undefined && this._today !== undefined) {
+            let bidPrice = this.bid();
+            let askPrice = this.ask();
+            this.decreaseAggressiveness();
+            if (this._today !== undefined) {
                 this._orderSetToday = {
-                    "buyOrder": new Order("buy", this._today, this._bidPrice, qd),
-                    "sellOrder": new Order("sell", this._today, this._askPrice, qs)
+                    "buyOrder": new Order("buy", this._today, bidPrice, qd),
+                    "sellOrder": new Order("sell", this._today, askPrice, qs)
                 };
                 return this._orderSetToday;
             }
             else
-                throw "_bidPrice/_askPrice/_today is undefined, try updateMktInfo() first.";
+                throw "_today is undefined, try updateMktInfo() first.";
         }
         else
             throw "market info not sufficient when making order";
     }
-    initBidPrice() {
-        this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
-        if (this._maxPayable !== undefined) {
-            this._bidPrice = this._maxPayable * Math.max(0, (1 - this._aggressiveness));
-        }
-        else
-            throw "The _maxPayable is still undefined.";
-    }
     bid() {
-        if (this._maxPayable !== undefined && this._bidPrice !== undefined) {
-            let delta = this._maxPayable - this._bidPrice;
-            if (delta > 0) {
-                this._bidPrice += Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
-                this._aggressiveness = 1 - this._bidPrice / this._maxPayable;
-            }
-            else if (delta < 0)
-                this.initBidPrice();
+        if (this._maxPayable !== undefined) {
+            return this._maxPayable * (1 - this._aggressiveness);
         }
         else
-            this.initBidPrice();
-    }
-    initAskPrice() {
-        this._aggressiveness = MyMath.oneTailNormalSample(this._aggressiveness, 0.25, "right");
-        if (this._minSellable !== undefined)
-            this._askPrice = this._minSellable * (1 + this._aggressiveness);
-        else
-            throw "The _minSellable is still undefined.";
+            throw "The _maxPayable is undefined.";
     }
     ask() {
-        if (this._minSellable !== undefined && this._askPrice !== undefined) {
-            let delta = this._askPrice - this._minSellable;
-            if (delta > 0) {
-                this._askPrice -= Math.min(delta, delta * MyMath.oneTailNormalSample(0, 0.5, "right"));
-                this._aggressiveness = this._askPrice / this._minSellable - 1;
-            }
-            else if (delta < 0)
-                this.initAskPrice();
+        if (this._minSellable !== undefined) {
+            return this._minSellable * (1 / (1 - this._aggressiveness + Number.EPSILON));
         }
         else
-            this.initAskPrice();
+            throw "The _minSellable is undefined.";
     }
     buyIn(stockIn, dealPrice, today) {
+        this.increaseAggressiveness();
         // revise stock info
         for (let eachStock of stockIn) {
             eachStock.buyInCost = dealPrice;
@@ -167,11 +141,22 @@ export class Individual {
         this._tradeAmount += stockIn.length;
     }
     sellOut(qOut, dealPrice) {
+        this.increaseAggressiveness();
         // Use FIFO
         this._stockHolding.sort((a, b) => a.buyInDay - b.buyInDay);
         let stockOut = this._stockHolding.splice(0, qOut);
         this._cashOwning += qOut * dealPrice;
         this._tradeAmount += qOut;
         return stockOut;
+    }
+    decreaseAggressiveness() {
+        if (this._aggressivenessChangable) {
+            this._aggressiveness += Math.max(-1 * this._aggressiveness, MyMath.oneTailNormalSample(0, this._aggressiveness / 3, "left"));
+        }
+    }
+    increaseAggressiveness() {
+        if (this._aggressivenessChangable) {
+            this._aggressiveness += Math.min(1 - this._aggressiveness, MyMath.oneTailNormalSample(0, (1 - this._aggressiveness) / 3, "right"));
+        }
     }
 }

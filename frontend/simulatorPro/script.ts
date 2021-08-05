@@ -102,6 +102,7 @@ class Main {
                 this.numOfIndividual += this.indiviComposition[eachStrategy].number;
             }
             this.pm = new PriceMachine(this.initialEq, this.numOfIndividual);
+
             // decide the size of each node
             this.nodeDivSize = 0;
             if (this.animationField instanceof HTMLElement) {
@@ -111,6 +112,7 @@ class Main {
             }
             let cashLeft: number = this.initTotalCash;
             let stockLeft: number = this.totalStock;
+
             // initialize myself(me)
             let nodeDiv = this.createNodeDiv(this.pauseTime);
             nodeDiv.id = "me";
@@ -123,8 +125,9 @@ class Main {
             stockLeft -= stockGot;
             let stockHolding: Stock[] = [];
             for (let i = 0; i < stockGot; i++) stockHolding.push(new Stock(this.pm.equilibrium, 0));
-            this.me = new Individual(nodeDiv, this.myselfSetting.strategySetting, cashOwning, stockHolding);
+            this.me = new Individual(nodeDiv, this.myselfSetting.strategySetting, cashOwning, stockHolding, 0, false);
             this.individualList.push(this.me);
+
             // initialize all the other individuals
             let j = 1;  // start with 1 because myself counts 1
             for (let eachStrategy in this.indiviComposition) {
