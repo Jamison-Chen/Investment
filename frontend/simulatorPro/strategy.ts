@@ -31,14 +31,14 @@ export class ValueFollower implements Strategy {
 }
 export class PriceChaser implements Strategy {
     public name: string;
-    public attitude: number;
+    // public attitude: number;
     public constructor(strategyName: string) {
         this.name = strategyName;
-        this.attitude = 1;
+        // this.attitude = 1;
     }
     public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
-        this.attitude *= Math.max(0, MyMath.normalSample(1, 0.033));
-        let pd: number = pToday * MyMath.normalSample(1, 0.033);
+        // this.attitude *= Math.max(0, MyMath.normalSample(1, 0.033));
+        let pd: number = pToday * Math.max(0.9, Math.min(1.1, MyMath.normalSample(1, 0.033)));
         // let pd: number = pToday * Math.max(0.9, Math.min(1.1, this.attitude));
         let ps: number = pd;
         // if pd and ps > pToday, it means you expect the price to rise
@@ -255,7 +255,7 @@ export class Chicken implements Strategy {
         let r = otherParams["r"];
         let runawayRate = otherParams["runaway-rate"];
 
-        let ps: number = pToday * MyMath.normalSample(1, 0.033);
+        let ps: number = pToday * Math.max(0.9, Math.min(1.1, MyMath.normalSample(1, 0.033)));
         let pd: number = ps;
         let qd: number = 0;
         let qs: number = 0;
