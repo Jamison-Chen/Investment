@@ -15,7 +15,7 @@ class StockInfoView:
         # self.endPoint2 = "https://www.twse.com.tw/exchangeReport/STOCK_DAY"
         self.result = []
 
-    def fetchAndStore(self, sidList):
+    def fetchAndStore(self, sidList, date):
         try:
             allData = []
             for each in sidList:
@@ -33,7 +33,7 @@ class StockInfoView:
                 # arrange the data format
                 dataRow = {}
                 try:
-                    dataRow["date"] = res["d"].split('.')[0]
+                    dataRow["date"] = date
                     dataRow["sid"] = res["ch"].split('.')[0]
                     dataRow["name"] = res["n"]
                     dataRow["trade-type"] = res["ex"]
@@ -81,7 +81,7 @@ class StockInfoView:
                                   fluctPrice=each["fluct-price"],
                                   fluctRate=each["fluct-rate"])
                     s.save()
-            self.prepareResult(sidList)
+            self.prepareResult(sidList, date)
         except Exception as e:
             raise e
 
@@ -105,12 +105,12 @@ class StockInfoView:
                         noNeedToFetchSidList.append(eachSid)
                 else:
                     needToFetchSidList.append(eachSid)
-            self.prepareResult(noNeedToFetchSidList)
-            self.fetchAndStore(needToFetchSidList)
+            self.prepareResult(noNeedToFetchSidList, date)
+            self.fetchAndStore(needToFetchSidList, date)
         except Exception as e:
             raise e
 
-    def prepareResult(self, sidList):
+    def prepareResult(self, sidList, date):
         for eachSid in sidList:
             q = StockInfo.objects.filter(sid=eachSid)
             if len(q) != 0:
@@ -127,4 +127,4 @@ class StockInfoView:
                                     "fluct-price": q.fluctPrice,
                                     "fluct-rate": q.fluctRate})
             else:
-                self.fetchAndStore([eachSid])
+                self.fetchAndStore([eachSid], date)
