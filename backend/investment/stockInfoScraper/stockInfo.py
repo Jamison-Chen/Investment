@@ -9,10 +9,10 @@ from .models import StockInfo
 class StockInfoView:
     def __init__(self):
         # info of multiple stocks, single day
-        self.endPoint1 = "https://www.twse.com.tw/exchangeReport/MI_INDEX"
+        # self.endPoint1 = "https://www.twse.com.tw/exchangeReport/MI_INDEX"
         self.endPoint12 = "https://mis.twse.com.tw/stock/api/getStockInfo.jsp?ex_ch="
         # info of single stock, multiple days
-        # self.endPoint2 = "https://www.twse.com.tw/exchangeReport/STOCK_DAY"
+        # self.endPoint2 = "https://www.twse.com.tw/exchangeReport/STOCK_DAY?response=json&date=20210809&stockNo=2330"
         self.result = []
 
     def fetchAndStore(self, sidList, date):

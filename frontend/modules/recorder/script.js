@@ -61,16 +61,11 @@ let endPoint;
 function recordCRUD(requestBody, type) {
     let bodyContent = requestBody.toURLSearchParams();
     return fetch(`${endPoint}${type}`, { method: 'post', body: bodyContent })
-        .then(function (response) {
-        return response.json();
-    });
+        .then((resp) => resp.json());
 }
 function fetchStockInfo(sidList, date = "") {
     const url = decideURL(sidList, date);
-    return fetch(url)
-        .then(function (response) {
-        return response.json();
-    });
+    return fetch(url).then((resp) => resp.json());
 }
 function decideURL(sidList, date) {
     if (date !== "" && sidList.length !== 0) {

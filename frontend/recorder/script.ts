@@ -57,17 +57,12 @@ let endPoint: string;
 function recordCRUD(requestBody: RequestBody, type: "trade" | "dividend"): Promise<void> {
     let bodyContent = requestBody.toURLSearchParams();
     return fetch(`${endPoint}${type}`, { method: 'post', body: bodyContent })
-        .then(function (response) {
-            return response.json();
-        });
+        .then((resp) => resp.json());
 }
 
 function fetchStockInfo(sidList: string[], date: string = ""): Promise<void> {
     const url: string = decideURL(sidList, date);
-    return fetch(url)
-        .then(function (response) {
-            return response.json();
-        });
+    return fetch(url).then((resp) => resp.json());
 }
 
 function decideURL(sidList: string[], date: string): string {
