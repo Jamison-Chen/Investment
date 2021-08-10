@@ -76,7 +76,7 @@ export class BHmixGrid extends Strategy {
         let latestMinP = this.pList[startDay];
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i === 0) {
+            if (i === startDay) {
                 qToday = this.calcQToday(this.totalAssetsList[i], this.pList[i], this.pList[i], (1 + r) * this.pList[i]);
             } else {
                 if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
@@ -117,7 +117,7 @@ export class PlannedBHmixGrid extends BHmixGrid {
         let latestMinP = this.pList[startDay];
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i === 0) {
+            if (i === startDay) {
                 qToday = this.calcQToday(this.totalAssetsList[i], this.pList[i], this.pList[i], (1 + r) * this.pList[i]);
             } else {
                 if (this.pList[i] < latestMaxP && this.pList[i] < latestMinP) {
@@ -147,15 +147,14 @@ export class GridConstQ extends Strategy {
         // Draw divide lines
         // numbers in divideLines are in descending order
         let divideLines: number[] = [];
-        for (let i = 0; i < nTable + 1; i++) {
-            divideLines.push((minPrice * i / nTable) + (maxPrice * (nTable - i) / nTable));
+        for (let i = 0; i < nTable; i++) {
+            divideLines.push((minPrice * i + maxPrice * (nTable - i)) / nTable);
         }
-
         let standAt = this.calcStandAt(this.pList[startDay], divideLines);
         let qStack: number[] = [];
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i === 0) {
+            if (i === startDay) {
                 qToday = Math.floor(Math.floor(this.totalAssetsList[i] / this.pList[i]) / (nTable - standAt));
                 // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?(還有剩下多少目前價格以下的網格?)
                 qStack.push(qToday);
@@ -173,7 +172,7 @@ export class GridConstQ extends Strategy {
                     }
                 } else if (newStandAt > standAt) {  // If price falls,
                     let qIfAllIn = Math.floor(this.cashList[i - 1] / this.pList[i]);
-                    if (newStandAt <= nTable) {  // If price isn't too low, buy some.
+                    if (newStandAt < nTable) {  // If price isn't too low, buy some.
                         qToday = Math.floor((qIfAllIn / (nTable - standAt)) * (newStandAt - standAt));
                         // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?
                         // (還有剩下多少目前價格以下的網格?)
@@ -196,49 +195,28 @@ export class GridConstQ extends Strategy {
     }
 }
 export class GridConstRatio extends Strategy {
-    public followStrategy(maxPrice: number, minPrice: number, nTable: number, securityRatio: number, startDay: number): void {
-        // Draw divide lines
-        // numbers in divideLines are in descending order
-        let divideLines: number[] = [];
-        for (let i = 0; i < nTable + 1; i++) {
-            divideLines.push((minPrice * i / nTable) + (maxPrice * (nTable - i) / nTable));
-        }
-        let standAt = this.calcStandAt(this.pList[startDay], divideLines);
+    public followStrategy(sensitivity: number, securityRatio: number, startDay: number): void {
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i === 0) {
+            if (i === startDay) {
                 qToday = Math.floor(this.totalAssetsList[i] * securityRatio / this.pList[i]);
             } else {
-                let newStandAt = this.calcStandAt(this.pList[i], divideLines);
-                if (newStandAt < standAt) { // If price rises,
+                let priceChangeRate = (this.pList[i] - this.pList[i - 1]) / this.pList[i - 1];
+                if (priceChangeRate >= sensitivity) { // If price rises,
                     if (this.cumulQList[i - 1] > 0) {
-                        if (newStandAt > 0) {   // If price isn't too high, sell a part.
-                            while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) > (this.cashList[i - 1] - qToday * this.pList[i])) {
-                                qToday--;
-                            }
-                            qToday = Math.max(-1 * this.cumulQList[i - 1], qToday);
-                        } else qToday = -1 * this.cumulQList[i - 1];    // If price is too high, sell all out.
-                    }
-                } else if (newStandAt > standAt) {  // If price falls,
-                    let qIfAllIn = Math.floor(this.cashList[i - 1] / this.pList[i]);
-                    if (newStandAt <= nTable) {  // If price isn't too low, buy some.
-                        while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) < (this.cashList[i - 1] - qToday * this.pList[i])) {
-                            qToday++;
+                        while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) > (this.cashList[i - 1] - qToday * this.pList[i])) {
+                            qToday--;
                         }
-                    } else qToday = qIfAllIn;  // If price is too low, buy all in.
+                        qToday = Math.max(-1 * this.cumulQList[i - 1], qToday);
+                    }
+                } else if (priceChangeRate <= sensitivity * -1) {  // If price falls,
+                    while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) < (this.cashList[i - 1] - qToday * this.pList[i])) {
+                        qToday++;
+                    }
                 }
-                standAt = newStandAt;
             }
             this.recordAllInfo(qToday, i);
         }
-    }
-    private calcStandAt(price: number, aList: number[]): number {
-        let result = 0;
-        for (let each of aList) {
-            if (price >= each) return result;
-            result++;
-        }
-        return result;
     }
 }
 export class Chicken extends Strategy {
@@ -247,7 +225,7 @@ export class Chicken extends Strategy {
         let latestMinP: number = this.pList[startDay];
         for (let i = startDay; i < this.nDays; i++) {
             let qToday = 0;
-            if (i === 0) qToday = this.calcQToday(r, this.totalAssetsList[i], this.pList[i], this.pList[i]);
+            if (i === startDay) qToday = this.calcQToday(r, this.totalAssetsList[i], this.pList[i], this.pList[i]);
             else {
                 let maxCostHolding = Object.keys(this.buyHistory).length > 0 ? Math.max(...Object.keys(this.buyHistory).map(e => parseFloat(e))) : 0;
                 // If price rises, and higher than maxCostHolding, buy in.

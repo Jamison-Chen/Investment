@@ -14,58 +14,11 @@ let option3 = document.getElementById("option3");
 let option4 = document.getElementById("option4");
 let comparisonOption = document.getElementById("comparison");
 let startBtn = document.getElementById("start-btn");
-// function applyPriceChart(dataIn: (string | number)[][]): void {
-//     if (priceChartDiv !== null) {
-//         google.charts.load('current', { 'packages': ["corechart"] });
-//         let options = {
-//             title: '價格走勢',
-//             titleTextStyle: {
-//                 fontSize: 16,
-//                 bold: false,
-//                 color: "#777"
-//             },
-//             curveType: 'none',
-//             width: priceChartDiv.offsetWidth - 1,
-//             height: priceChartDiv.offsetHeight - 1,
-//             legend: { position: 'none' },
-//             // hAxis: {
-//             //     title: "Day"
-//             // }
-//         };
-//         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", priceChartDiv));
-//     }
-// }
-// function applyAssetsCharts(title: string, dataIn: (string | number)[][]): void {
-//     if (assetsChartDiv !== null) {
-//         google.charts.load('current', { 'packages': ["corechart"] });
-//         let options = {
-//             title: title,
-//             titleTextStyle: {
-//                 fontSize: 16,
-//                 bold: false,
-//                 color: "#777"
-//             },
-//             curveType: 'none',
-//             width: assetsChartDiv.offsetWidth - 1,
-//             height: assetsChartDiv.offsetHeight - 1,
-//             // legend: { position: 'none' },
-//             // hAxis: {
-//             //     title: "Day"
-//             // }
-//         };
-//         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", assetsChartDiv));
-//     }
-// }
-// function drawSimulatedChart(dataIn: any[][], options: any, chartType: string, targetDiv: HTMLElement | null): void {
-//     let data = google.visualization.arrayToDataTable(dataIn);
-//     let chart = new google.visualization[chartType](targetDiv);
-//     chart.draw(data, options);
-// }
 function simulatePriceFluct(initP, nDays) {
     let pList = [initP];
     for (let i = 0; i < nDays - 1; i++) {
         // Ramdom Walk
-        pList.push(pList[pList.length - 1] * normalSample(1, 0.033));
+        pList.push(Math.round(pList[pList.length - 1] * normalSample(1, 0.033) * 100) / 100);
     }
     return pList;
 }
@@ -88,14 +41,11 @@ function execStrategy(s, args) {
     if (s.dailyQList.length === 0)
         s.followStrategy(...args);
     let comprehensiveData = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
-    let priceData = [["Day", "Price"]];
     for (let i = 0; i < s.nDays; i++) {
         let eachComprehensiveData = [i + 1, s.totalAssetsList[i], s.securMktValList[i], s.cumulInvestCashList[i], s.cashList[i]];
         let eachPrice = [i + 1, s.pList[i]];
         comprehensiveData.push(eachComprehensiveData);
-        priceData.push(eachPrice);
     }
-    priceChartDrawer.drawChart(priceData);
     assetsChartDrawer.drawChart(comprehensiveData, "各項資產");
 }
 function compareStrategies(e, strategies) {
@@ -135,6 +85,13 @@ function main() {
     let initTotalAssets = 10000;
     let nDays = 360;
     let pList = simulatePriceFluct(initP, nDays);
+    //  Draw Price Chart
+    let priceData = [["Day", "Price"]];
+    for (let i = 0; i < pList.length; i++) {
+        let eachPrice = [i + 1, pList[i]];
+        priceData.push(eachPrice);
+    }
+    priceChartDrawer.drawChart(priceData);
     // BHmixGrid Strategy
     let rb = 0.05;
     let argsB = [rb, 0];
@@ -142,13 +99,13 @@ function main() {
     // Planned BHmixGrid Strategy
     let pb = new PlannedBHmixGrid("PlannedBHmixGrid", initTotalAssets, nDays, pList);
     // Grid Strategy (const q)
-    let maxPrice = 300;
-    let minPrice = 25;
-    let nTable = 55;
+    // let maxPrice = 300;
+    // let minPrice = 25;
+    // let nTable = 55;
     // let argsGQ: (number | string)[] = [maxPrice, minPrice, nTable, 0];
     // let gq = new GridConstQ("GridConstQ", initTotalAssets, nDays, pList);
     // Grid Strategy (const ratio)
-    let argsGR = [maxPrice, minPrice, nTable, 0.5, 0];
+    let argsGR = [0.01, 0.5, 0];
     let gr = new GridConstRatio("GridConstRatio", initTotalAssets, nDays, pList);
     // Chicken Strategy
     let rc = 0.1;
@@ -165,7 +122,7 @@ function main() {
         option4.innerHTML = c.name;
         option4.addEventListener("click", (e) => selectStrategy(e, c, argsC));
         comparisonOption.addEventListener("click", (e) => compareStrategies(e, [[b, argsB], [pb, argsB], [gr, argsGR], [c, argsC]]));
-        option1.click();
+        comparisonOption.click();
         startBtn.addEventListener("click", () => location.reload());
     }
 }
