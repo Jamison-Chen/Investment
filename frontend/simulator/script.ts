@@ -1,4 +1,4 @@
-import { Strategy, BHmixGrid, PlannedBHmixGrid, GridConstQ, Chicken, GridConstRatio } from './simulator.js';
+import { Strategy, BHmixGrid, PlannedBHmixGrid, Chicken, GridConstRatio } from './strategy.js';
 const recorderOption = document.getElementById("recorder-option");
 const simulatorOption = document.getElementById("simulator-option");
 const simulatorProOption = document.getElementById("simulator-pro-option");
@@ -79,25 +79,19 @@ function normalSample(mu: number, std: number): number {
 }
 
 function selectStrategy(e: Event, s: Strategy, args: (string | number)[]): void {
-    for (let each of allOptions) {
-        each.classList.remove("active");
-    }
-    if (e.currentTarget instanceof HTMLElement) {
-        e.currentTarget.classList.add("active");
-    }
+    for (let each of allOptions) each.classList.remove("active");
+    if (e.currentTarget instanceof HTMLElement) e.currentTarget.classList.add("active");
     execStrategy(s, args);
 }
 
 function execStrategy(s: Strategy, args: (string | number)[]): void {
-    if (s.dailyQList.length === 0) {
-        s.followStrategy(...args);
-    }
+    if (s.dailyQList.length === 0) s.followStrategy(...args);
     let comprehensiveData: (string | number)[][] = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
     let priceData: (string | number)[][] = [["Day", "Price"]];
     for (let i = 0; i < s.nDays; i++) {
-        let eachComprehensive = [i + 1, s.totalAssetsList[i], s.securMktValList[i], s.cumulInvestCashList[i], s.cashList[i]]
+        let eachComprehensiveData = [i + 1, s.totalAssetsList[i], s.securMktValList[i], s.cumulInvestCashList[i], s.cashList[i]]
         let eachPrice = [i + 1, s.pList[i]];
-        comprehensiveData.push(eachComprehensive);
+        comprehensiveData.push(eachComprehensiveData);
         priceData.push(eachPrice);
     }
     applyPriceChart(priceData);
@@ -105,12 +99,8 @@ function execStrategy(s: Strategy, args: (string | number)[]): void {
 }
 
 function compareStrategies(e: Event, strategies: [Strategy, (string | number)[]][]): void {
-    for (let each of allOptions) {
-        each.classList.remove("active");
-    }
-    if (e.currentTarget instanceof HTMLElement) {
-        e.currentTarget.classList.add("active");
-    }
+    for (let each of allOptions) each.classList.remove("active");
+    if (e.currentTarget instanceof HTMLElement) e.currentTarget.classList.add("active");
     let comparedData: (string | number)[][] = [["Day"]];
     for (let eachStrategy of strategies) {
         comparedData[0].push(eachStrategy[0].name)
@@ -121,26 +111,24 @@ function compareStrategies(e: Event, strategies: [Strategy, (string | number)[]]
             try {
                 comparedData[i + 1].push(eachStrategy[0].totalAssetsList[i]);
             } catch {
-                comparedData.push([i + 1, eachStrategy[0].totalAssetsList[i]])
+                comparedData.push([i + 1, eachStrategy[0].totalAssetsList[i]]);
             }
         }
     }
     applyAssetsCharts("獲利比較", comparedData);
 }
 
-function simulatorMain(): void {
+function main(): void {
     if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
         recorderOption.href = "../recorder/";
         simulatorOption.href = "#";
         simulatorOption.classList.add("active");
         simulatorProOption.href = "../simulatorPro/";
     }
-
     let initP = 100;
     let initTotalAssets = 10000;
     let nDays = 360;
     let pList = simulatePriceFluct(initP, nDays);
-
 
     // BHmixGrid Strategy
     let rb = 0.05;
@@ -169,22 +157,22 @@ function simulatorMain(): void {
 
     if (option1 !== null && option2 !== null && option3 !== null && startBtn !== null && option4 !== null && comparisonOption !== null) {
         option1.innerHTML = b.name;
-        option1.addEventListener("click", (e) => { selectStrategy(e, b, argsB) });
+        option1.addEventListener("click", (e) => selectStrategy(e, b, argsB));
 
         option2.innerHTML = pb.name;
-        option2.addEventListener("click", (e) => { selectStrategy(e, pb, argsB) });
+        option2.addEventListener("click", (e) => selectStrategy(e, pb, argsB));
 
         option3.innerHTML = gr.name;
-        option3.addEventListener("click", (e) => { selectStrategy(e, gr, argsGR) });
+        option3.addEventListener("click", (e) => selectStrategy(e, gr, argsGR));
 
         option4.innerHTML = c.name;
-        option4.addEventListener("click", (e) => { selectStrategy(e, c, argsC) });
+        option4.addEventListener("click", (e) => selectStrategy(e, c, argsC));
 
-        comparisonOption.addEventListener("click", (e) => { compareStrategies(e, [[b, argsB], [pb, argsB], [gr, argsGR], [c, argsC]]) });
+        comparisonOption.addEventListener("click", (e) => compareStrategies(e, [[b, argsB], [pb, argsB], [gr, argsGR], [c, argsC]]));
 
         option1.click();
-        startBtn.addEventListener("click", _ => location.reload());
+        startBtn.addEventListener("click", () => location.reload());
     }
 }
 
-simulatorMain();
+main();

@@ -162,9 +162,8 @@ export class GridConstQ extends Strategy {
                     if (this.cumulQList[i - 1] > 0) {
                         if (newStandAt > 0) { // If price isn't too high, sell a part.
                             let temp = qStack.pop();
-                            if (temp) {
+                            if (temp)
                                 qToday = -1 * temp;
-                            }
                         }
                         else { // If price is too high, sell all out.
                             qToday = -1 * this.cumulQList[i - 1];
@@ -176,12 +175,12 @@ export class GridConstQ extends Strategy {
                     let qIfAllIn = Math.floor(this.cashList[i - 1] / this.pList[i]);
                     if (newStandAt <= nTable) { // If price isn't too low, buy some.
                         qToday = Math.floor((qIfAllIn / (nTable - standAt)) * (newStandAt - standAt));
-                        // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?(還有剩下多少目前價格以下的網格?)
+                        // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?
+                        // (還有剩下多少目前價格以下的網格?)
                         // (newStandAt - standAt): 上次所處網格與這次所處網格的距離
                     }
-                    else { // If price is too low, buy all in.
-                        qToday = qIfAllIn;
-                    }
+                    else
+                        qToday = qIfAllIn; // If price is too low, buy all in.
                     qStack.push(qToday);
                 }
                 standAt = newStandAt;
@@ -192,9 +191,8 @@ export class GridConstQ extends Strategy {
     calcStandAt(price, aList) {
         let result = 0;
         for (let each of aList) {
-            if (price >= each) {
+            if (price >= each)
                 return result;
-            }
             result++;
         }
         return result;
@@ -224,9 +222,8 @@ export class GridConstRatio extends Strategy {
                             }
                             qToday = Math.max(-1 * this.cumulQList[i - 1], qToday);
                         }
-                        else { // If price is too high, sell all out.
-                            qToday = -1 * this.cumulQList[i - 1];
-                        }
+                        else
+                            qToday = -1 * this.cumulQList[i - 1]; // If price is too high, sell all out.
                     }
                 }
                 else if (newStandAt > standAt) { // If price falls,
@@ -236,9 +233,8 @@ export class GridConstRatio extends Strategy {
                             qToday++;
                         }
                     }
-                    else { // If price is too low, buy all in.
-                        qToday = qIfAllIn;
-                    }
+                    else
+                        qToday = qIfAllIn; // If price is too low, buy all in.
                 }
                 standAt = newStandAt;
             }
@@ -248,9 +244,8 @@ export class GridConstRatio extends Strategy {
     calcStandAt(price, aList) {
         let result = 0;
         for (let each of aList) {
-            if (price >= each) {
+            if (price >= each)
                 return result;
-            }
             result++;
         }
         return result;

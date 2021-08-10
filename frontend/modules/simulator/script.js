@@ -1,4 +1,4 @@
-import { BHmixGrid, PlannedBHmixGrid, Chicken, GridConstRatio } from './simulator.js';
+import { BHmixGrid, PlannedBHmixGrid, Chicken, GridConstRatio } from './strategy.js';
 const recorderOption = document.getElementById("recorder-option");
 const simulatorOption = document.getElementById("simulator-option");
 const simulatorProOption = document.getElementById("simulator-pro-option");
@@ -75,36 +75,31 @@ function normalSample(mu, std) {
     return std * Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v) + mu;
 }
 function selectStrategy(e, s, args) {
-    for (let each of allOptions) {
+    for (let each of allOptions)
         each.classList.remove("active");
-    }
-    if (e.currentTarget instanceof HTMLElement) {
+    if (e.currentTarget instanceof HTMLElement)
         e.currentTarget.classList.add("active");
-    }
     execStrategy(s, args);
 }
 function execStrategy(s, args) {
-    if (s.dailyQList.length === 0) {
+    if (s.dailyQList.length === 0)
         s.followStrategy(...args);
-    }
     let comprehensiveData = [["Day", "總資產", "證券市值", "投入現金", "剩餘現金"]];
     let priceData = [["Day", "Price"]];
     for (let i = 0; i < s.nDays; i++) {
-        let eachComprehensive = [i + 1, s.totalAssetsList[i], s.securMktValList[i], s.cumulInvestCashList[i], s.cashList[i]];
+        let eachComprehensiveData = [i + 1, s.totalAssetsList[i], s.securMktValList[i], s.cumulInvestCashList[i], s.cashList[i]];
         let eachPrice = [i + 1, s.pList[i]];
-        comprehensiveData.push(eachComprehensive);
+        comprehensiveData.push(eachComprehensiveData);
         priceData.push(eachPrice);
     }
     applyPriceChart(priceData);
     applyAssetsCharts("各項資產", comprehensiveData);
 }
 function compareStrategies(e, strategies) {
-    for (let each of allOptions) {
+    for (let each of allOptions)
         each.classList.remove("active");
-    }
-    if (e.currentTarget instanceof HTMLElement) {
+    if (e.currentTarget instanceof HTMLElement)
         e.currentTarget.classList.add("active");
-    }
     let comparedData = [["Day"]];
     for (let eachStrategy of strategies) {
         comparedData[0].push(eachStrategy[0].name);
@@ -122,7 +117,7 @@ function compareStrategies(e, strategies) {
     }
     applyAssetsCharts("獲利比較", comparedData);
 }
-function simulatorMain() {
+function main() {
     if (recorderOption instanceof HTMLAnchorElement && simulatorOption instanceof HTMLAnchorElement && simulatorProOption instanceof HTMLAnchorElement) {
         recorderOption.href = "../recorder/";
         simulatorOption.href = "#";
@@ -155,16 +150,16 @@ function simulatorMain() {
     let c = new Chicken("Chicken", initTotalAssets, nDays, pList);
     if (option1 !== null && option2 !== null && option3 !== null && startBtn !== null && option4 !== null && comparisonOption !== null) {
         option1.innerHTML = b.name;
-        option1.addEventListener("click", (e) => { selectStrategy(e, b, argsB); });
+        option1.addEventListener("click", (e) => selectStrategy(e, b, argsB));
         option2.innerHTML = pb.name;
-        option2.addEventListener("click", (e) => { selectStrategy(e, pb, argsB); });
+        option2.addEventListener("click", (e) => selectStrategy(e, pb, argsB));
         option3.innerHTML = gr.name;
-        option3.addEventListener("click", (e) => { selectStrategy(e, gr, argsGR); });
+        option3.addEventListener("click", (e) => selectStrategy(e, gr, argsGR));
         option4.innerHTML = c.name;
-        option4.addEventListener("click", (e) => { selectStrategy(e, c, argsC); });
-        comparisonOption.addEventListener("click", (e) => { compareStrategies(e, [[b, argsB], [pb, argsB], [gr, argsGR], [c, argsC]]); });
+        option4.addEventListener("click", (e) => selectStrategy(e, c, argsC));
+        comparisonOption.addEventListener("click", (e) => compareStrategies(e, [[b, argsB], [pb, argsB], [gr, argsGR], [c, argsC]]));
         option1.click();
-        startBtn.addEventListener("click", _ => location.reload());
+        startBtn.addEventListener("click", () => location.reload());
     }
 }
-simulatorMain();
+main();

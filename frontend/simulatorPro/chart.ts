@@ -1,10 +1,8 @@
 export class MyGoogleChart {
-    private _chartDiv: HTMLElement;
     protected _option: any;
     protected _chartType: string;
     protected _chart: any;
-    public constructor(chartDiv: HTMLElement) {
-        this._chartDiv = chartDiv;
+    public constructor() {
         this._option = {};
         this._chartType = "";
     }
@@ -16,7 +14,7 @@ export class MyGoogleChart {
 
 export class AssetChart extends MyGoogleChart {
     public constructor(chartDiv: HTMLElement) {
-        super(chartDiv);
+        super();
         this._option = {
             title: "My Asset",
             titleTextStyle: {
@@ -39,7 +37,7 @@ export class AssetChart extends MyGoogleChart {
 
 export class CurveChart extends MyGoogleChart {
     public constructor(chartDiv: HTMLElement) {
-        super(chartDiv);
+        super();
         this._option = {
             // title: 'Demand / Supply Curve',
             // titleTextStyle: {
@@ -64,14 +62,8 @@ export class CurveChart extends MyGoogleChart {
 
 export class DealAmountChart extends MyGoogleChart {
     public constructor(chartDiv: HTMLElement) {
-        super(chartDiv);
+        super();
         this._option = {
-            // title: 'Deal Amount',
-            // titleTextStyle: {
-            //     fontSize: 14,
-            //     bold: false,
-            //     color: "#777"
-            // },
             width: chartDiv.offsetWidth,
             height: chartDiv.offsetHeight,
             legend: { position: "none" },
@@ -88,14 +80,8 @@ export class DealAmountChart extends MyGoogleChart {
 
 export class MarketEqChart extends MyGoogleChart {
     public constructor(chartDiv: HTMLElement) {
-        super(chartDiv);
+        super();
         this._option = {
-            // title: 'Given Price vs. Market Equilibrium',
-            // titleTextStyle: {
-            //     fontSize: 14,
-            //     bold: false,
-            //     color: "#777"
-            // },
             curveType: 'none',
             width: chartDiv.offsetWidth,
             height: chartDiv.offsetHeight,

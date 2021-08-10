@@ -1,6 +1,5 @@
 export class MyGoogleChart {
-    constructor(chartDiv) {
-        this._chartDiv = chartDiv;
+    constructor() {
         this._option = {};
         this._chartType = "";
     }
@@ -11,7 +10,7 @@ export class MyGoogleChart {
 }
 export class AssetChart extends MyGoogleChart {
     constructor(chartDiv) {
-        super(chartDiv);
+        super();
         this._option = {
             title: "My Asset",
             titleTextStyle: {
@@ -33,7 +32,7 @@ export class AssetChart extends MyGoogleChart {
 }
 export class CurveChart extends MyGoogleChart {
     constructor(chartDiv) {
-        super(chartDiv);
+        super();
         this._option = {
             // title: 'Demand / Supply Curve',
             // titleTextStyle: {
@@ -57,14 +56,8 @@ export class CurveChart extends MyGoogleChart {
 }
 export class DealAmountChart extends MyGoogleChart {
     constructor(chartDiv) {
-        super(chartDiv);
+        super();
         this._option = {
-            // title: 'Deal Amount',
-            // titleTextStyle: {
-            //     fontSize: 14,
-            //     bold: false,
-            //     color: "#777"
-            // },
             width: chartDiv.offsetWidth,
             height: chartDiv.offsetHeight,
             legend: { position: "none" },
@@ -80,14 +73,8 @@ export class DealAmountChart extends MyGoogleChart {
 }
 export class MarketEqChart extends MyGoogleChart {
     constructor(chartDiv) {
-        super(chartDiv);
+        super();
         this._option = {
-            // title: 'Given Price vs. Market Equilibrium',
-            // titleTextStyle: {
-            //     fontSize: 14,
-            //     bold: false,
-            //     color: "#777"
-            // },
             curveType: 'none',
             width: chartDiv.offsetWidth,
             height: chartDiv.offsetHeight,

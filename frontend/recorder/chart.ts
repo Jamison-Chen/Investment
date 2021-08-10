@@ -1,20 +1,18 @@
 export class MyGoogleChart {
     protected CHART_HEIGHT: number;
     protected CHART_WIDTH: number;
-    protected _chartDiv: HTMLElement;
     protected _chartType: string;
     protected _chart: any;
-    public constructor(chartDiv: any) {
+    public constructor() {
         this.CHART_HEIGHT = window.innerWidth / 3.3;
         this.CHART_WIDTH = window.innerHeight / 2.5;
-        this._chartDiv = chartDiv;
         this._chartType = "";
     }
 }
 
 export class CashInvestedChart extends MyGoogleChart {
     public constructor(chartDiv: any) {
-        super(chartDiv);
+        super();
         this._chartType = "LineChart";
         google.charts.load('current', { packages: ["corechart"] });
         google.charts.setOnLoadCallback(() => {
@@ -50,7 +48,7 @@ export class CashInvestedChart extends MyGoogleChart {
 
 export class MktValPieChart extends MyGoogleChart {
     public constructor(chartDiv: any) {
-        super(chartDiv);
+        super();
         this._chartType = "PieChart";
         google.charts.load('current', { 'packages': ["corechart"] });
         google.charts.setOnLoadCallback(() => {
@@ -82,7 +80,7 @@ export class MktValPieChart extends MyGoogleChart {
 
 export class CompareChart extends MyGoogleChart {
     public constructor(chartDiv: any) {
-        super(chartDiv);
+        super();
         this._chartType = "ColumnChart";
         google.charts.load('current', { 'packages': ['corechart', 'bar'] });
         google.charts.setOnLoadCallback(() => {
@@ -124,7 +122,7 @@ export class CompareChart extends MyGoogleChart {
 
 export class EachStockPQChart extends MyGoogleChart {
     public constructor(chartDiv: any) {
-        super(chartDiv);
+        super();
         this._chartType = "Histogram";
         google.charts.load('current', { 'packages': ["corechart"] });
         google.charts.setOnLoadCallback(() => {
@@ -154,7 +152,7 @@ export class EachStockPQChart extends MyGoogleChart {
 
 export class EachStockCompareChart extends MyGoogleChart {
     public constructor(chartDiv: any) {
-        super(chartDiv);
+        super();
         this._chartType = "ColumnChart";
         google.charts.load('current', { packages: ['corechart', 'bar'] });
         google.charts.setOnLoadCallback(() => {
