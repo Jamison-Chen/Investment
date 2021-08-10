@@ -1,66 +1,69 @@
 import { Strategy, BHmixGrid, PlannedBHmixGrid, Chicken, GridConstRatio } from './strategy.js';
-const recorderOption = document.getElementById("recorder-option");
-const simulatorOption = document.getElementById("simulator-option");
-const simulatorProOption = document.getElementById("simulator-pro-option");
-const priceGraph = document.getElementById("price-graph");
-const assetsGraph = document.getElementById("assets-graph");
-const allOptions = document.getElementsByClassName("strategy-option");
-const option1 = document.getElementById("option1");
-const option2 = document.getElementById("option2");
-const option3 = document.getElementById("option3");
-const option4 = document.getElementById("option4");
-const comparisonOption = document.getElementById("comparison");
-const startBtn = document.getElementById("start-btn");
+import { AssetChart, PriceChart } from './chart.js';
+let recorderOption = document.getElementById("recorder-option");
+let simulatorOption = document.getElementById("simulator-option");
+let simulatorProOption = document.getElementById("simulator-pro-option");
+let priceChartDiv = document.getElementById("price-chart");
+let assetsChartDiv = document.getElementById("assets-chart");
+let priceChartDrawer: PriceChart;
+let assetsChartDrawer: AssetChart;
+let allOptions = document.getElementsByClassName("strategy-option");
+let option1 = document.getElementById("option1");
+let option2 = document.getElementById("option2");
+let option3 = document.getElementById("option3");
+let option4 = document.getElementById("option4");
+let comparisonOption = document.getElementById("comparison");
+let startBtn = document.getElementById("start-btn");
 
-function applyPriceChart(dataIn: (string | number)[][]): void {
-    if (priceGraph !== null) {
-        google.charts.load('current', { 'packages': ["corechart"] });
-        let options = {
-            title: '價格走勢',
-            titleTextStyle: {
-                fontSize: 16,
-                bold: false,
-                color: "#777"
-            },
-            curveType: 'none',
-            width: priceGraph.offsetWidth - 1,
-            height: priceGraph.offsetHeight - 1,
-            legend: { position: 'none' },
-            // hAxis: {
-            //     title: "Day"
-            // }
-        };
-        google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", priceGraph));
-    }
-}
+// function applyPriceChart(dataIn: (string | number)[][]): void {
+//     if (priceChartDiv !== null) {
+//         google.charts.load('current', { 'packages': ["corechart"] });
+//         let options = {
+//             title: '價格走勢',
+//             titleTextStyle: {
+//                 fontSize: 16,
+//                 bold: false,
+//                 color: "#777"
+//             },
+//             curveType: 'none',
+//             width: priceChartDiv.offsetWidth - 1,
+//             height: priceChartDiv.offsetHeight - 1,
+//             legend: { position: 'none' },
+//             // hAxis: {
+//             //     title: "Day"
+//             // }
+//         };
+//         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", priceChartDiv));
+//     }
+// }
 
-function applyAssetsCharts(title: string, dataIn: (string | number)[][]): void {
-    if (assetsGraph !== null) {
-        google.charts.load('current', { 'packages': ["corechart"] });
-        let options = {
-            title: title,
-            titleTextStyle: {
-                fontSize: 16,
-                bold: false,
-                color: "#777"
-            },
-            curveType: 'none',
-            width: assetsGraph.offsetWidth - 1,
-            height: assetsGraph.offsetHeight - 1,
-            // legend: { position: 'none' },
-            // hAxis: {
-            //     title: "Day"
-            // }
-        };
-        google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", assetsGraph));
-    }
-}
+// function applyAssetsCharts(title: string, dataIn: (string | number)[][]): void {
+//     if (assetsChartDiv !== null) {
+//         google.charts.load('current', { 'packages': ["corechart"] });
+//         let options = {
+//             title: title,
+//             titleTextStyle: {
+//                 fontSize: 16,
+//                 bold: false,
+//                 color: "#777"
+//             },
+//             curveType: 'none',
+//             width: assetsChartDiv.offsetWidth - 1,
+//             height: assetsChartDiv.offsetHeight - 1,
+//             // legend: { position: 'none' },
+//             // hAxis: {
+//             //     title: "Day"
+//             // }
+//         };
+//         google.charts.setOnLoadCallback(() => drawSimulatedChart(dataIn, options, "LineChart", assetsChartDiv));
+//     }
+// }
 
-function drawSimulatedChart(dataIn: any[][], options: any, chartType: string, targetDiv: HTMLElement | null): void {
-    let data = google.visualization.arrayToDataTable(dataIn);
-    let chart = new google.visualization[chartType](targetDiv);
-    chart.draw(data, options);
-}
+// function drawSimulatedChart(dataIn: any[][], options: any, chartType: string, targetDiv: HTMLElement | null): void {
+//     let data = google.visualization.arrayToDataTable(dataIn);
+//     let chart = new google.visualization[chartType](targetDiv);
+//     chart.draw(data, options);
+// }
 
 function simulatePriceFluct(initP: number, nDays: number): number[] {
     let pList = [initP];
@@ -94,8 +97,8 @@ function execStrategy(s: Strategy, args: (string | number)[]): void {
         comprehensiveData.push(eachComprehensiveData);
         priceData.push(eachPrice);
     }
-    applyPriceChart(priceData);
-    applyAssetsCharts("各項資產", comprehensiveData);
+    priceChartDrawer.drawChart(priceData);
+    assetsChartDrawer.drawChart(comprehensiveData, "各項資產");
 }
 
 function compareStrategies(e: Event, strategies: [Strategy, (string | number)[]][]): void {
@@ -115,7 +118,7 @@ function compareStrategies(e: Event, strategies: [Strategy, (string | number)[]]
             }
         }
     }
-    applyAssetsCharts("獲利比較", comparedData);
+    assetsChartDrawer.drawChart(comparedData, "獲利比較");
 }
 
 function main(): void {
@@ -124,6 +127,10 @@ function main(): void {
         simulatorOption.href = "#";
         simulatorOption.classList.add("active");
         simulatorProOption.href = "../simulatorPro/";
+    }
+    if (priceChartDiv instanceof HTMLElement && assetsChartDiv instanceof HTMLElement) {
+        priceChartDrawer = new PriceChart(priceChartDiv);
+        assetsChartDrawer = new AssetChart(assetsChartDiv);
     }
     let initP = 100;
     let initTotalAssets = 10000;

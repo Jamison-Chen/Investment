@@ -14,7 +14,7 @@
     align-items: center;
 }
 
-#graph-container {
+#chart-container {
     min-height: calc(70vh);
     width: 100%;
     display: grid;
@@ -29,7 +29,7 @@
     background-color: #000;
 }
 
-#chart-list {
+#option-list {
     height: 35%;
     width: 96%;
     padding: 10px 2%;
