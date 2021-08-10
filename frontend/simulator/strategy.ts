@@ -34,20 +34,21 @@ export class Strategy implements Strategy {
         let cashDeltaToday = qToday * this.pList[i];
         if (qToday >= 0) {  // buying
             this.cumulInvestCashList.push(this.cumulInvestCashList[i - 1] + cashDeltaToday);
+            this.cashList.push(this.cashList[i - 1] - cashDeltaToday * 1.001425);
         } else {  // when selling, count average
             this.cumulInvestCashList.push(this.cumulInvestCashList[i - 1] * this.cumulQList[i] / this.cumulQList[i - 1]);
+            this.cashList.push(this.cashList[i - 1] - cashDeltaToday * 0.995575);
         }
-        this.cashList.push(this.cashList[i - 1] - cashDeltaToday);
     }
-    public calcRateOfReturn(i: number): void {
-        if (this.cumulInvestCashList[i] > 0) {
-            this.rateOfReturnList.push((this.securMktValList[i] - this.cumulInvestCashList[i]) / this.cumulInvestCashList[i]);
-        } else this.rateOfReturnList.push(0);
-    }
+    // public calcRateOfReturn(i: number): void {
+    //     if (this.cumulInvestCashList[i] > 0) {
+    //         this.rateOfReturnList.push((this.securMktValList[i] - this.cumulInvestCashList[i]) / this.cumulInvestCashList[i]);
+    //     } else this.rateOfReturnList.push(0);
+    // }
     public recordBuyHistory(qToday: number, i: number): void {
         if (qToday > 0) {
-            // round to the 3rd decimal
-            let key = Math.round((this.pList[i] + Number.EPSILON) * 1000) / 1000;
+            // round to the 2nd decimal
+            let key = Math.round((this.pList[i] + Number.EPSILON) * 100) / 100;
             if (this.buyHistory[`${key}`] === undefined) this.buyHistory[`${key}`] = qToday;
             else this.buyHistory[`${key}`] += qToday;
         }
@@ -64,7 +65,7 @@ export class Strategy implements Strategy {
             this.recordQuantity(qToday, i);
             this.recordCashFlow(qToday, i);
             this.securMktValList.push(this.cumulQList[i] * this.pList[i]);
-            this.calcRateOfReturn(i);
+            // this.calcRateOfReturn(i);
             this.totalAssetsList.push(this.cashList[i] + this.securMktValList[i]);
         }
         this.recordBuyHistory(qToday, i);
@@ -142,78 +143,121 @@ export class PlannedBHmixGrid extends BHmixGrid {
         }
     }
 }
-export class GridConstQ extends Strategy {
-    public followStrategy(maxPrice: number, minPrice: number, nTable: number, startDay: number): void {
-        // Draw divide lines
-        // numbers in divideLines are in descending order
-        let divideLines: number[] = [];
-        for (let i = 0; i < nTable; i++) {
-            divideLines.push((minPrice * i + maxPrice * (nTable - i)) / nTable);
-        }
-        let standAt = this.calcStandAt(this.pList[startDay], divideLines);
-        let qStack: number[] = [];
-        for (let i = startDay; i < this.nDays; i++) {
-            let qToday = 0;
-            if (i === startDay) {
-                qToday = Math.floor(Math.floor(this.totalAssetsList[i] / this.pList[i]) / (nTable - standAt));
-                // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?(還有剩下多少目前價格以下的網格?)
-                qStack.push(qToday);
-            } else {
-                let newStandAt = this.calcStandAt(this.pList[i], divideLines);
-                if (newStandAt < standAt) { // If price rises,
-                    if (this.cumulQList[i - 1] > 0) {
-                        if (newStandAt > 0) {   // If price isn't too high, sell a part.
-                            let temp = qStack.pop();
-                            if (temp) qToday = -1 * temp;
-                        } else {    // If price is too high, sell all out.
-                            qToday = -1 * this.cumulQList[i - 1];
-                            qStack = [];
-                        }
-                    }
-                } else if (newStandAt > standAt) {  // If price falls,
-                    let qIfAllIn = Math.floor(this.cashList[i - 1] / this.pList[i]);
-                    if (newStandAt < nTable) {  // If price isn't too low, buy some.
-                        qToday = Math.floor((qIfAllIn / (nTable - standAt)) * (newStandAt - standAt));
-                        // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?
-                        // (還有剩下多少目前價格以下的網格?)
-                        // (newStandAt - standAt): 上次所處網格與這次所處網格的距離
-                    } else qToday = qIfAllIn;  // If price is too low, buy all in.
-                    qStack.push(qToday);
-                }
-                standAt = newStandAt;
-            }
-            this.recordAllInfo(qToday, i);
-        }
-    }
-    private calcStandAt(price: number, aList: number[]): number {
-        let result = 0;
-        for (let each of aList) {
-            if (price >= each) return result;
-            result++;
-        }
-        return result;
-    }
-}
-export class GridConstRatio extends Strategy {
+// export class GridConstQ extends Strategy {
+//     public followStrategy(maxPrice: number, minPrice: number, nTable: number, startDay: number): void {
+//         // Draw divide lines
+//         // numbers in divideLines are in descending order
+//         let divideLines: number[] = [];
+//         for (let i = 0; i < nTable; i++) {
+//             divideLines.push((minPrice * i + maxPrice * (nTable - i)) / nTable);
+//         }
+//         let standAt = this.calcStandAt(this.pList[startDay], divideLines);
+//         let qStack: number[] = [];
+//         for (let i = startDay; i < this.nDays; i++) {
+//             let qToday = 0;
+//             if (i === startDay) {
+//                 qToday = Math.floor(Math.floor(this.totalAssetsList[i] / this.pList[i]) / (nTable - standAt));
+//                 // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?(還有剩下多少目前價格以下的網格?)
+//                 qStack.push(qToday);
+//             } else {
+//                 let newStandAt = this.calcStandAt(this.pList[i], divideLines);
+//                 if (newStandAt < standAt) { // If price rises,
+//                     if (this.cumulQList[i - 1] > 0) {
+//                         if (newStandAt > 0) {   // If price isn't too high, sell a part.
+//                             let temp = qStack.pop();
+//                             if (temp) qToday = -1 * temp;
+//                         } else {    // If price is too high, sell all out.
+//                             qToday = -1 * this.cumulQList[i - 1];
+//                             qStack = [];
+//                         }
+//                     }
+//                 } else if (newStandAt > standAt) {  // If price falls,
+//                     let qIfAllIn = Math.floor(this.cashList[i - 1] / this.pList[i]);
+//                     if (newStandAt < nTable) {  // If price isn't too low, buy some.
+//                         qToday = Math.floor((qIfAllIn / (nTable - standAt)) * (newStandAt - standAt));
+//                         // (nTable - standAt): 最慘的情形下，你可能會因為價格連跌而連買入幾天?
+//                         // (還有剩下多少目前價格以下的網格?)
+//                         // (newStandAt - standAt): 上次所處網格與這次所處網格的距離
+//                     } else qToday = qIfAllIn;  // If price is too low, buy all in.
+//                     qStack.push(qToday);
+//                 }
+//                 standAt = newStandAt;
+//             }
+//             this.recordAllInfo(qToday, i);
+//         }
+//     }
+//     private calcStandAt(price: number, aList: number[]): number {
+//         let result = 0;
+//         for (let each of aList) {
+//             if (price >= each) return result;
+//             result++;
+//         }
+//         return result;
+//     }
+// }
+export class CRG extends Strategy {
     public followStrategy(sensitivity: number, securityRatio: number, startDay: number): void {
+        let latestTradePrice: number = 0;
         for (let i = startDay; i < this.nDays; i++) {
-            let qToday = 0;
+            let qToday: number = 0;
             if (i === startDay) {
                 qToday = Math.floor(this.totalAssetsList[i] * securityRatio / this.pList[i]);
             } else {
-                let priceChangeRate = (this.pList[i] - this.pList[i - 1]) / this.pList[i - 1];
-                if (priceChangeRate >= sensitivity) { // If price rises,
+                let priceRiseRate = (this.pList[i] - latestTradePrice) / latestTradePrice;
+                let priceFallRate = (this.pList[i] - latestTradePrice) / this.pList[i];
+                if (priceRiseRate >= sensitivity) { // If price rises,
                     if (this.cumulQList[i - 1] > 0) {
                         while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) > (this.cashList[i - 1] - qToday * this.pList[i])) {
                             qToday--;
                         }
                         qToday = Math.max(-1 * this.cumulQList[i - 1], qToday);
                     }
-                } else if (priceChangeRate <= sensitivity * -1) {  // If price falls,
+                } else if (priceFallRate <= sensitivity * -1) {  // If price falls,
                     while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) < (this.cashList[i - 1] - qToday * this.pList[i])) {
                         qToday++;
                     }
                 }
+            }
+            if (qToday != 0) latestTradePrice = this.pList[i];
+            this.recordAllInfo(qToday, i);
+        }
+    }
+}
+export class CRG2 extends Strategy {
+    public followStrategy(sensitivity: number, securityRatio: number, startDay: number): void {
+        let minPriceSinceLastTrade: number = 0;
+        let maxPriceSinceLastTrade: number = 0;
+        let lastAllOutPrice: number = 0;
+        for (let i = startDay; i < this.nDays; i++) {
+            let qToday: number = 0;
+            if (i === startDay) {
+                qToday = Math.floor(this.totalAssetsList[i] * securityRatio / this.pList[i]);
+            } else if (this.cumulQList[i - 1] === 0 && this.pList[i] > lastAllOutPrice) {
+                qToday = Math.floor(this.totalAssetsList[i - 1] * securityRatio / this.pList[i]);
+            } else if (this.pList[i] < this.cumulInvestCashList[i - 1] / this.cumulQList[i - 1] * 0.95) {
+                lastAllOutPrice = this.cumulInvestCashList[i - 1] / this.cumulQList[i - 1];
+                qToday = -1 * this.cumulQList[i - 1];
+            } else {
+                let priceRiseRate = (this.pList[i] - minPriceSinceLastTrade) / minPriceSinceLastTrade;
+                let priceFallRate = (this.pList[i] - maxPriceSinceLastTrade) / this.pList[i];
+                if (priceRiseRate >= sensitivity) { // If price rises,
+                    if (this.cumulQList[i - 1] > 0) {
+                        while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) > (this.cashList[i - 1] - qToday * this.pList[i])) {
+                            qToday--;
+                        }
+                        qToday = Math.max(-1 * this.cumulQList[i - 1], qToday);
+                    }
+                } else if (priceFallRate <= sensitivity * -1) {  // If price falls,
+                    while (((this.cumulQList[i - 1] + qToday) * this.pList[i]) < (this.cashList[i - 1] - qToday * this.pList[i])) {
+                        qToday++;
+                    }
+                }
+            }
+            minPriceSinceLastTrade = Math.min(minPriceSinceLastTrade, this.pList[i]);
+            maxPriceSinceLastTrade = Math.max(maxPriceSinceLastTrade, this.pList[i]);
+            if (qToday != 0) {
+                minPriceSinceLastTrade = this.pList[i];
+                maxPriceSinceLastTrade = this.pList[i];
             }
             this.recordAllInfo(qToday, i);
         }
