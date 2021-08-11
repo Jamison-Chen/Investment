@@ -19,7 +19,7 @@ class Main {
         },
         "grid-const-ratio": {
             "displayedName": "GridConstRatio",
-            "otherDetails": ["max-price", "min-price", "n-table", "stock-ratio"]
+            "otherDetails": ["sensitivity", "stock-ratio"]
         },
         "chicken": {
             "displayedName": "Chicken",
@@ -573,9 +573,7 @@ class Main {
                 "strategySetting": {
                     "name": "GridConstRatio",
                     "params": {
-                        "max-price": 30,
-                        "min-price": 3,
-                        "n-table": 100,
+                        "sensitivity": 0.1,
                         "stock-ratio": 0.5
                     }
                 }
@@ -624,12 +622,12 @@ class Main {
         this.myselfSetting = {
             "initialCash": 1000,
             "initialStock": 0,
-            "strategyLabel": "chicken",
+            "strategyLabel": "grid-const-ratio",
             "strategySetting": {
-                "name": "Chicken",
+                "name": "GridConstRatio",
                 "params": {
-                    "r": 0.2,
-                    "runaway-rate": 0.9
+                    "sensitivity": 0.05,
+                    "stock-ratio": 0.5
                 }
             }
         }

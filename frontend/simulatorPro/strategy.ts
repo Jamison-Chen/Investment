@@ -179,51 +179,39 @@ export class BHmixGrid implements Strategy {
 //     }
 // }
 export class GridConstRatio implements Strategy {
-    private standAt: number;
-    private divideLines: number[]
+    private latestTradePrice: number;
     public name: string;
     public constructor(strategyName: string) {
         this.name = strategyName;
-        this.standAt = 0
-        this.divideLines = [];
+        this.latestTradePrice = 0;
     }
     public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
-        let maxPrice = otherParams["max-price"];
-        let minPrice = otherParams["min-price"];
-        let nTable = otherParams["n-table"];
+        let sensitivity = otherParams["sensitivity"];
         let stockRatio = otherParams["stock-ratio"];
 
-        let ps: number = pToday * 0.952;    // ask a little bit lower for getting dealt more easily
-        let pd: number = pToday * 1.05;    // bid a little bit higher for getting dealt more easily
+        let pd: number = pToday * Math.max(0.9, Math.min(1.1, MyMath.normalSample(1, 0.033)));    // bid a little bit higher for getting dealt more easily
+        let ps: number = pd;    // ask a little bit lower for getting dealt more easily
         let qd: number = 0;
         let qs: number = 0;
-        if (today === 1) {
-            // Draw divide lines
-            // numbers in divideLines are in descending order
-            for (let i = 0; i < nTable + 1; i++) {
-                this.divideLines.push((minPrice * i / nTable) + (maxPrice * (nTable - i) / nTable));
-            }
-            this.standAt = this.calcStandAt(pToday, this.divideLines);
-            qd = Math.floor(cashOwning * stockRatio / pd);
-        } else {
-            let newStandAt = this.calcStandAt(pToday, this.divideLines);
-            if (newStandAt < this.standAt) { // If price rises,
+
+        if (stockHolding.length >= 2) {
+            this.latestTradePrice = stockHolding.reduce((a, b) => a.buyInDay > b.buyInDay ? a : b).buyInCost;
+        } else if (stockHolding.length === 1) {
+            this.latestTradePrice = stockHolding[0].buyInCost;
+        }
+
+        if (today === 1 || stockHolding.length === 0) qd = Math.floor(cashOwning * stockRatio / pd);
+        else {
+            let priceRiseRate = (pd - this.latestTradePrice) / this.latestTradePrice;
+            let priceFallRate = (pd - this.latestTradePrice) / pd;
+            if (priceRiseRate >= sensitivity) { // If price rises,
                 if (stockHolding.length > 0) {
-                    if (newStandAt > 0) {   // If price isn't too high, sell a part.
-                        while ((stockHolding.length - qs) * ps > cashOwning + qs * ps) {
-                            qs++;
-                        }
-                        qs = Math.min(stockHolding.length, qs);
-                    } else qs = stockHolding.length;    // If price is too high, sell all out.
+                    while ((stockHolding.length - qs) * ps > cashOwning + qs * ps) qs++;
+                    qs = Math.min(stockHolding.length, qs);
                 }
-            } else if (newStandAt > this.standAt) {  // If price falls,
-                if (newStandAt <= nTable) {  // If price isn't too low, buy some.
-                    while ((stockHolding.length + qd) * pd < cashOwning - qd * pd) {
-                        qd++;
-                    }
-                } else qd = Math.floor(cashOwning / pd);  // If price is too low, buy all in.
+            } else if (priceFallRate <= sensitivity * -1) {  // If price falls,
+                while ((stockHolding.length + qd) * pd < cashOwning - qd * pd) qd++;
             }
-            this.standAt = newStandAt;
         }
         return {
             "today": today,
@@ -232,14 +220,6 @@ export class GridConstRatio implements Strategy {
             "sellP": ps,
             "sellQ": qs
         }
-    }
-    private calcStandAt(price: number, aList: number[]): number {
-        let result = 0;
-        for (let each of aList) {
-            if (price >= each) return result;
-            result++;
-        }
-        return result;
     }
 }
 export class Chicken implements Strategy {
