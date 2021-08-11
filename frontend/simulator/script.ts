@@ -111,14 +111,6 @@ function main(): void {
     let argsCRG_1: (number | string)[] = [0.1, 0.5, 0];
     let crg_1 = new CRG("CRG", initTotalAssets, nDays, pList);
 
-    // CRG
-    // let argsCRG_2: (number | string)[] = [0.01, 0.5, 0];
-    // let crg_2 = new CRG("CRG", initTotalAssets, nDays, pList);
-
-    // CRG
-    // let argsCRG_3: (number | string)[] = [1, 0.5, 0];
-    // let crg_3 = new CRG("CRG", initTotalAssets, nDays, pList);
-
     // Chicken Strategy
     let rc = 0.1;
     let runawayRate = 0.85;
@@ -132,11 +124,9 @@ function main(): void {
     if (option1 !== null && option2 !== null && option3 !== null && option4 !== null && comparisonOption !== null && startBtn !== null) {
         option1.innerHTML = b.name;
         option1.addEventListener("click", (e) => selectStrategy(e, b, argsB));
-        // option1.addEventListener("click", (e) => selectStrategy(e, crg_1, argsCRG_1));
 
         option2.innerHTML = pb.name;
         option2.addEventListener("click", (e) => selectStrategy(e, pb, argsB));
-        // option2.addEventListener("click", (e) => selectStrategy(e, crg_2, argsCRG_2));
 
         option3.innerHTML = crg_1.name;
         option3.addEventListener("click", (e) => selectStrategy(e, crg_1, argsCRG_1));
