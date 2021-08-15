@@ -2,7 +2,13 @@ import { Stock } from "./stock.js";
 import { MyMath } from "./myMath.js";
 export interface Strategy {
     name: string;
-    followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any;
+    followStrategy(
+        today: number,
+        cashOwning: number,
+        stockHolding: Stock[],
+        valAssessed: number,
+        pToday: number,
+        otherParams: any): any;
 }
 export class ValueFollower implements Strategy {
     public name: string;
@@ -65,10 +71,6 @@ export class BHmixGrid implements Strategy {
     }
     public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
         let r = otherParams.r;
-        // this.latestMaxP = -1 * Infinity;
-        // this.latestMinP = Infinity;
-        // let latestMaxP: number = -1 * Infinity;
-        // let latestMinP: number = Infinity;
         if (stockHolding.length === 0 || today === 1) {
             // this.latestMaxP = pToday* this.normalSample(1, 0.033)
             this.latestMaxP = pToday;
@@ -86,9 +88,10 @@ export class BHmixGrid implements Strategy {
         if (stockHolding.length === 0) qd = this.calcQToday(cashOwning, pToday, r);
         else {
             // If price record low, buy in
-            if (pToday < this.latestMaxP && pToday < this.latestMinP) qd = this.calcQToday(cashOwning, pToday, r);
-            // Sell all out
-            else if (pToday > this.latestMaxP) qs = stockHolding.length;
+            if (pToday < this.latestMaxP && pToday < this.latestMinP) {
+                qd = this.calcQToday(cashOwning, pToday, r);
+                // Sell all out
+            } else if (pToday > this.latestMaxP) qs = stockHolding.length;
         }
         return {
             "today": today,
@@ -100,84 +103,9 @@ export class BHmixGrid implements Strategy {
     }
     protected calcQToday(cashOwned: number, pToday: number, r: number): number {
         let qIfAllIn = cashOwned / pToday;
-        // if (latestMaxP !== undefined && latestMinP !== undefined) {
-        //     // 2 strtegies are given:
-        //     let baseQ = ((latestMinP - pToday) / latestMinP) * qIfAllIn;
-        //     // let baseQ = r * qIfAllIn;
-
-        //     // a few strtegies are given:
-        //     // let multiplier = latestMaxP / pToday;
-
-        //     // because 1.313 * tanh(1) ~= 1
-        //     // let multiplier = latestMaxP / (1.313 * Math.tanh(pToday / latestMaxP) * pToday);
-        //     // let multiplier = latestMaxP / (1.738 / Math.exp(1 / (1.81 * (pToday / latestMaxP))) * pToday);
-        //     let multiplier = (40 * (((pToday / latestMaxP) - 1) ** 4)) + 1;
-        //     // let multiplier = 1;
-        //     // let multiplier = pToday/latestMaxP;
-        //     return Math.floor(baseQ * multiplier);
-        // } else return Math.floor(r * qIfAllIn);
         return Math.floor(r * qIfAllIn);
     }
 }
-// export class PlannedBHmixGrid extends BHmixGrid {
-//     public followStrategy(r: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): any {
-//         if (stockHolding.length === 0 || today === 1) {
-//             this.latestMaxP = pToday;
-//             this.latestMinP = this.latestMaxP;
-//         } else {
-//             for (let eachStock of stockHolding) {
-//                 if (eachStock.buyInCost > this.latestMaxP) this.latestMaxP = eachStock.buyInCost;
-//                 if (eachStock.buyInCost < this.latestMinP) this.latestMinP = eachStock.buyInCost;
-//             }
-//         }
-//         let ps: number = this.latestMaxP;
-//         let pd: number = this.latestMinP;
-//         let qd: number = 0;
-//         let qs: number = 0;
-//         if (stockHolding.length === 0) qd = this.calcQToday(cashOwning, pToday, r);
-//         else {
-//             // If price record low, buy in
-//             if (pToday < this.latestMaxP && pToday < this.latestMinP) qd = this.calcQToday(cashOwning, pToday, r);
-//             // Sell
-//             for (let eachStock of stockHolding) {
-//                 let eachCost = eachStock.buyInCost;
-//                 let targetSellP = eachCost * (1 + (this.latestMaxP - eachCost) / this.latestMaxP);
-//                 if (pToday > targetSellP) {
-//                     if (eachCost > this.latestMinP) this.latestMinP = eachCost;
-//                     qs += 1;
-//                 }
-//             }
-//         }
-//         return {
-//     "today": today,
-//     "buyP": pd,
-//     "buyQ": qd,
-//     "sellP": ps,
-//     "sellQ": qs
-// }
-//     }
-// }
-
-// export class GridConstQ implements Strategy {
-//     public followStrategy(maxPrice: number, minPrice: number, nTable: number, today: number, cashOwning: number, stockHolding: Stock[], pToday: number): any {
-//         // Draw divide lines
-//         // numbers in divideLines are in descending order
-//         let divideLines: number[] = [];
-//         for (let i = 0; i < nTable + 1; i++) {
-//             divideLines.push((minPrice * i / nTable) + (maxPrice * (nTable - i) / nTable));
-//         }
-//     }
-//     private calcStandAt(price: number, aList: number[]): number {
-//         let result = 0;
-//         for (let each of aList) {
-//             if (price >= each) {
-//                 return result;
-//             }
-//             result++;
-//         }
-//         return result;
-//     }
-// }
 export class GridConstRatio implements Strategy {
     private latestTradePrice: number;
     public name: string;
@@ -189,8 +117,8 @@ export class GridConstRatio implements Strategy {
         let sensitivity = otherParams["sensitivity"];
         let stockRatio = otherParams["stock-ratio"];
 
-        let pd: number = pToday * Math.max(0.9, Math.min(1.1, MyMath.normalSample(1, 0.033)));    // bid a little bit higher for getting dealt more easily
-        let ps: number = pd;    // ask a little bit lower for getting dealt more easily
+        let pd: number = pToday * Math.max(0.9, Math.min(1.1, MyMath.normalSample(1, 0.033)));
+        let ps: number = pd;
         let qd: number = 0;
         let qs: number = 0;
 
@@ -199,9 +127,9 @@ export class GridConstRatio implements Strategy {
         } else if (stockHolding.length === 1) {
             this.latestTradePrice = stockHolding[0].buyInCost;
         }
-
-        if (today === 1 || stockHolding.length === 0) qd = Math.floor(cashOwning * stockRatio / pd);
-        else {
+        if (today === 1 || stockHolding.length === 0) {
+            qd = Math.floor(cashOwning * stockRatio / pd);
+        } else {
             let priceRiseRate = (pd - this.latestTradePrice) / this.latestTradePrice;
             let priceFallRate = (pd - this.latestTradePrice) / pd;
             if (priceRiseRate >= sensitivity) { // If price rises,
@@ -266,10 +194,7 @@ export class Chicken implements Strategy {
     private calcQToday(r: number, cashOwned: number, pToday: number): number {
         const qIfAllIn = cashOwned / pToday;
         if (qIfAllIn < 1) return 0;
-        // 3 strategies for deciding multiplier are given:
         let multiplier = r;
-        // let multiplier = r * (this.latestMinP / pToday) ** 5;
-        // let multiplier = r / (1 + pToday - this.latestMinP);
         let qToday = Math.floor(qIfAllIn * multiplier)
         return qToday > 1 ? qToday : 1;
     }
