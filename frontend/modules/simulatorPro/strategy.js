@@ -1,7 +1,7 @@
 import { MyMath } from "./myMath.js";
 export class ValueFollower {
-    constructor(strategyName) {
-        this.name = strategyName;
+    constructor() {
+        this.name = "ValueFollower";
     }
     followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
         let pd = valAssessed;
@@ -25,8 +25,8 @@ export class ValueFollower {
 }
 export class PriceChaser {
     // public attitude: number;
-    constructor(strategyName) {
-        this.name = strategyName;
+    constructor() {
+        this.name = "PriceChaser";
         // this.attitude = 1;
     }
     followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
@@ -48,8 +48,8 @@ export class PriceChaser {
     }
 }
 export class BHmixGrid {
-    constructor(strategyName) {
-        this.name = strategyName;
+    constructor() {
+        this.name = "BHmixGrid";
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
@@ -172,8 +172,8 @@ export class BHmixGrid {
 //     }
 // }
 export class GridConstRatio {
-    constructor(strategyName) {
-        this.name = strategyName;
+    constructor() {
+        this.name = "CRG";
         this.latestTradePrice = 0;
     }
     followStrategy(today, cashOwning, stockHolding, valAssessed, pToday, otherParams) {
@@ -216,8 +216,8 @@ export class GridConstRatio {
     }
 }
 export class Chicken {
-    constructor(strategyName) {
-        this.name = strategyName;
+    constructor() {
+        this.name = "Chicken";
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }

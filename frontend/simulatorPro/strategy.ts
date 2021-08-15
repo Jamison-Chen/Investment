@@ -6,8 +6,8 @@ export interface Strategy {
 }
 export class ValueFollower implements Strategy {
     public name: string;
-    public constructor(strategyName: string) {
-        this.name = strategyName;
+    public constructor() {
+        this.name = "ValueFollower";
     }
     public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
         let pd: number = valAssessed;
@@ -32,8 +32,8 @@ export class ValueFollower implements Strategy {
 export class PriceChaser implements Strategy {
     public name: string;
     // public attitude: number;
-    public constructor(strategyName: string) {
-        this.name = strategyName;
+    public constructor() {
+        this.name = "PriceChaser";
         // this.attitude = 1;
     }
     public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
@@ -58,8 +58,8 @@ export class BHmixGrid implements Strategy {
     protected latestMaxP: number;
     protected latestMinP: number;
     public name: string;
-    public constructor(strategyName: string) {
-        this.name = strategyName;
+    public constructor() {
+        this.name = "BHmixGrid";
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }
@@ -181,8 +181,8 @@ export class BHmixGrid implements Strategy {
 export class GridConstRatio implements Strategy {
     private latestTradePrice: number;
     public name: string;
-    public constructor(strategyName: string) {
-        this.name = strategyName;
+    public constructor() {
+        this.name = "CRG";
         this.latestTradePrice = 0;
     }
     public followStrategy(today: number, cashOwning: number, stockHolding: Stock[], valAssessed: number, pToday: number, otherParams: any): any {
@@ -226,8 +226,8 @@ export class Chicken implements Strategy {
     private latestMaxP: number;
     private latestMinP: number;
     public name: string;
-    public constructor(strategyName: string) {
-        this.name = strategyName;
+    public constructor() {
+        this.name = "Chicken";
         this.latestMaxP = -1 * Infinity;
         this.latestMinP = Infinity;
     }

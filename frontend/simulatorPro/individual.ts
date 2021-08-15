@@ -31,6 +31,7 @@ export class Individual {
         "GridConstRatio": "#00A",
         "Chicken": "#A0A"
     };
+    private _allStrategies: any = { ValueFollower, PriceChaser, BHmixGrid, GridConstRatio, Chicken };
     public constructor(aDiv: HTMLElement, strayegySetting: any, initCash: number, stockHolding: Stock[], aggr: number = Math.random(), aggrChangeable: boolean = true) {
         this.divControlled = aDiv;
         this._strategySetting = strayegySetting;
@@ -90,12 +91,11 @@ export class Individual {
     }
     private chooseStrayegy(strategyName: string): Strategy {
         this.divControlled.style.backgroundColor = this._strategyColor[strategyName];
-        if (strategyName === "ValueFollower") return new ValueFollower(strategyName);
-        else if (strategyName === "PriceChaser") return new PriceChaser(strategyName);
-        else if (strategyName === "BHmixGrid") return new BHmixGrid(strategyName);
-        else if (strategyName === "GridConstRatio") return new GridConstRatio(strategyName);
-        else if (strategyName === "Chicken") return new Chicken(strategyName);
-        else throw "Strategy undefined.";
+        try {
+            return new this._allStrategies[strategyName]();
+        } catch {
+            throw "Strategy undefined.";
+        }
     }
     public updateMktInfo(today: number, valueToday: number, priceToday: number, dailyEconGrowthRate: number): void {
         this._today = today;

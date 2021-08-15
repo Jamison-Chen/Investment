@@ -11,6 +11,7 @@ export class Individual {
             "GridConstRatio": "#00A",
             "Chicken": "#A0A"
         };
+        this._allStrategies = { ValueFollower, PriceChaser, BHmixGrid, GridConstRatio, Chicken };
         this.divControlled = aDiv;
         this._strategySetting = strayegySetting;
         this._aggressiveness = aggr;
@@ -71,18 +72,12 @@ export class Individual {
     }
     chooseStrayegy(strategyName) {
         this.divControlled.style.backgroundColor = this._strategyColor[strategyName];
-        if (strategyName === "ValueFollower")
-            return new ValueFollower(strategyName);
-        else if (strategyName === "PriceChaser")
-            return new PriceChaser(strategyName);
-        else if (strategyName === "BHmixGrid")
-            return new BHmixGrid(strategyName);
-        else if (strategyName === "GridConstRatio")
-            return new GridConstRatio(strategyName);
-        else if (strategyName === "Chicken")
-            return new Chicken(strategyName);
-        else
+        try {
+            return new this._allStrategies[strategyName]();
+        }
+        catch (_a) {
             throw "Strategy undefined.";
+        }
     }
     updateMktInfo(today, valueToday, priceToday, dailyEconGrowthRate) {
         this._today = today;
