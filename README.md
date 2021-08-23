@@ -39,9 +39,9 @@ Step 4
 
     python manage.py migrate
 
-Step 5
+Step 5 (optional)
 
-(optional) You can replace the original db.sqlite3 file by the file that you already recorded some data in.
+You can replace the original db.sqlite3 file by the file that you already recorded some data in.
 
 ---
 
