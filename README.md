@@ -6,9 +6,58 @@
 
 ---
 
->## Investment Recorder
+>## Installation
 
-##### TODOS
+### Enviroment Required
+
+* Python (version >= 3)
+* Node.js (version >= 12)
+* npm (version >= 6)
+* pipenv
+
+### Steps to Follow
+
+Step 1
+
+    git clone https://github.com/Jamison-Chen/Investment.git
+
+Step 2
+
+>./
+
+    npm i --production
+
+Step 3
+
+>./backend
+
+    pipenv install --ignore-pipfile
+
+Step 4
+
+>./backend/investment
+
+    python manage.py migrate
+
+Step 5
+
+(optional) You can replace the original db.sqlite3 file by the file that you already recorded some data in.
+
+---
+
+>## Open the App
+
+./
+
+    npm use
+
+---
+
+>## Project Description
+
+### **Investment Recorder**
+
+#### TODOS
 
 * Povide spaces to write down investment memo for each company.
 
@@ -28,24 +77,28 @@
 
 ---
 
->## Stock Market Simulator
+### **Stock Market Simulator**
 
 There are two versions of simulator: the normal one and the Pro version.
 
 > ### Normal Simulator
 
-In this version, the price fluctuation is simulated via *Random Walk*.
+* In this version, the price fluctuation is simulated via **Random Walk**.
 
-There's no animation in this version. That is, once you click the button **Random Walk**, you will see the final result of simulation directly.
+* Once you click the button *Random Walk*, you will see the final result of simulation directly.
 
-There're a few strategy buttons for you to click. After clicking each of them, you can see the detailed info includes how much money has this strategy invested at any point of time, the total market value, and the cash remained.
+* There're a few strategy buttons for you to click. You can see the detailed info including the performance of each strategy.
 
-There is one last button called **Comparison**. This shows you the comparison of the performances of all the strategies, so that you can access which strategy is better for which specific price-fluctuating situation.
+* The *Comparison* button shows you the comparison of the performances of all the strategies.
 
 > ### Simulator Pro
 
-The main difference between the Pro version and the normal one is that in this version, the price is not determined by Random Walk anymore. Instead, each price is determine through the process of **matching each demand to each supply**, which just like what happen in the real world. Consequently, you can see the animation of the price generating one by one.
+* Each price is determine through the process of **matching each demand to each supply** in this version, which trys to mimic trades happen in the real world.
 
-Moreover, you can controll the componets of the market you are in, which means that it's for you to decide what strategies are all the other people using ans, of course, what strategy are you using.
+* You can see the animation of the price generating day after day.
 
-After deciding the component of the market, you will see many squares on the screen, each of them represent a person in the market, and then you can start simulate. And you can see how your assets value fluctuating just like the normal version by clicking the square that represent you.
+* It's for you to decide what strategies are all the other people using and what strategy are you using.
+
+* Each of the square on the left-hand side represents a person in the market.
+
+* You can see how your assets value fluctuating just like the normal version by clicking the first square, which represents you.
