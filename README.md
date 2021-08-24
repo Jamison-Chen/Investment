@@ -49,7 +49,7 @@ You can replace the original db.sqlite3 file by the file that you already record
 
 ./
 
-    npm use
+    npm start
 
 ---
 
