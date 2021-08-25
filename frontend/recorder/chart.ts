@@ -167,7 +167,7 @@ export class EachStockCompareChart extends MyGoogleChart {
             ];
             data = google.visualization.arrayToDataTable(data);
             let options = {
-                title: `報酬率 ${Math.round((securityMktVal / (cashInvested - cashDividend) - 1) * 10000) / 100}%`,
+                title: `報酬率 ${Math.round(((securityMktVal + cashDividend) / cashInvested - 1) * 10000) / 100}%`,
                 titleTextStyle: {
                     fontSize: 14,
                     bold: true,
