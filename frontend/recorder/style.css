@@ -6,7 +6,7 @@
 @media screen and (min-width:1024px) {
     :root {
         --tradeRecordTableWidth: 600px;
-        --cashDividendTableWidth: 420px;
+        --cashDividendTableWidth: 450px;
         --individualRecordTableWidth: 600px;
         --stockInfoTableWidth: 470px;
     }
