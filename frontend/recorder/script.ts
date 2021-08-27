@@ -32,6 +32,7 @@ const mktValPieChart = document.getElementById('component-chart');
 const compareChart = document.getElementById('compare-chart');
 const individualPriceQuantityChart = document.getElementById("individual-price-quantity-chart");
 const individualCompareChart = document.getElementById("individual-compare-chart");
+const loading = document.getElementById("loading");
 
 let allHoldingSids: Set<string> = new Set();
 let stockWarehouse: any = {};  // structure: {aSid:{aDealTime:{aPrice:curQ, ...},  ...}, ...}
@@ -460,6 +461,7 @@ async function main(): Promise<void> {
         stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
         stockwarehousetable.build(stockInfoJson["data"], tradeRecordJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
     }
+    if (loading instanceof HTMLElement) loading.style.display = "none";
 }
 
 main();

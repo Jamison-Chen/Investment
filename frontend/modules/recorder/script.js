@@ -40,6 +40,7 @@ const mktValPieChart = document.getElementById('component-chart');
 const compareChart = document.getElementById('compare-chart');
 const individualPriceQuantityChart = document.getElementById("individual-price-quantity-chart");
 const individualCompareChart = document.getElementById("individual-compare-chart");
+const loading = document.getElementById("loading");
 let allHoldingSids = new Set();
 let stockWarehouse = {}; // structure: {aSid:{aDealTime:{aPrice:curQ, ...},  ...}, ...}
 let cashDividendJson;
@@ -472,6 +473,8 @@ function main() {
             stockwarehousetable = new StockWarehouseTable(stockWarehouseTableBody);
             stockwarehousetable.build(stockInfoJson["data"], tradeRecordJson["data"], allHoldingSids, stockWarehouse, showEachStockDetail, calcCashInvstOfEachSid);
         }
+        if (loading instanceof HTMLElement)
+            loading.style.display = "none";
     });
 }
 main();

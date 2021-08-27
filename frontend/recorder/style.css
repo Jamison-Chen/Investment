@@ -437,3 +437,20 @@ html {
 .divide-line {
     margin: 0 2px;
 }
+
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    background-color: #FFF;
+}
+
+#loading>img {
+    width: 100px;
+}
